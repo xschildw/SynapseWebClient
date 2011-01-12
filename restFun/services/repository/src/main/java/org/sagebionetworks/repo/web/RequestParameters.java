@@ -14,11 +14,11 @@
 package org.sagebionetworks.repo.web;
 
 /**
- * Constants for query parameter keys
+ * Constants for query parameter keys and header names used by the service controllers.
  * <p>
  * All query parameter keys should be in this file as opposed to being
  * defined in individual controllers.  The reason for this to is help
- * ensure consistency accross controllers.
+ * ensure consistency across controllers.
  *
  * @author deflaux
  */

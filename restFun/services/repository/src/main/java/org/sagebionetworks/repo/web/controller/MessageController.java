@@ -25,9 +25,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 /**
  * REST controller for CRUD operations on Message objects
  * <p><ul>  
- * <li>TODO more error handling with correct HTTP error response codes
- * <li>TODO PUT
- * <li>TODO etags
+ * <li>TODO pagination
  * </ul>
  * @author deflaux
  */
