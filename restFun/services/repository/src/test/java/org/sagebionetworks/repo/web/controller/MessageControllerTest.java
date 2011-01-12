@@ -4,6 +4,9 @@
 package org.sagebionetworks.repo.web.controller;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.logging.Logger;
@@ -14,6 +17,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.sagebionetworks.repo.model.Message;
+import org.sagebionetworks.repo.web.RequestParameters;
 import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -166,7 +170,7 @@ public class MessageControllerTest {
         assertEquals(HttpStatus.NOT_FOUND.value(), response.getStatus());
         JSONObject results = new JSONObject(response.getContentAsString());
         // The response should be: {"reason":"no message with id 22 exists"}
-        assertTrue(null != results.getString("reason"));
+        assertNotNull(results.getString("reason"));
     }
 
     /**
@@ -187,7 +191,7 @@ public class MessageControllerTest {
         JSONObject results = new JSONObject(response.getContentAsString());
         // The response should be: {"reason":"Failed to convert value of type 'java.lang.String' to required type 'java.lang.Long';
         // nested exception is java.lang.NumberFormatException: For input string: \"thisShouldBeANumber\""}
-        assertTrue(null != results.getString("reason"));
+        assertNotNull(results.getString("reason"));
     }
 
     /**
@@ -232,7 +236,7 @@ public class MessageControllerTest {
         // The response should be something like: {"reason":"Unrecognized field \"textBROKEN\"
         // (Class org.sagebionetworks.repo.model.Message), not marked as ignorable\n at
         // [Source: org.mortbay.jetty.HttpParser$Input@293a985; line: 1, column: 2]"}
-        assertTrue(null != results.getString("reason"));
+        assertNotNull(results.getString("reason"));
     }
 
     /**
@@ -259,7 +263,7 @@ public class MessageControllerTest {
         // nested exception is org.codehaus.jackson.JsonParseException: Unexpected character
         // ('t' (code 116)): was expecting double-quote to start field name\n at [Source:
         // org.springframework.mock.web.DelegatingServletInputStream@11e3c2c6; line: 1, column: 3]"}
-        assertTrue(null != results.getString("reason"));
+        assertNotNull(results.getString("reason"));
     }
 
     /**
@@ -280,7 +284,7 @@ public class MessageControllerTest {
         assertEquals(HttpStatus.BAD_REQUEST.value(), response.getStatus());
         JSONObject results = new JSONObject(response.getContentAsString());
         // The response should be something like: {"reason":"No content to map to Object due to end of input"}
-        assertTrue(null != results.getString("reason"));
+        assertNotNull(results.getString("reason"));
     }
 
     /**
@@ -322,7 +326,147 @@ public class MessageControllerTest {
         assertEquals(HttpStatus.NOT_FOUND.value(), response.getStatus());
         JSONObject results = new JSONObject(response.getContentAsString());
         // The response should be: {"reason":"no message with id 22 exists"}
-        assertTrue(null != results.getString("reason"));
+        assertNotNull(results.getString("reason"));
     }
 
+    /**
+     * Test method for {@link org.sagebionetworks.repo.web.controller.MessageController#updateMessage(Long, Integer, Message)}.
+     * @throws Exception
+     */
+    @Test
+    public void testUpdateMessage() throws Exception {
+        // Make one new message
+        testCreateMessage();
+
+        // Get that message
+        MockHttpServletRequest getMethodRequest = new MockHttpServletRequest();
+        MockHttpServletResponse getMethodResponse = new MockHttpServletResponse();
+        getMethodRequest.setMethod("GET");
+        getMethodRequest.addHeader("Accept", "application/json");
+        getMethodRequest.setRequestURI("/message/1");
+        servlet.service(getMethodRequest, getMethodResponse);
+        log.info("GET Results: " + getMethodResponse.getContentAsString());
+        JSONObject getResults = new JSONObject(getMethodResponse.getContentAsString());
+        Integer etag = (Integer) getMethodResponse.getHeader(RequestParameters.ETAG_HEADER);
+        assertNotNull(etag);
+
+        // Modify that message
+        getResults.put("text", "updated message from a unit test");
+
+        MockHttpServletRequest putMethodRequest = new MockHttpServletRequest();
+        MockHttpServletResponse putMethodResponse = new MockHttpServletResponse();
+        putMethodRequest.setMethod("PUT");
+        putMethodRequest.addHeader("Accept", "application/json");
+        putMethodRequest.addHeader(RequestParameters.ETAG_HEADER, etag);
+        putMethodRequest.setRequestURI("/message/1");
+        putMethodRequest.addHeader("Content-Type", "application/json; charset=UTF-8");
+        putMethodRequest.setContent(getResults.toString().getBytes("UTF-8"));
+        servlet.service(putMethodRequest, putMethodResponse);
+        log.info("Results: " + putMethodResponse.getContentAsString());
+        assertEquals(HttpStatus.OK.value(), putMethodResponse.getStatus());
+        JSONObject results = new JSONObject(putMethodResponse.getContentAsString());
+        // The response should be something like: {"id":1,"text":"updated message from a unit test"}
+        assertTrue(0 < results.getInt("id"));
+        assertEquals("updated message from a unit test", results.getString("text"));
+        Integer updatedEtag = (Integer) putMethodResponse.getHeader(RequestParameters.ETAG_HEADER);
+        assertNotNull(updatedEtag);
+
+        // Make sure we got an updated etag
+        assertFalse(etag.equals(updatedEtag));
+    }
+
+    /**
+     * Test method for {@link org.sagebionetworks.repo.web.controller.MessageController#updateMessage(Long, Integer, Message)}.
+     * @throws Exception
+     */
+    @Test
+    public void testUpdateMessageConflict() throws Exception {
+        // Make one new message
+        testCreateMessage();
+
+        // Get that message
+        MockHttpServletRequest getMethodRequest = new MockHttpServletRequest();
+        MockHttpServletResponse getMethodResponse = new MockHttpServletResponse();
+        getMethodRequest.setMethod("GET");
+        getMethodRequest.addHeader("Accept", "application/json");
+        getMethodRequest.setRequestURI("/message/1");
+        servlet.service(getMethodRequest, getMethodResponse);
+        log.info("GET Results: " + getMethodResponse.getContentAsString());
+        JSONObject getResults = new JSONObject(getMethodResponse.getContentAsString());
+        Integer etag = (Integer) getMethodResponse.getHeader(RequestParameters.ETAG_HEADER);
+
+        // Someone else updates it
+        testUpdateMessage();
+
+        // Modify the message we got earlier
+        getResults.put("text", "conflicting message from a unit test");
+
+        MockHttpServletRequest putMethodRequest = new MockHttpServletRequest();
+        MockHttpServletResponse putMethodResponse = new MockHttpServletResponse();
+        putMethodRequest.setMethod("PUT");
+        putMethodRequest.addHeader("Accept", "application/json");
+        putMethodRequest.addHeader(RequestParameters.ETAG_HEADER, etag);
+        putMethodRequest.setRequestURI("/message/1");
+        putMethodRequest.addHeader("Content-Type", "application/json; charset=UTF-8");
+        putMethodRequest.setContent(getResults.toString().getBytes("UTF-8"));
+        servlet.service(putMethodRequest, putMethodResponse);
+        log.info("Results: " + putMethodResponse.getContentAsString());
+        assertEquals(HttpStatus.PRECONDITION_FAILED.value(), putMethodResponse.getStatus());
+        JSONObject results = new JSONObject(putMethodResponse.getContentAsString());
+        // The response should be something like:
+        assertNotNull(results.getString("reason"));
+    }
+
+    /**
+     * Test method for {@link org.sagebionetworks.repo.web.controller.MessageController#updateMessage(Long, Integer, Message)}.
+     * @throws Exception
+     */
+    @Test
+    public void testUpdateMessageMissingEtag() throws Exception {
+        // Make one new message
+        testCreateMessage();
+
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        request.setMethod("PUT");
+        request.addHeader("Accept", "application/json");
+        request.setRequestURI("/message/1");
+        request.addHeader("Content-Type", "application/json; charset=UTF-8");
+        request.setContent("{\"id\": 1, \"text\":\"updated message from a unit test\"}".getBytes("UTF-8"));
+        servlet.service(request, response);
+        log.info("Results: " + response.getContentAsString());
+        assertEquals(HttpStatus.BAD_REQUEST.value(), response.getStatus());
+        JSONObject results = new JSONObject(response.getContentAsString());
+        // The response should be something like:  {"reason":"Failed to invoke handler method [public
+        // org.sagebionetworks.repo.model.Message org.sagebionetworks.repo.web.controller.MessageController.updateMessage
+        // (java.lang.Long,java.lang.String,org.sagebionetworks.repo.model.Message)
+        // throws org.sagebionetworks.repo.web.NotFoundException]; nested exception is java.lang.IllegalStateException:
+        // Missing header 'Etag' of type [java.lang.String]"}
+        assertNotNull(results.getString("reason"));
+    }
+
+    /**
+     * Test method for {@link org.sagebionetworks.repo.web.controller.MessageController#updateMessage(Long, Integer, Message)}.
+     * @throws Exception
+     */
+    @Test
+    public void testUpdateNonExistentMessage() throws Exception {
+        // Make one new message
+        testCreateMessage();
+
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        request.setMethod("PUT");
+        request.addHeader("Accept", "application/json");
+        request.addHeader("Etag", 123);
+        request.setRequestURI("/message/100");
+        request.addHeader("Content-Type", "application/json; charset=UTF-8");
+        request.setContent("{\"id\": 100, \"text\":\"updated message from a unit test\"}".getBytes("UTF-8"));
+        servlet.service(request, response);
+        log.info("Results: " + response.getContentAsString());
+        assertEquals(HttpStatus.NOT_FOUND.value(), response.getStatus());
+        JSONObject results = new JSONObject(response.getContentAsString());
+        // The response should be something like: {"reason":"no message with id 100 exists"}
+        assertNotNull(results.getString("reason"));
+    }
 }

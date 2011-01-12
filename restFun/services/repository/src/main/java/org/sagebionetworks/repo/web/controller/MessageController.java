@@ -6,13 +6,16 @@ import java.util.logging.Logger;
 import org.sagebionetworks.repo.model.Message;
 import org.sagebionetworks.repo.server.MessageRepository;
 import org.sagebionetworks.repo.view.PaginatedResults;
+import org.sagebionetworks.repo.web.ConflictingUpdateException;
 import org.sagebionetworks.repo.web.NotFoundException;
+import org.sagebionetworks.repo.web.RequestParameters;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -93,16 +96,30 @@ public class MessageController extends BaseController {
     /**
      * Update an existing message
      * <p><ul>
-     * <li>TODO implement me!
-     * <li>validate updated message
+     * <li>TODO validate updated message
      * </ul>
      * @param id the unique identifier for the message to be updated
+     * @param etag 
      * @param updatedMessage 
+     * @return the updated message
+     * @throws NotFoundException 
+     * @throws ConflictingUpdateException 
      */
-    @ResponseStatus(HttpStatus.NOT_IMPLEMENTED)
+    @ResponseStatus(HttpStatus.OK)
     @RequestMapping(value = "/{id}", method = RequestMethod.PUT)
-    public void updateMessage(@PathVariable Long id, @RequestBody Message updatedMessage) {
-        return;
+    public @ResponseBody Message updateMessage(@PathVariable Long id, 
+            @RequestHeader(RequestParameters.ETAG_HEADER) Integer etag, 
+            @RequestBody Message updatedMessage) throws NotFoundException, ConflictingUpdateException {
+        Message message = messageRepository.getById(id);
+        if(null == message) {
+            throw new NotFoundException("no message with id " + id + " exists");
+        }
+        if(etag != message.hashCode()) {
+            throw new ConflictingUpdateException("message with id " + id 
+                    + "was updated since you last fetched it, retrieve it again and reapply the update");
+        }
+        messageRepository.create(updatedMessage);
+        return updatedMessage;
     }
     
     /**
