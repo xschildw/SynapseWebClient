@@ -6,10 +6,10 @@ package org.sagebionetworks.repo.web;
 import javax.servlet.ServletException;
 
 /**
- * Application exception indicating that a resource was more recently updated than the version referenced in the current update request
+ * Application exception indicating that a resource was more recently updated than the version referenced in the current update request<p>
  * 
  * @author deflaux
- * */
+ */
 public class ConflictingUpdateException extends ServletException {
 
     /**

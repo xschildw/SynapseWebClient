@@ -24,7 +24,7 @@
     </property>
     <property name="customModelAndViewResolvers">
         <list>
-            <bean class="org.sagebionetworks.repo.web.EtagResolver"/>
+            <bean class="org.sagebionetworks.repo.web.ResponseHeaderResolver"/>
         </list>
     </property>
   </bean>

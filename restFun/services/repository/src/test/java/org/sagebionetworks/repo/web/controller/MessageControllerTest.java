@@ -6,10 +6,11 @@ package org.sagebionetworks.repo.web.controller;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.logging.Logger;
+
+import javax.servlet.http.HttpServletRequest;
 
 import org.json.JSONObject;
 import org.junit.After;
@@ -17,7 +18,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.sagebionetworks.repo.model.Message;
-import org.sagebionetworks.repo.web.RequestParameters;
+import org.sagebionetworks.repo.view.PaginatedResults;
+import org.sagebionetworks.repo.web.ServiceConstants;
 import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -105,7 +107,7 @@ public class MessageControllerTest {
     }
 
     /**
-     * Test method for {@link org.sagebionetworks.repo.web.controller.MessageController#getMessages()}.
+     * Test method for {@link org.sagebionetworks.repo.web.controller.MessageController#getMessages(Integer, Integer, HttpServletRequest)}.
      * @throws Exception
      */
     @Test
@@ -124,12 +126,65 @@ public class MessageControllerTest {
         assertEquals(HttpStatus.OK.value(), response.getStatus());
         JSONObject results = new JSONObject(response.getContentAsString());
         // The response should be:
-        // {"results":["id":1,"text":"message from a unit test"},{"id":2,"text":"message from a unit test"}],
-        // "totalNumberOfResults":2}
-        assertEquals(2, results.getInt("totalNumberOfResults"));
+        //  {"results":[{"id":1,"text":"message from a unit test"},{"id":2,
+        //   "text":"message from a unit test"}],"totalNumberOfResults":42,
+        //   "paging":{"previous":"/message?offset=1&limit=10","next":"/message?offset=11&limit=10"}}
+        assertNotNull(results.getInt("totalNumberOfResults"));
         assertEquals(2, results.getJSONArray("results").length());
+        assertEquals("/message?offset=1&limit=10", results.getJSONObject("paging").getString(PaginatedResults.PREVIOUS_PAGE_FIELD));
+        assertEquals("/message?offset=11&limit=10", results.getJSONObject("paging").getString(PaginatedResults.NEXT_PAGE_FIELD));
     }
 
+    /**
+     * Test method for {@link org.sagebionetworks.repo.web.controller.MessageController#getMessages(Integer, Integer, HttpServletRequest)}.
+     * @throws Exception
+     */
+    @Test
+    public void testGetMessagesBadLimit() throws Exception {
+        // Load up a few messages
+        testCreateMessage();
+        testCreateMessage();
+
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        request.setMethod("GET");
+        request.addHeader("Accept", "application/json");
+        request.setRequestURI("/message");
+        request.setParameter(ServiceConstants.PAGINATION_OFFSET_PARAM, "1");
+        request.setParameter(ServiceConstants.PAGINATION_LIMIT_PARAM, "0");
+        servlet.service(request, response);
+        log.info("Results: " + response.getContentAsString());
+        assertEquals(HttpStatus.BAD_REQUEST.value(), response.getStatus());
+        JSONObject results = new JSONObject(response.getContentAsString());
+        // The response should be:
+        assertNotNull(results.getString("reason"));
+    }
+    
+    /**
+     * Test method for {@link org.sagebionetworks.repo.web.controller.MessageController#getMessages(Integer, Integer, HttpServletRequest)}.
+     * @throws Exception
+     */
+    @Test
+    public void testGetMessagesBadOffset() throws Exception {
+        // Load up a few messages
+        testCreateMessage();
+        testCreateMessage();
+
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        request.setMethod("GET");
+        request.addHeader("Accept", "application/json");
+        request.setRequestURI("/message");
+        request.setParameter(ServiceConstants.PAGINATION_OFFSET_PARAM, "-5");
+        request.setParameter(ServiceConstants.PAGINATION_LIMIT_PARAM, "0");
+        servlet.service(request, response);
+        log.info("Results: " + response.getContentAsString());
+        assertEquals(HttpStatus.BAD_REQUEST.value(), response.getStatus());
+        JSONObject results = new JSONObject(response.getContentAsString());
+        // The response should be:
+        assertNotNull(results.getString("reason"));
+    }
+    
     /**
      * Test method for {@link org.sagebionetworks.repo.web.controller.MessageController#getMessage(java.lang.Long)}.
      * @throws Exception
@@ -204,7 +259,8 @@ public class MessageControllerTest {
         MockHttpServletResponse response = new MockHttpServletResponse();
         request.setMethod("POST");
         request.addHeader("Accept", "application/json");
-        request.setRequestURI("/message");
+        String requestURI = "/message";
+        request.setRequestURI(requestURI);
         request.addHeader("Content-Type", "application/json; charset=UTF-8");
         request.setContent("{\"text\":\"message from a unit test\"}".getBytes("UTF-8"));
         servlet.service(request, response);
@@ -214,6 +270,7 @@ public class MessageControllerTest {
         // The response should be something like: {"id":1,"text":"message from a unit test"}
         assertTrue(0 < results.getInt("id"));
         assertEquals("message from a unit test", results.getString("text"));
+        assertEquals(requestURI + "/" + results.getInt("id"), response.getHeader(ServiceConstants.LOCATION_HEADER));
     }
 
     /**
@@ -347,7 +404,7 @@ public class MessageControllerTest {
         servlet.service(getMethodRequest, getMethodResponse);
         log.info("GET Results: " + getMethodResponse.getContentAsString());
         JSONObject getResults = new JSONObject(getMethodResponse.getContentAsString());
-        Integer etag = (Integer) getMethodResponse.getHeader(RequestParameters.ETAG_HEADER);
+        Integer etag = (Integer) getMethodResponse.getHeader(ServiceConstants.ETAG_HEADER);
         assertNotNull(etag);
 
         // Modify that message
@@ -357,7 +414,7 @@ public class MessageControllerTest {
         MockHttpServletResponse putMethodResponse = new MockHttpServletResponse();
         putMethodRequest.setMethod("PUT");
         putMethodRequest.addHeader("Accept", "application/json");
-        putMethodRequest.addHeader(RequestParameters.ETAG_HEADER, etag);
+        putMethodRequest.addHeader(ServiceConstants.ETAG_HEADER, etag);
         putMethodRequest.setRequestURI("/message/1");
         putMethodRequest.addHeader("Content-Type", "application/json; charset=UTF-8");
         putMethodRequest.setContent(getResults.toString().getBytes("UTF-8"));
@@ -368,7 +425,7 @@ public class MessageControllerTest {
         // The response should be something like: {"id":1,"text":"updated message from a unit test"}
         assertTrue(0 < results.getInt("id"));
         assertEquals("updated message from a unit test", results.getString("text"));
-        Integer updatedEtag = (Integer) putMethodResponse.getHeader(RequestParameters.ETAG_HEADER);
+        Integer updatedEtag = (Integer) putMethodResponse.getHeader(ServiceConstants.ETAG_HEADER);
         assertNotNull(updatedEtag);
 
         // Make sure we got an updated etag
@@ -393,7 +450,7 @@ public class MessageControllerTest {
         servlet.service(getMethodRequest, getMethodResponse);
         log.info("GET Results: " + getMethodResponse.getContentAsString());
         JSONObject getResults = new JSONObject(getMethodResponse.getContentAsString());
-        Integer etag = (Integer) getMethodResponse.getHeader(RequestParameters.ETAG_HEADER);
+        Integer etag = (Integer) getMethodResponse.getHeader(ServiceConstants.ETAG_HEADER);
 
         // Someone else updates it
         testUpdateMessage();
@@ -405,7 +462,7 @@ public class MessageControllerTest {
         MockHttpServletResponse putMethodResponse = new MockHttpServletResponse();
         putMethodRequest.setMethod("PUT");
         putMethodRequest.addHeader("Accept", "application/json");
-        putMethodRequest.addHeader(RequestParameters.ETAG_HEADER, etag);
+        putMethodRequest.addHeader(ServiceConstants.ETAG_HEADER, etag);
         putMethodRequest.setRequestURI("/message/1");
         putMethodRequest.addHeader("Content-Type", "application/json; charset=UTF-8");
         putMethodRequest.setContent(getResults.toString().getBytes("UTF-8"));
