@@ -1,4 +1,3 @@
-
 package org.sagebionetworks.repo.server;
 
 import java.util.ArrayList;
@@ -10,8 +9,6 @@ import javax.jdo.JDOHelper;
 import javax.jdo.PersistenceManager;
 import javax.jdo.PersistenceManagerFactory;
 
-import org.sagebionetworks.repo.model.Message;
-
 /**
  * Example persistence manager class
  * <p>
@@ -19,28 +16,38 @@ import org.sagebionetworks.repo.model.Message;
  * Code lifted from the <a
  * href="http://code.google.com/p/maven-gae-plugin/source/browse/trunk/gae-archetype-jsp/src/main/resources/archetype-resources/src/main/java/server/MessageRepository.java?r=738http://code.google.com/p/maven-gae-plugin/source/browse/trunk/gae-archetype-jsp/src/main/resources/archetype-resources/src/main/java/model/Message.java?r=738">maven-gae-plugin</a>
  * template and modified a tiny bit to serve as an example
+ * @param <T>
  */
-public class MessageRepository {
+public class EntityRepository<T> {
 
     static final PersistenceManagerFactory pmfInstance = JDOHelper.getPersistenceManagerFactory("transactions-optional");
 
+    private Class<T> theModelClass;
+
     /**
-     * Return all messages stored in the repository
-     * 
-     * @return collection of all messages stored in the repository
+     * @param theModelClass
      */
-    public List<Message> getAll() {
+    public EntityRepository(Class<T> theModelClass) {
+      this.theModelClass = theModelClass;
+    }
+
+    /**
+     * Return all entities stored in the repository
+     *
+     * @return collection of all entities stored in the repository
+     */
+    public List<T> getAll() {
         PersistenceManager pm = pmfInstance.getPersistenceManager();
         try {
-            List<Message> messages = new ArrayList<Message>();
-            Extent<Message> extent = pm.getExtent(Message.class, false);
-            for (Message message : extent) {
-                messages.add(message);
+            List<T> entities = new ArrayList<T>();
+            Extent<T> extent = pm.getExtent(theModelClass, false);
+            for (T entity : extent) {
+                entities.add(entity);
             }
 
             extent.closeAll();
 
-            return messages;
+            return entities;
         }
         finally {
             pm.close();
@@ -48,12 +55,12 @@ public class MessageRepository {
     }
 
     /**
-     * @param message
+     * @param entity
      */
-    public void create(Message message) {
+    public void create(T entity) {
         PersistenceManager pm = pmfInstance.getPersistenceManager();
         try {
-            pm.makePersistent(message);
+            pm.makePersistent(entity);
         }
         finally {
             pm.close();
@@ -62,13 +69,13 @@ public class MessageRepository {
 
     /**
      * @param id
-     * @return the message corresponding to the id, null otherwise
+     * @return the entity corresponding to the id, null otherwise
      */
-    public Message getById(Long id) {
+    public T getById(Long id) {
         PersistenceManager pm = pmfInstance.getPersistenceManager();
         try {
-            Message message = pm.getObjectById(Message.class, id);
-            return message;
+            T entity = pm.getObjectById(theModelClass, id);
+            return entity;
         }
         catch(JDODataStoreException ex) {
             return null;
@@ -85,7 +92,7 @@ public class MessageRepository {
     public boolean deleteById(Long id) {
         PersistenceManager pm = pmfInstance.getPersistenceManager();
         try {
-            pm.deletePersistent(pm.getObjectById(Message.class, id));
+            pm.deletePersistent(pm.getObjectById(theModelClass, id));
             return true;
         }
         catch(JDODataStoreException ex) {
@@ -97,24 +104,24 @@ public class MessageRepository {
     }
 
     /**
-     * Return all messages stored in the repository within a particular range<p>
-     * 
+     * Return all entities stored in the repository within a particular range<p>
+     *
      * TODO this is a dummy class, therefore I have not bothered to implement this yet
-     * 
+     *
      * @param offset
      * @param limit
-     * @return collection of all messages stored in the repository
+     * @return collection of all entities stored in the repository
      */
-    public List<Message> getRange(Integer offset, Integer limit) {
+    public List<T> getRange(Integer offset, Integer limit) {
         // TODO implement me!
         return getAll();
     }
 
     /**
-     * Return the count of all messages stored in the repository<p>
-     * 
+     * Return the count of all entities stored in the repository<p>
+     *
      * TODO this is a dummy class, therefore I have not bothered to implement this yet
-     * 
+     *
      * @return the count
      */
     public Integer getCount() {
