@@ -9,6 +9,8 @@ import javax.jdo.JDOHelper;
 import javax.jdo.PersistenceManager;
 import javax.jdo.PersistenceManagerFactory;
 
+import org.sagebionetworks.repo.model.gaejdo.PMF;
+
 /**
  * Example persistence manager class
  * <p>
@@ -19,8 +21,6 @@ import javax.jdo.PersistenceManagerFactory;
  * @param <T>
  */
 public class EntityRepository<T> {
-
-    static final PersistenceManagerFactory pmfInstance = JDOHelper.getPersistenceManagerFactory("transactions-optional");
 
     private Class<T> theModelClass;
 
@@ -37,7 +37,7 @@ public class EntityRepository<T> {
      * @return collection of all entities stored in the repository
      */
     public List<T> getAll() {
-        PersistenceManager pm = pmfInstance.getPersistenceManager();
+        PersistenceManager pm = PMF.get();
         try {
             List<T> entities = new ArrayList<T>();
             Extent<T> extent = pm.getExtent(theModelClass, false);
@@ -58,7 +58,7 @@ public class EntityRepository<T> {
      * @param entity
      */
     public void create(T entity) {
-        PersistenceManager pm = pmfInstance.getPersistenceManager();
+        PersistenceManager pm = PMF.get();
         try {
             pm.makePersistent(entity);
         }
@@ -72,7 +72,7 @@ public class EntityRepository<T> {
      * @return the entity corresponding to the id, null otherwise
      */
     public T getById(Long id) {
-        PersistenceManager pm = pmfInstance.getPersistenceManager();
+        PersistenceManager pm = PMF.get();
         try {
             T entity = pm.getObjectById(theModelClass, id);
             return entity;
@@ -90,7 +90,7 @@ public class EntityRepository<T> {
      * @return true if found and deleted, false otherwise
      */
     public boolean deleteById(Long id) {
-        PersistenceManager pm = pmfInstance.getPersistenceManager();
+        PersistenceManager pm = PMF.get();
         try {
             pm.deletePersistent(pm.getObjectById(theModelClass, id));
             return true;
