@@ -11,5 +11,21 @@
         <property name="javax.jdo.option.NontransactionalWrite" value="true"/>
         <property name="javax.jdo.option.RetainValues" value="true"/>
         <property name="datanucleus.appengine.autoCreateDatastoreTxns" value="true"/>
+        <property name="datanucleus.appengine.storageVersion" value="WRITE_OWNED_CHILD_KEYS_TO_PARENTS"/>
     </persistence-manager-factory>
+
+    <persistence-manager-factory name="sage-mysql">
+        <property name="javax.jdo.PersistenceManagerFactoryClass"
+            value="org.datanucleus.jdo.JDOPersistenceManagerFactory"/>
+        <property name="datanucleus.NontransactionalRead" value="true"/>
+        <property name="datanucleus.NontransactionalWrite" value="true"/>
+        <property name="javax.jdo.option.ConnectionURL" value="jdbc:mysql://localhost/test"/>
+        <property name="javax.jdo.option.ConnectionDriverName" value="com.mysql.jdbc.Driver"/>
+        <property name="javax.jdo.option.ConnectionUserName" value="root"/>
+        <property name="javax.jdo.option.ConnectionPassword" value=""/>
+        <property name="datanucleus.autoCreateSchema" value="true"/>
+        <property name="datanucleus.validateTables" value="false"/>
+        <property name="datanucleus.validateConstraints" value="false"/>
+    </persistence-manager-factory>
+
 </jdoconfig>

@@ -20,7 +20,8 @@ import javax.jdo.PersistenceManagerFactory;
  */
 public class EntityRepository<T> {
 
-    static final PersistenceManagerFactory pmfInstance = JDOHelper.getPersistenceManagerFactory("transactions-optional");
+    //    static final PersistenceManagerFactory pmfInstance = JDOHelper.getPersistenceManagerFactory("transactions-optional");
+    static final PersistenceManagerFactory pmfInstance = JDOHelper.getPersistenceManagerFactory("sage-mysql");
 
     private Class<T> theModelClass;
 
