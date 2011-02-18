@@ -21,9 +21,7 @@ import junit.framework.Assert;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
-import org.sagebionetworks.repo.model.gaejdo.GAEJDOAnnotation;
 import org.sagebionetworks.repo.model.gaejdo.GAEJDODAOFactoryImpl;
 import org.sagebionetworks.repo.model.gaejdo.GAEJDODataset;
 import org.sagebionetworks.repo.model.gaejdo.GAEJDOInputDataLayer;
@@ -166,6 +164,7 @@ public class DatasetDAOTest {
 
 		DatasetDAO dao = fac.getDatasetDAO();
 		LayerLocationsDAO locationsDao = fac.getLayerLocationsDAO();
+		LayerPreviewDAO previewDao = fac.getLayerPreviewDAO();
 		
 		String id = dao.create(d);
 		Assert.assertNotNull(id);
@@ -187,63 +186,23 @@ public class DatasetDAOTest {
 				"attribute1", "value1");
 		layerDAO.getStringAnnotationDAO(layer1.getId()).addAnnotation(
 				"attribute2", "value2");
-
-		// The following commented out code causes this problem
 		
-//		org.sagebionetworks.repo.model.DatastoreException: org.sagebionetworks.repo.model.DatastoreException: org.sagebionetworks.repo.model.DatastoreException: Expected one object but found 0
-//		at org.sagebionetworks.repo.model.gaejdo.GAEJDOBaseDAOImpl.get(GAEJDOBaseDAOImpl.java:202)
-//		at org.sagebionetworks.repo.model.gaejdo.GAEJDOBaseDAOImpl.get(GAEJDOBaseDAOImpl.java:1)
-//		at org.sagebionetworks.repo.model.DatasetDAOTest.testCreateAndRetrieveLayer(DatasetDAOTest.java:215)
-//		at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
-//		at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:39)
-//		at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:25)
-//		at java.lang.reflect.Method.invoke(Method.java:597)
-//		at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:44)
-//		at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:15)
-//		at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:41)
-//		at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:20)
-//		at org.junit.internal.runners.statements.RunBefores.evaluate(RunBefores.java:28)
-//		at org.junit.internal.runners.statements.RunAfters.evaluate(RunAfters.java:31)
-//		at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:73)
-//		at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:46)
-//		at org.junit.runners.ParentRunner.runChildren(ParentRunner.java:180)
-//		at org.junit.runners.ParentRunner.access$000(ParentRunner.java:41)
-//		at org.junit.runners.ParentRunner$1.evaluate(ParentRunner.java:173)
-//		at org.junit.internal.runners.statements.RunBefores.evaluate(RunBefores.java:28)
-//		at org.junit.internal.runners.statements.RunAfters.evaluate(RunAfters.java:31)
-//		at org.junit.runners.ParentRunner.run(ParentRunner.java:220)
-//		at org.eclipse.jdt.internal.junit4.runner.JUnit4TestReference.run(JUnit4TestReference.java:46)
-//		at org.eclipse.jdt.internal.junit.runner.TestExecution.run(TestExecution.java:38)
-//		at org.eclipse.jdt.internal.junit.runner.RemoteTestRunner.runTests(RemoteTestRunner.java:467)
-//		at org.eclipse.jdt.internal.junit.runner.RemoteTestRunner.runTests(RemoteTestRunner.java:683)
-//		at org.eclipse.jdt.internal.junit.runner.RemoteTestRunner.run(RemoteTestRunner.java:390)
-//		at org.eclipse.jdt.internal.junit.runner.RemoteTestRunner.main(RemoteTestRunner.java:197)
-//	Caused by: org.sagebionetworks.repo.model.DatastoreException: org.sagebionetworks.repo.model.DatastoreException: Expected one object but found 0
-//		at org.sagebionetworks.repo.model.gaejdo.GAEJDOInputDataLayerDAOImpl.getInRange(GAEJDOInputDataLayerDAOImpl.java:303)
-//		at org.sagebionetworks.repo.model.gaejdo.GAEJDODatasetDAOImpl.copyToDto(GAEJDODatasetDAOImpl.java:78)
-//		at org.sagebionetworks.repo.model.gaejdo.GAEJDODatasetDAOImpl.copyToDto(GAEJDODatasetDAOImpl.java:1)
-//		at org.sagebionetworks.repo.model.gaejdo.GAEJDOBaseDAOImpl.get(GAEJDOBaseDAOImpl.java:197)
-//		... 26 more
-//	Caused by: org.sagebionetworks.repo.model.DatastoreException: Expected one object but found 0
-//		at org.sagebionetworks.repo.model.gaejdo.GAEJDORevisableDAOImpl.getLatest(GAEJDORevisableDAOImpl.java:236)
-//		at org.sagebionetworks.repo.model.gaejdo.GAEJDOInputDataLayerDAOImpl.getInputLayers(GAEJDOInputDataLayerDAOImpl.java:270)
-//		at org.sagebionetworks.repo.model.gaejdo.GAEJDOInputDataLayerDAOImpl.getInRange(GAEJDOInputDataLayerDAOImpl.java:293)
-//		... 29 more
-
-
+		LayerLocations locations = locationsDao.get(layer1.getId());
+		assertEquals(0, locations.getLocations().size());
+		locations.getLocations().add(new LayerLocation("awsebs", "snap-29d33a42 (US West)"));
+		locations.getLocations()
+				.add(new LayerLocation(
+						"sage",
+						"smb://fremont/C$/external-data/DAT_001__TCGA_Glioblastoma/Mar2010/tcga_glioblastoma_data.tar.gz"));
+		locations.getLocations()
+				.add(new LayerLocation(
+						"awss3",
+						"tcga_glioblastoma/tcga_glioblastoma_data.tar.gz"));
+		locationsDao.update(locations);
 		
-//		LayerLocations locations = locationsDao.get(layer1.getId());
-//		assertEquals(0, locations.getLocations().size());
-//		locations.getLocations().add(new LayerLocation("awsebs", "snap-29d33a42 (US West)"));
-//		locations.getLocations()
-//				.add(new LayerLocation(
-//						"sage",
-//						"smb://fremont/C$/external-data/DAT_001__TCGA_Glioblastoma/Mar2010/tcga_glioblastoma_data.tar.gz"));
-//		locations.getLocations()
-//				.add(new LayerLocation(
-//						"awss3",
-//						"tcga_glioblastoma/tcga_glioblastoma_data.tar.gz"));
-//		locationsDao.update(locations);
+		LayerPreview preview = previewDao.get(layer1.getId());
+		preview.setPreview("foo!");
+		previewDao.update(preview);
 		
 		InputDataLayer layer2 = createLayer(now);
 		layer2.setName("genotyping data");
@@ -280,7 +239,7 @@ public class DatasetDAOTest {
 		Assert.assertEquals(layer1.getUri(), l.getUri());
 		Assert.assertEquals(layer1.getVersion(), l.getVersion());
 		LayerLocations storedLocations = locationsDao.get(layer1.getId());
-//		Assert.assertEquals(3, storedLocations.getLocations().size());
+		Assert.assertEquals(3, storedLocations.getLocations().size());
 
 		Collection<InputDataLayer> layers = layerDAO.getInRange(0, 100);
 		Assert.assertEquals(2, layers.size());

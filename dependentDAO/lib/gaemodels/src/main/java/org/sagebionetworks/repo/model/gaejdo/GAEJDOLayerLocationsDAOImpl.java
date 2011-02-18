@@ -3,6 +3,7 @@ package org.sagebionetworks.repo.model.gaejdo;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Set;
 
 import org.sagebionetworks.repo.model.DatastoreException;
 import org.sagebionetworks.repo.model.InvalidModelException;
@@ -30,8 +31,8 @@ public class GAEJDOLayerLocationsDAOImpl extends
 			throws DatastoreException {
 		dto.setId(KeyFactory.keyToString(jdo.getId()));
 		Collection<LayerLocation> dtoLocations = new HashSet<LayerLocation>();
-		if (null != jdo.getLocations()) {
-			for (GAEJDOLayerLocation location : jdo.getLocations()) {
+		if (null != jdo.getLocations() && null != jdo.getLocations().getLayerLocations()) {
+			for (GAEJDOLayerLocation location : jdo.getLocations().getLayerLocations()) {
 				dtoLocations.add(location.toLayerLocation());
 			}
 		}
@@ -54,13 +55,14 @@ public class GAEJDOLayerLocationsDAOImpl extends
 			throw new InvalidModelException(
 					"'locations' is a required property for LayerLocations");
 		}
-		Collection<GAEJDOLayerLocation> jdoLocations = new HashSet<GAEJDOLayerLocation>();
+		Set<GAEJDOLayerLocation> jdoLocations = new HashSet<GAEJDOLayerLocation>();
 		if (null != dto.getLocations()) {
 			for (LayerLocation location : dto.getLocations()) {
 				jdoLocations.add(new GAEJDOLayerLocation(location));
 			}
 		}
-		jdo.setLocations(jdoLocations);
+		GAEJDOLayerLocations container = jdo.getLocations();
+		container.setLayerLocations(jdoLocations);
 	}
 
 	@Override

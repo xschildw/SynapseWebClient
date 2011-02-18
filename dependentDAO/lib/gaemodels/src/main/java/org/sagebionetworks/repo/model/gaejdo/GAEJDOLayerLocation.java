@@ -26,6 +26,16 @@ public class GAEJDOLayerLocation {
 
 	@Persistent
 	private String path;
+	
+	// this is the backwards pointer for the 1-1 owned relationship
+	@Persistent
+	private GAEJDOLayerLocations owner;
+
+	/**
+	 * Default constructor
+	 */
+	public GAEJDOLayerLocation() {
+	}
 
 	/**
 	 * @param type
@@ -86,6 +96,22 @@ public class GAEJDOLayerLocation {
 	 */
 	public void setPath(String path) {
 		this.path = path;
+	}
+
+
+
+	/**
+	 * @param owner the owner to set
+	 */
+	public void setOwner(GAEJDOLayerLocations owner) {
+		this.owner = owner;
+	}
+
+	/**
+	 * @return the owner
+	 */
+	public GAEJDOLayerLocations getOwner() {
+		return owner;
 	}
 
 	/**

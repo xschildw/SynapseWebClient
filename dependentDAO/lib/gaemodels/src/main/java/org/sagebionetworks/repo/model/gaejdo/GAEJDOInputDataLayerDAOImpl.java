@@ -16,7 +16,6 @@ import org.sagebionetworks.repo.model.DatastoreException;
 import org.sagebionetworks.repo.model.InputDataLayer;
 import org.sagebionetworks.repo.model.InputDataLayerDAO;
 import org.sagebionetworks.repo.model.InvalidModelException;
-import org.sagebionetworks.repo.model.LayerLocation;
 import org.sagebionetworks.repo.web.NotFoundException;
 
 import com.google.appengine.api.datastore.Key;
@@ -44,7 +43,9 @@ public class GAEJDOInputDataLayerDAOImpl extends
 		jdo.setAnnotations(a);
 		GAEJDORevision<GAEJDOInputDataLayer> r = new GAEJDORevision<GAEJDOInputDataLayer>();
 		jdo.setRevision(r);
-
+		GAEJDOLayerLocations l = GAEJDOLayerLocations.newGAEJDOLayerLocations();
+		jdo.setLocations(l);
+		
 		return jdo;
 	}
 

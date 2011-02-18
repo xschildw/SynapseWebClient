@@ -307,33 +307,33 @@ public class LayerControllerTest {
 		assertEquals(0, locations.length());
 
 		// Modify the locations
-//		locations
-//				.put(new JSONObject(
-//						"{\"type\":\"awss3\",\"path\":\"human_liver_cohort/expression/expression.txt\"}"));
-//		locations.put(new JSONObject(
-//				"{\"type\":\"awsebs\", \"path\":\"snap-29d33a42 (US West)\"}"));
-//		locations
-//				.put(new JSONObject(
-//						"{\"type\":\"sage\", \"path\":\"smb://fremont/C$/external-data/DAT_001__TCGA_Glioblastoma/Mar2010/tcga_glioblastoma_data.tar.gz\"}"));
-//		JSONObject updatedLayerLocations = helper
-//				.testUpdateJsonEntity(layerLocations);
-//		assertExpectedLayerLocationsProperties(updatedLayerLocations);
-//
-//		// Check that the update response reflects the change
-//		assertEquals(3, updatedLayerLocations.getJSONArray("locations")
-//				.length());
-//
-//		// Now make sure the stored one reflects the change too
-//		JSONObject storedLayerLocations = helper.testGetJsonEntity(newLayer
-//				.getJSONArray("locations").getString(0));
-//		assertEquals(3, storedLayerLocations.getJSONArray("locations").length());
-//		assertExpectedLayerLocationsProperties(storedLayerLocations);
+		locations
+				.put(new JSONObject(
+						"{\"type\":\"awss3\",\"path\":\"human_liver_cohort/expression/expression.txt\"}"));
+		locations.put(new JSONObject(
+				"{\"type\":\"awsebs\", \"path\":\"snap-29d33a42 (US West)\"}"));
+		locations
+				.put(new JSONObject(
+						"{\"type\":\"sage\", \"path\":\"smb://fremont/C$/external-data/DAT_001__TCGA_Glioblastoma/Mar2010/tcga_glioblastoma_data.tar.gz\"}"));
+		JSONObject updatedLayerLocations = helper
+				.testUpdateJsonEntity(layerLocations);
+		assertExpectedLayerLocationsProperties(updatedLayerLocations);
+
+		// Check that the update response reflects the change
+		assertEquals(3, updatedLayerLocations.getJSONArray("locations")
+				.length());
+
+		// Now make sure the stored one reflects the change too
+		JSONObject storedLayerLocations = helper.testGetJsonEntity(newLayer
+				.getJSONArray("locations").getString(0));
+		assertEquals(3, storedLayerLocations.getJSONArray("locations").length());
+		assertExpectedLayerLocationsProperties(storedLayerLocations);
 		
 		// As a sanity check, make sure we can walk from one end to the other
 		JSONObject saneDataset = helper.testGetJsonEntity(dataset.getString("uri"));
 		JSONObject saneLayers = helper.testGetJsonEntities(saneDataset.getString("layer"), null, null, null, null);
 		JSONObject saneLayer = helper.testGetJsonEntity(saneLayers.getJSONArray("results").getJSONObject(0).getString("uri"));
-		JSONObject saneLocations = helper.testGetJsonEntity(saneLayer.getJSONArray("locations").getString(0));
+		helper.testGetJsonObject(saneLayer.getJSONArray("locations").getString(0));
 	}
 
 	/**
