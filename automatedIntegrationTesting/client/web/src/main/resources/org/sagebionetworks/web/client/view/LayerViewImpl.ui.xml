@@ -1,0 +1,75 @@
+<!DOCTYPE ui:UiBinder SYSTEM "http://dl.google.com/gwt/DTD/xhtml.ent">
+<ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"
+	xmlns:g="urn:import:com.google.gwt.user.client.ui" xmlns:d="urn:import:com.google.gwt.dom.client">
+	<ui:style>
+		.title {
+			font-size: 2em;
+			font-weight: bold;
+			color: #777777;
+			margin: 10px 20px 10px;
+			text-align: left;
+			width: 650px;
+		}
+		
+		.topTable {
+			padding: 10px;
+			cellspacing: 50px;
+		}
+		
+		.oneThird {
+			width: 350px;
+		}
+		
+		.twoThirds {
+			width: 700px;
+		}
+		
+		.rowTop {
+			vertical-align: top;
+		}
+	</ui:style>
+	<g:HTMLPanel>
+		<table>
+			<tr valign="bottom">
+				<td>					
+					<div class="{style.title}">
+						<span ui:field="titleSpan" />
+					</div>
+				</td>
+				<td>					
+					<div class="{style.oneThird}" style="text-align: right;">
+						Privacy Setting: <span ui:field="securitySpan" />
+					</div>
+				</td>
+			</tr>
+		</table>
+		<hr />
+		<table class="{style.topTable}">
+			<tr class="{style.rowTop}">
+				<td>
+					<div class="{style.twoThirds}">
+						<body>
+							<h3>Overview</h3>							
+							<g:FlowPanel ui:field="overviewPanel" />							
+						</body>
+					</div>
+				</td>
+				<td>
+					<div class="{style.oneThird}">
+						<g:FlexTable ui:field="rightFlexTable" />
+					</div>
+				</td>
+			</tr>
+			<tr colspan="2">
+				<td>
+					<span ui:field="downloadSpan" />
+					<span ui:field="termsOfUseSpan" />
+				</td>
+			</tr>
+		</table>
+		<hr/>
+		<div>
+			<g:SimplePanel ui:field="previewTablePanel" />
+		</div>
+	</g:HTMLPanel>
+</ui:UiBinder>
