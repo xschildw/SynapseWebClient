@@ -5,16 +5,21 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.jdo.PersistenceManager;
+import javax.jdo.Transaction;
+
 import org.sagebionetworks.repo.model.Dataset;
 import org.sagebionetworks.repo.model.DatasetDAO;
 import org.sagebionetworks.repo.model.DatastoreException;
 import org.sagebionetworks.repo.model.InputDataLayer;
 import org.sagebionetworks.repo.model.InputDataLayerDAO;
 import org.sagebionetworks.repo.model.InvalidModelException;
+import org.sagebionetworks.repo.model.UnauthorizedException;
 import org.sagebionetworks.repo.model.jdo.persistence.JDOAnnotations;
 import org.sagebionetworks.repo.model.jdo.persistence.JDODataset;
 import org.sagebionetworks.repo.model.jdo.persistence.JDOInputDataLayer;
 import org.sagebionetworks.repo.model.jdo.persistence.JDORevision;
+import org.sagebionetworks.repo.web.NotFoundException;
 
 
 
@@ -146,6 +151,23 @@ public class JDODatasetDAOImpl extends
 	public InputDataLayerDAO getInputDataLayerDAO(String datasetId) throws DatastoreException {
 		return new JDOInputDataLayerDAOImpl(userId, KeyFactory
 				.stringToKey(datasetId));
+	}
+	
+	/**
+	 * Override the parent method to remove authorization references to child layers prior to deletion
+	 */
+	public void delete(String id) throws DatastoreException, NotFoundException,
+	UnauthorizedException {
+		PersistenceManager pm = PMF.get();
+//		Transaction tx = pm.currentTransaction();
+		JDODataset ds = pm.getObjectById(JDODataset.class, KeyFactory.stringToKey(id));
+		JDOInputDataLayerDAOImpl idlDAO = (JDOInputDataLayerDAOImpl)getInputDataLayerDAO(id);
+		Set<JDOInputDataLayer> idls = ds.getInputLayers();
+		for (JDOInputDataLayer idl: idls) {
+			idlDAO.removeResourceFromAllGroups(idl.getId());
+		}
+//		tx.commit();
+		super.delete(id);
 	}
 
 }

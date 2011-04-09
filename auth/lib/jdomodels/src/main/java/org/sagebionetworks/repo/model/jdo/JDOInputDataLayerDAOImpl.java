@@ -223,6 +223,22 @@ public class JDOInputDataLayerDAOImpl extends
 	}
 
 	/**
+	 * Remove references to this resource from all groups prior to deletion
+	 */
+	public void removeResourceFromAllGroups(Long key) throws DatastoreException, NotFoundException {
+		PersistenceManager pm = PMF.get();
+		Transaction tx = pm.currentTransaction();
+		tx.begin();
+//		Long key = KeyFactory.stringToKey(id);
+		JDOInputDataLayer jdo = (JDOInputDataLayer) pm.getObjectById(
+				getJdoClass(), key);
+		JDOUserGroupDAOImpl groupDAO = new JDOUserGroupDAOImpl(null);
+		groupDAO.removeResourceFromAllGroups(jdo);
+		pm.deletePersistent(jdo);
+		tx.commit();
+	}
+	
+	/**
 	 * Delete the specified object
 	 * 
 	 * @param id
@@ -231,12 +247,13 @@ public class JDOInputDataLayerDAOImpl extends
 	 * @throws NotFoundException
 	 */
 	public void delete(String id) throws DatastoreException, NotFoundException {
+		Long key = KeyFactory.stringToKey(id);
+		removeResourceFromAllGroups(key);
 		PersistenceManager pm = PMF.get();
 		Transaction tx = null;
 		try {
 			tx = pm.currentTransaction();
 			tx.begin();
-			Long key = KeyFactory.stringToKey(id);
 			JDOInputDataLayer jdo = (JDOInputDataLayer) pm.getObjectById(
 					getJdoClass(), key);
 			JDODataset ownerDataset = (JDODataset) pm.getObjectById(

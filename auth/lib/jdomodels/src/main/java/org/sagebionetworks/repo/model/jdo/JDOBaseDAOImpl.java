@@ -3,6 +3,7 @@ package org.sagebionetworks.repo.model.jdo;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.logging.Logger;
@@ -65,6 +66,11 @@ abstract public class JDOBaseDAOImpl<S extends Base, T extends JDOBase>
 	 * @return the new object
 	 */
 	abstract protected S newDTO();
+	
+	/**
+	 * @return the type of the object which the DAO serves
+	 */
+	public String getType() {return newDTO().getClass().getName();}
 
 	/**
 	 * Create a new instance of the persistable object. Introducing this
@@ -166,6 +172,16 @@ abstract public class JDOBaseDAOImpl<S extends Base, T extends JDOBase>
 
 	protected T createIntern(S dto) throws InvalidModelException,
 			DatastoreException {
+		//
+		// Set system-controlled immutable fields
+		//
+		// Question: is this where we want to be setting immutable
+		// system-controlled fields for our
+		// objects? This should only be set at creation time so its not
+		// appropriate to put it in copyFromDTO.
+		dto.setCreationDate(new Date()); // now
+
+
 		T jdo = newJDO();
 		copyFromDto(dto, jdo);
 		return jdo;
@@ -189,7 +205,7 @@ abstract public class JDOBaseDAOImpl<S extends Base, T extends JDOBase>
 		}
 		// System.out.println("addUserAccess: Group is "+group.getName());
 		// now add the object to the group
-		JDOUserGroupDAOImpl.addResourceToGroup(group, jdo, Arrays
+		JDOUserGroupDAOImpl.addResourceToGroup(group, jdo.getClass().getName(), jdo.getId(), Arrays
 				.asList(new String[] { AuthorizationConstants.READ_ACCESS,
 						AuthorizationConstants.CHANGE_ACCESS,
 						AuthorizationConstants.SHARE_ACCESS }));
@@ -220,10 +236,10 @@ abstract public class JDOBaseDAOImpl<S extends Base, T extends JDOBase>
 			pm.makePersistent(jdo);
 			tx.commit();
 //			tx = pm.currentTransaction();
-//			tx.begin();
+			tx.begin();
 			addUserAccess(pm, jdo); // TODO Am I do the transaction control
 									// correctly?
-//			tx.commit();
+			tx.commit();
 			copyToDto(jdo, dto);
 			dto.setId(KeyFactory.keyToString(jdo.getId())); // TODO Consider
 															// putting this line
@@ -249,6 +265,8 @@ abstract public class JDOBaseDAOImpl<S extends Base, T extends JDOBase>
 	 * @throws DatastoreException
 	 * @throws NotFoundException
 	 */
+	// TODO, move authorization check AFTER the retrieval step, so that we get a 'not found' result
+	// rather than 'unauthorized' when an object does not exist.
 	public S get(String id) throws DatastoreException, NotFoundException,
 			UnauthorizedException {
 		PersistenceManager pm = PMF.get();
@@ -287,13 +305,15 @@ abstract public class JDOBaseDAOImpl<S extends Base, T extends JDOBase>
 			UnauthorizedException {
 		PersistenceManager pm = PMF.get();
 		Long key = KeyFactory.stringToKey(id);
-		if (!JDOUserGroupDAOImpl.canAccess(userId, getJdoClass().getName(), key, AuthorizationConstants.CHANGE_ACCESS, pm))
+		JDOUserGroupDAOImpl groupDAO = new JDOUserGroupDAOImpl(null);
+		if (!groupDAO.canAccess(userId, getJdoClass().getName(), key, AuthorizationConstants.CHANGE_ACCESS, pm))
 			throw new UnauthorizedException();
 		Transaction tx = null;
 		try {
 			tx = pm.currentTransaction();
 			tx.begin();
 			T jdo = (T) pm.getObjectById(getJdoClass(), key);
+			groupDAO.removeResourceFromAllGroups(jdo);
 			// delete(pm, jdo);
 			pm.deletePersistent(jdo);
 			tx.commit();
@@ -626,17 +646,18 @@ abstract public class JDOBaseDAOImpl<S extends Base, T extends JDOBase>
 		// get all objects that these groups can access
 
 		Query query = pm.newQuery(JDOResourceAccess.class);
-		query.setFilter("owner==pUserGroup && resourceType==pResourceType && accessType==pAccessType");
+		query.setFilter("owner==pUserGroup && resourceType==pResourceType");
 		query.declareParameters(JDOUserGroup.class.getName()+ " pUserGroup, " + 
-				String.class.getName() + " pResourceType, "+
-				String.class.getName() + " pAccessType");
+				String.class.getName() + " pResourceType");
 		Collection<Long> ans = new HashSet<Long>();
 		for (JDOUserGroup ug : groups) {
 			@SuppressWarnings("unchecked")
 			Collection<JDOResourceAccess> ras = (Collection<JDOResourceAccess>) query
-					.execute(ug, jdoClass.getName(), accessType);
+					.execute(ug, jdoClass.getName());
 			for (JDOResourceAccess ra : ras)
-				ans.add(ra.getResourceId());
+				if (ra.getAccessType().contains(accessType)) {
+					ans.add(ra.getResourceId());
+				}
 		}
 		return ans;
 	}
