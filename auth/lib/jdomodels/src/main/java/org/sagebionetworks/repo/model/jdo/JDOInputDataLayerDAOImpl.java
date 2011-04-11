@@ -196,11 +196,6 @@ public class JDOInputDataLayerDAOImpl extends
 			pm.makePersistent(ownerDataset);
 			JDORevision<JDOInputDataLayer> r = jdo.getRevision();
 			r.setOriginal(r.getId()); // points to itself
-			// *** Start Nicole's fix ***
-//			JDORevision<JDODataset> ownerRevision = ownerDataset
-//					.getRevision();
-//			ownerRevision.setLatest(true);
-			// *** end Nicole's fix ***
 			pm.makePersistent(ownerDataset); // not sure if it's necessary to
 			// 'persist' again
 			tx.commit();
@@ -227,15 +222,10 @@ public class JDOInputDataLayerDAOImpl extends
 	 */
 	public void removeResourceFromAllGroups(Long key) throws DatastoreException, NotFoundException {
 		PersistenceManager pm = PMF.get();
-		Transaction tx = pm.currentTransaction();
-		tx.begin();
-//		Long key = KeyFactory.stringToKey(id);
 		JDOInputDataLayer jdo = (JDOInputDataLayer) pm.getObjectById(
 				getJdoClass(), key);
 		JDOUserGroupDAOImpl groupDAO = new JDOUserGroupDAOImpl(null);
 		groupDAO.removeResourceFromAllGroups(jdo);
-		pm.deletePersistent(jdo);
-		tx.commit();
 	}
 	
 	/**
@@ -248,16 +238,16 @@ public class JDOInputDataLayerDAOImpl extends
 	 */
 	public void delete(String id) throws DatastoreException, NotFoundException {
 		Long key = KeyFactory.stringToKey(id);
-		removeResourceFromAllGroups(key);
 		PersistenceManager pm = PMF.get();
 		Transaction tx = null;
 		try {
 			tx = pm.currentTransaction();
-			tx.begin();
 			JDOInputDataLayer jdo = (JDOInputDataLayer) pm.getObjectById(
 					getJdoClass(), key);
 			JDODataset ownerDataset = (JDODataset) pm.getObjectById(
 					JDODataset.class, datasetId);
+			removeResourceFromAllGroups(key);
+			tx.begin();
 			ownerDataset.getInputLayers().remove(jdo);
 			pm.deletePersistent(jdo);
 			tx.commit();

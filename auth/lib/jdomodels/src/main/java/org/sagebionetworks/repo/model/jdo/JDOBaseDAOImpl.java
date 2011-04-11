@@ -205,10 +205,19 @@ abstract public class JDOBaseDAOImpl<S extends Base, T extends JDOBase>
 		}
 		// System.out.println("addUserAccess: Group is "+group.getName());
 		// now add the object to the group
-		JDOUserGroupDAOImpl.addResourceToGroup(group, jdo.getClass().getName(), jdo.getId(), Arrays
-				.asList(new String[] { AuthorizationConstants.READ_ACCESS,
-						AuthorizationConstants.CHANGE_ACCESS,
-						AuthorizationConstants.SHARE_ACCESS }));
+		Transaction tx = pm.currentTransaction();
+		try {
+			tx.begin();
+			JDOUserGroupDAOImpl.addResourceToGroup(group, jdo.getClass().getName(), jdo.getId(), Arrays
+					.asList(new String[] { AuthorizationConstants.READ_ACCESS,
+							AuthorizationConstants.CHANGE_ACCESS,
+							AuthorizationConstants.SHARE_ACCESS }));
+			tx.commit();
+		} finally {
+			if (tx.isActive()) {
+				tx.rollback();
+			}
+		}
 	}
 
 	/**
@@ -236,10 +245,7 @@ abstract public class JDOBaseDAOImpl<S extends Base, T extends JDOBase>
 			pm.makePersistent(jdo);
 			tx.commit();
 //			tx = pm.currentTransaction();
-			tx.begin();
-			addUserAccess(pm, jdo); // TODO Am I do the transaction control
-									// correctly?
-			tx.commit();
+			addUserAccess(pm, jdo); 
 			copyToDto(jdo, dto);
 			dto.setId(KeyFactory.keyToString(jdo.getId())); // TODO Consider
 															// putting this line
@@ -265,21 +271,23 @@ abstract public class JDOBaseDAOImpl<S extends Base, T extends JDOBase>
 	 * @throws DatastoreException
 	 * @throws NotFoundException
 	 */
-	// TODO, move authorization check AFTER the retrieval step, so that we get a 'not found' result
-	// rather than 'unauthorized' when an object does not exist.
 	public S get(String id) throws DatastoreException, NotFoundException,
 			UnauthorizedException {
 		PersistenceManager pm = PMF.get();
 		Long key = KeyFactory.stringToKey(id);
-		if (!JDOUserGroupDAOImpl.canAccess(userId, getJdoClass().getName(), key, AuthorizationConstants.READ_ACCESS, pm))
-			throw new UnauthorizedException();
 		try {
 			T jdo = (T) pm.getObjectById(getJdoClass(), key);
+			//  authorization check comes AFTER the retrieval step, so that we get a 'not found' result
+			// rather than 'forbidden' when an object does not exist.
+			if (!JDOUserGroupDAOImpl.canAccess(userId, getJdoClass().getName(), key, AuthorizationConstants.READ_ACCESS, pm))
+				throw new UnauthorizedException();
 			S dto = newDTO();
 			copyToDto(jdo, dto);
 			return dto;
 		} catch (JDOObjectNotFoundException e) {
 			throw new NotFoundException(e);
+		} catch (UnauthorizedException e) {
+			throw e;
 		} catch (Exception e) {
 			throw new DatastoreException(e);
 		} finally {
@@ -305,20 +313,22 @@ abstract public class JDOBaseDAOImpl<S extends Base, T extends JDOBase>
 			UnauthorizedException {
 		PersistenceManager pm = PMF.get();
 		Long key = KeyFactory.stringToKey(id);
-		JDOUserGroupDAOImpl groupDAO = new JDOUserGroupDAOImpl(null);
-		if (!groupDAO.canAccess(userId, getJdoClass().getName(), key, AuthorizationConstants.CHANGE_ACCESS, pm))
-			throw new UnauthorizedException();
 		Transaction tx = null;
 		try {
 			tx = pm.currentTransaction();
 			tx.begin();
 			T jdo = (T) pm.getObjectById(getJdoClass(), key);
+			JDOUserGroupDAOImpl groupDAO = new JDOUserGroupDAOImpl(null);
+			if (!groupDAO.canAccess(userId, getJdoClass().getName(), key, AuthorizationConstants.CHANGE_ACCESS, pm))
+				throw new UnauthorizedException();
 			groupDAO.removeResourceFromAllGroups(jdo);
 			// delete(pm, jdo);
 			pm.deletePersistent(jdo);
 			tx.commit();
 		} catch (JDOObjectNotFoundException e) {
 			throw new NotFoundException(e);
+		} catch (UnauthorizedException e) {
+			throw e;
 		} catch (Exception e) {
 			throw new DatastoreException(e);
 		} finally {

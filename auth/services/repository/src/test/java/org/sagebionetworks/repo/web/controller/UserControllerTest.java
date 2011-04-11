@@ -209,7 +209,7 @@ public class UserControllerTest {
 		User user = users.get(0);
 		JSONObject results = helper.testGetJsonEntity(user.getUri());
 		JSONObject error = helper.testGetJsonEntityShouldFail(results
-				.getString("uri")+"0", HttpStatus.FORBIDDEN);
+				.getString("uri")+"0", HttpStatus.NOT_FOUND);
 		assertNotNull(error.getString("reason"));
 	}
 

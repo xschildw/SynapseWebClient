@@ -154,7 +154,11 @@ public class Helpers {
 	 */
 	public void tearDown() throws Exception {
 		for (TestStateItem item : testState) {
-			item.delete();
+			try {
+				item.delete();
+			} catch (Exception e) {
+				log.info(e.toString());
+			}
 		}
 
 	}
@@ -382,7 +386,7 @@ public class Helpers {
 			request.setParameter(AuthUtilConstants.USER_ID_PARAM, userId);
 		servlet.service(request, response);
 		log.info("Results: " + response.getContentAsString());
-		assertEquals(HttpStatus.NO_CONTENT.value(), response.getStatus());
+		assertEquals(requestUrl+" -> "+response.getContentAsString(), HttpStatus.NO_CONTENT.value(), response.getStatus());
 		assertEquals("", response.getContentAsString());
 
 		if (tryGet) testGetJsonEntityShouldFail(requestUrl, HttpStatus.NOT_FOUND);

@@ -239,8 +239,12 @@ public class DatasetDAOTest {
 		assertTrue(datasetWithLayers.getHasGeneticData());
 		assertTrue(datasetWithLayers.getHasClinicalData());
 
+		// what if you initialize a new Layer DAO?
+		InputDataLayerDAO layerDAOii = dao.getInputDataLayerDAO(id);
+
 		// test retrieval of layer by ID
-		InputDataLayer l = layerDAO.get(layer1.getId());
+		InputDataLayer l = layerDAOii.get(layer1.getId());
+		
 		Assert.assertNotNull(l);
 		Assert.assertEquals("clinical data", l.getName());
 		// then test that all field values are returned
@@ -411,7 +415,7 @@ public class DatasetDAOTest {
 		try {
 			dao.get(id);
 			Assert.fail("exception expected");
-		} catch (UnauthorizedException e) {
+		} catch (NotFoundException e) {
 			// as expected
 		}
 
