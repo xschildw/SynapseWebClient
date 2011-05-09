@@ -29,7 +29,7 @@ public class QueryManagerImpl implements QueryManager {
 	@Autowired
 	NodeQueryDao nodeQueryDao;
 	
-	private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
 
 	@Override
 	public <T extends Base> QueryResults executeQuery(String userId, BasicQuery query, Class<? extends T> clazz) throws DatastoreException {
@@ -43,14 +43,7 @@ public class QueryManagerImpl implements QueryManager {
 			EntityWithAnnotations<T> entityWithAnnos;
 			try {
 				entityWithAnnos = entityManager.getEntityWithAnnotations(userId, id, clazz);
-				// Convert the object to the map
-				@SuppressWarnings("unchecked")
-				Map<String, Object> row = OBJECT_MAPPER.convertValue(entityWithAnnos.getEntity(),Map.class);
-				Annotations annotations = entityWithAnnos.getAnnotations();
-				row.putAll(annotations.getStringAnnotations());
-				row.putAll(annotations.getDoubleAnnotations());
-				row.putAll(annotations.getLongAnnotations());
-				row.putAll(annotations.getDateAnnotations());
+				Map<String, Object> row = EntityToMapUtil.createMapFromEntity(entityWithAnnos);
 				// Add this row
 				allRows.add(row);
 			} catch (NotFoundException e) {
@@ -64,5 +57,6 @@ public class QueryManagerImpl implements QueryManager {
 		// done
 		return new QueryResults(allRows, nodeResults.getTotalNumberOfResults());
 	}
+	
 
 }
