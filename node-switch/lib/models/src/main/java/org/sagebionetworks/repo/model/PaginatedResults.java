@@ -37,7 +37,7 @@ public class PaginatedResults<T> implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
-	private int totalNumberOfResults;
+	private long totalNumberOfResults;
 	private List<T> results;
 	private Map<String, String> paging;
 
@@ -68,7 +68,7 @@ public class PaginatedResults<T> implements Serializable {
 	 *            the field upon which to sort
 	 */
 	public PaginatedResults(String urlPath, List<T> results,
-			int totalNumberOfResults, Integer offset, Integer limit,
+			long totalNumberOfResults, Integer offset, Integer limit,
 			String sort, Boolean ascending) {
 		this.results = results;
 		this.totalNumberOfResults = totalNumberOfResults;
@@ -108,15 +108,15 @@ public class PaginatedResults<T> implements Serializable {
 	/**
 	 * @return the total number of results in the system
 	 */
-	public int getTotalNumberOfResults() {
+	public long getTotalNumberOfResults() {
 		return totalNumberOfResults;
 	}
 
 	/**
-	 * @param totalNumberOfResults
+	 * @param total
 	 */
-	public void setTotalNumberOfResults(int totalNumberOfResults) {
-		this.totalNumberOfResults = totalNumberOfResults;
+	public void setTotalNumberOfResults(long total) {
+		this.totalNumberOfResults = total;
 	}
 
 	/**
