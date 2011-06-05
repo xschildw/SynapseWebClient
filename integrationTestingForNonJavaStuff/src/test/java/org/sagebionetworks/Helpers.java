@@ -1,6 +1,5 @@
 package org.sagebionetworks;
 
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.BufferedReader;
@@ -51,17 +50,11 @@ public class Helpers {
 	}
 
 	public static String getPython27Path() {
-		assertNotNull(
-				"Missing properties from .m2/settings.xml, see the javadoc for details",
-				System.getProperty("local.python27.path"));
-		return System.getProperty("local.python27.path");
+		return (null == System.getProperty("local.python27.path")) ? "" : System.getProperty("local.python27.path");
 	}
 
 	public static String getRPath() {
-		assertNotNull(
-				"Missing properties from .m2/settings.xml, see the javadoc for details",
-				System.getProperty("local.r.path"));
-		return System.getProperty("local.r.path");
+		return (null == System.getProperty("local.r.path")) ? "" : System.getProperty("local.r.path");
 	}
 
 	public static String getIntegrationTestUser() {

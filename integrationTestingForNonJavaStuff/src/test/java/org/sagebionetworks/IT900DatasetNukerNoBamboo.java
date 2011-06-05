@@ -2,7 +2,6 @@ package org.sagebionetworks;
 
 import static org.junit.Assert.assertEquals;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.sagebionetworks.Helpers.ExternalProcessResult;
 
@@ -12,16 +11,15 @@ import org.sagebionetworks.Helpers.ExternalProcessResult;
  * @author deflaux
  * 
  */
-public class IT010DatasetNuker {
+public class IT900DatasetNukerNoBamboo {
 
 	/**
 	 * @throws Exception
 	 */
-	@Ignore
 	@Test
 	public void testDatasetNuker() throws Exception {
 		String cmd[] = { Helpers.getPython27Path(),
-				"../tools/DatasetMetadataLoader/datasetNuker.py",
+				"target/non-java-dependencies/datasetNuker.py",
 				"--serviceEndpoint", Helpers.getRepositoryServiceBaseUrl() };
 		ExternalProcessResult result = Helpers.runExternalProcess(cmd);
 		assertEquals("", result.getStderr());

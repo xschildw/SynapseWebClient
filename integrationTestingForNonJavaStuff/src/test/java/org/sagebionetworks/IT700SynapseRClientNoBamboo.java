@@ -6,6 +6,6 @@ package org.sagebionetworks;
  * @author deflaux
  * 
  */
-public class IT700SynapseRClient {
+public class IT700SynapseRClientNoBamboo {
 
 }
