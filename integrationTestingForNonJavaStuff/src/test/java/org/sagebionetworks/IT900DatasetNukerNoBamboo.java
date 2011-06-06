@@ -6,7 +6,7 @@ import org.junit.Test;
 import org.sagebionetworks.Helpers.ExternalProcessResult;
 
 /**
- * Run this integration test as one of the first few to clean out our database
+ * Run this integration test to clean all datasets out of the database
  * 
  * @author deflaux
  * 

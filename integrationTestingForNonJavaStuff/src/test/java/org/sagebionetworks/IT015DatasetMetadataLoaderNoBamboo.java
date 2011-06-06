@@ -6,7 +6,7 @@ import org.junit.Test;
 import org.sagebionetworks.Helpers.ExternalProcessResult;
 
 /**
- * Run this integration test to load in some data
+ * Run this integration test to load in some realistic data
  * 
  * @author deflaux
  *

@@ -270,6 +270,16 @@
 		
 		<dependency>
 			<groupId>org.sagebionetworks</groupId>
+			<artifactId>synapseRClient</artifactId>
+			<version>${applicationVersion}</version>
+			<classifier>synapse-r-client-assembly</classifier>
+			<type>zip</type>
+			<!-- Make sure this isn't included on any classpath-->
+			<scope>provided</scope>
+		</dependency>
+		
+		<dependency>
+			<groupId>org.sagebionetworks</groupId>
 			<artifactId>DatasetMetadataLoader</artifactId>
 			<version>${applicationVersion}</version>
 			<classifier>dataset-metadata-loader-assembly</classifier>
