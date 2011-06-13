@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:util="http://www.springframework.org/schema/util"
+	xsi:schemaLocation="
+       http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+       http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.0.xsd
+       http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.0.xsd
+       http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd">
+
+	<!-- Trun on Spring's auotproxy using AspectJ's @Aspect annotations. -->
+	<aop:aspectj-autoproxy />
+	
+	<import resource="classpath:transaction-spb.xml"/>
+	
+	<!-- The real Node DAO -->
+	<bean id="nodeManager" class="org.sagebionetworks.repo.manager.NodeManagerImpl" />
+	<bean id="nodeInheritanceManager" class="org.sagebionetworks.repo.manager.NodeInheritanceManagerImpl" />
+	
+	
+	<!-- The Entity manager-->
+	<bean id="entityManager" class="org.sagebionetworks.repo.manager.EntityManagerImpl" />
+	
+	<!-- The Generic Entity Controller-->
+	<bean id="entityController" class="org.sagebionetworks.repo.web.GenericEntityControllerImpl" />
+	
+	<!-- The Location helper-->
+	<bean id="locationHelper" class="org.sagebionetworks.repo.util.LocationHelpersImpl" />
+	
+	<bean id="authorizationManager" class="org.sagebionetworks.repo.manager.AuthorizationManagerImpl" />
+	
+	<bean id="permissionsManager" class="org.sagebionetworks.repo.manager.PermissionsManagerImpl" />
+	
+	<bean id="iamClientFactory" class="org.sagebionetworks.repo.util.AmazonIdentityManagementFactoryImpl"  scope="singleton"/>
+	
+	<bean id="userManager" class="org.sagebionetworks.repo.manager.UserManagerImpl" />
+
+	<bean id="userDAO" class="org.sagebionetworks.repo.util.UserDAOProxy" scope="singleton"/>
+	<bean id="userDAOImpl" class="org.sagebionetworks.authutil.CrowdUserDAO" scope="singleton"/>
+	
+	<bean id="accessControlListDAO" class="org.sagebionetworks.repo.model.jdo.JDOAccessControlListDAOImpl" scope="singleton"/>
+	
+	<bean id="layerTypeCountCache" class="org.sagebionetworks.repo.web.controller.metadata.LayerTypeCountCacheImpl" scope="singleton"/>
+		
+	<bean id="datasetMetadataProvider" class="org.sagebionetworks.repo.web.controller.metadata.DatasetMetadataProvider" scope="singleton"/>
+	<bean id="inputDataLayerProvider" class="org.sagebionetworks.repo.web.controller.metadata.InputDataLayerMetadataProvider" scope="singleton"/>
+	<bean id="layerLocationMetadataProvider" class="org.sagebionetworks.repo.web.controller.metadata.LayerLocationMetadataProvider" scope="singleton"/>
+	<bean id="projectMetadataProvider" class="org.sagebionetworks.repo.web.controller.metadata.ProjectMetadataProvider" scope="singleton"/>
+	<bean id="storedLayerPreviewMetadataProvider" class="org.sagebionetworks.repo.web.controller.metadata.StoredLayerPreviewMetadataProvider" scope="singleton"/>
+	
+	<!-- the keys in this map must be the values of the org.sagebionetworks.repo.modelObjectType enum -->
+	<bean id="metadataProviderFactory" class="org.sagebionetworks.repo.web.controller.MetadataProviderFactoryImpl" scope="singleton">
+	    <property name="metadataProviderMap">
+	      <map>
+			<entry key="dataset"><ref bean="datasetMetadataProvider" /></entry>
+			<entry key="layer"><ref bean="inputDataLayerProvider" /></entry>
+			<entry key="layerlocation"><ref bean="layerLocationMetadataProvider" /></entry>
+			<entry key="project"><ref bean="projectMetadataProvider" /></entry>
+			<entry key="layerpreview"><ref bean="storedLayerPreviewMetadataProvider" /></entry>
+	      </map>
+	    </property>
+	</bean>
+</beans>

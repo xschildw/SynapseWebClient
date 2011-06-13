@@ -1,0 +1,15 @@
+#export(
+#	"getAnnotations",
+#	"getDatasetSummary",
+#	"getDatasetSummaries",
+#	"InitializeClientConfig",
+#	"sbnHostName",
+#	"sbnLogin",
+#	"sbnSslHostName",
+#	"sbnServiceName",
+#	"sbnServiceURI",
+#	"sbnServiceVersion"
+#)
+exportPattern('*')
+
+
