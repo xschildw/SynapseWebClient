@@ -38,6 +38,14 @@
 		<property name="maxActive">
 			<value>40</value>
 		</property>
+		<!-- This will test a connection to see if it is alive when a connection is fetched from the pool -->
+		<property name="testOnBorrow">
+			<value>${sagebionetworks.db.connection.validate}</value>
+		</property>
+		<!-- This is the SQL uses to test if a connection is alive -->
+		<property name="validationQuery">
+			<value>${sagebionetworks.db.connection.validation.sql}</value>
+		</property>
 	</bean>
 
 	<!-- PMF Bean -->
@@ -68,10 +76,6 @@
 
 	<bean id="userGroupDAO" class="org.sagebionetworks.repo.model.jdo.JDOUserGroupDAOImpl" />
 	
-	<!--bean id="authorizationManager" class="org.sagebionetworks.repo.model.jdo.JDOAuthorizationManagerImpl" /-->
-
-
-
 	<!-- The node query dao singleton -->
 	<bean id="fieldTypeDao" class="org.sagebionetworks.repo.model.jdo.JDOFieldTypeDAOImpl" />
 
