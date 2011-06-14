@@ -65,11 +65,16 @@ public class IT700SynapseRClientNoBamboo {
 		String cmd[] = {
 				Helpers.getRPath(),
 				"-e",
-				"library(sbnClient)",
+				"library(synapseClient)",
 				"-e",
-				"setClientConfig(new('ClientConfig', host='http://localhost:8080/services-repository-0.4-SNAPSHOT', sslhost='http://localhost:8080/services-authentication-0.4-SNAPSHOT', session.token='"
-						+ Helpers.getIntegrationTestUser() + "'))", "-e",
-				"sbnClient:::.test()" };
+				"synapseAuthServiceHostName(host='http://localhost:8080/services-authentication-0.4-SNAPSHOT')",
+				"-e",
+				"sessionToken(session.token='"
+						+ Helpers.getIntegrationTestUser() + "')",
+				"-e",
+				"synapseRepoServiceHostName(host='http://localhost:8080/services-repository-0.4-SNAPSHOT')",
+				"-e",
+				"synapseClient:::.test()" };
 		ExternalProcessResult result = Helpers.runExternalProcess(cmd);
 		assertTrue(0 <= result.getStdout().indexOf(" 0 errors, 0 failures"));
 	}
@@ -85,11 +90,16 @@ public class IT700SynapseRClientNoBamboo {
 		String cmd[] = {
 				Helpers.getRPath(),
 				"-e",
-				"library(sbnClient)",
+				"library(synapseClient)",
 				"-e",
-				"setClientConfig(new('ClientConfig', host='http://localhost:8080/services-repository-0.4-SNAPSHOT', sslhost='http://localhost:8080/services-authentication-0.4-SNAPSHOT', session.token='"
-						+ Helpers.getIntegrationTestUser() + "'))", "-e",
-				"sbnClient:::.integrationTest()" };
+				"synapseAuthServiceHostName(host='http://localhost:8080/services-authentication-0.4-SNAPSHOT')",
+				"-e",
+				"sessionToken(session.token='"
+						+ Helpers.getIntegrationTestUser() + "')",
+				"-e",
+				"synapseRepoServiceHostName(host='http://localhost:8080/services-repository-0.4-SNAPSHOT')", 
+				"-e",
+				"synapseClient:::.integrationTest()" };
 		ExternalProcessResult result = Helpers.runExternalProcess(cmd);
 		assertTrue(0 <= result.getStdout().indexOf(" 0 errors, 0 failures"));
 	}

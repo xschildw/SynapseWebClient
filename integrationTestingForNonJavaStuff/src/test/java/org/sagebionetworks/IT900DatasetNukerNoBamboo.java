@@ -20,7 +20,15 @@ public class IT900DatasetNukerNoBamboo {
 	public void testDatasetNuker() throws Exception {
 		String cmd[] = { Helpers.getPython27Path(),
 				"target/non-java-dependencies/datasetNuker.py",
-				"--serviceEndpoint", Helpers.getRepositoryServiceBaseUrl() };
+				"--repoEndpoint",
+				Helpers.getRepositoryServiceBaseUrl(),
+				"--authEndpoint",
+				Helpers.getAuthServiceBaseUrl(),
+				"--user",
+				Helpers.getIntegrationTestUser(),
+				"--password",
+				Helpers.getIntegrationTestUser(),
+		};
 		ExternalProcessResult result = Helpers.runExternalProcess(cmd);
 		assertEquals("", result.getStderr());
 	}
