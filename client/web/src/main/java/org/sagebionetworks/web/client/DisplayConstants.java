@@ -4,8 +4,8 @@ import com.google.gwt.i18n.client.DateTimeFormat;
 
 public class DisplayConstants {
 
-	public static final String SYNAPSEWEB_URL = "https://staging-synapseweb.elasticbeanstalk.com";
-	public static final String AUTH_URL = "https://staging-auth.elasticbeanstalk.com";
+	public static final String SYNAPSEWEB_URL = "https://synapse-alpha.sagebase.org";
+	public static final String AUTH_URL = "https://auth-alpha.sagebase.org";
 	
 	
 	public static final int DEFAULT_GRID_COLUMN_WIDTH_PX = 150;
