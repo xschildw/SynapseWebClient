@@ -85,7 +85,7 @@ public class AccessControlListEditorViewImpl extends LayoutContainer implements 
 	}
 	
 	@Override
-	public void refresh(List<AclEntry> entries, List<AclPrincipal> principals, boolean isEditable) {
+	public void refresh(List<AclEntry> entries, List<AclPrincipal> principals, boolean isInherited) {
 		final ListStore<PermissionsTableEntry> permissionsStore = new ListStore<PermissionsTableEntry>();
 		for(AclEntry aclEntry : entries) {
 			permissionsStore.add(new PermissionsTableEntry(aclEntry));
@@ -94,7 +94,7 @@ public class AccessControlListEditorViewImpl extends LayoutContainer implements 
 	}
 	
 	@Override
-	public void setAclDetails(List<AclEntry> entries, List<AclPrincipal> principals, boolean isEditable) {
+	public void setAclDetails(List<AclEntry> entries, List<AclPrincipal> principals, boolean isInherited) {
 		// setup view
 		this.setLayout(new FlowLayout(10));			
 		Label permissionsLabel = new Label(DisplayConstants.SHARING_PANEL_EXISTING_LABEL + ":");
@@ -108,7 +108,7 @@ public class AccessControlListEditorViewImpl extends LayoutContainer implements 
 			permissionsStore.add(new PermissionsTableEntry(aclEntry));
 		}
 		createPermissionsGrid(permissionsStore);	
-		if(!isEditable) { 
+		if(isInherited) { 
 			permissionsGrid.disable();
 			Label readOnly = new Label(DisplayConstants.PERMISSIONS_INHERITED_TEXT);			
 			add(readOnly);			
