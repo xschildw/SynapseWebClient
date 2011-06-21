@@ -1,3 +1,4 @@
+
 # TODO: Add comment
 # 
 # Author: mfuria
@@ -45,7 +46,7 @@ kSupportedPlatforms <- list(
 {
 	resetSynapseHostConfig()
 	dataLocationPrefs("awss3")
-	.setCache("synapseCacheDir", "/synapseCache")
+	.setCache("synapseCacheDir", gsub("[\\]+", "/", path.expand("~/.synapseCache")))
 	.setCache("supportedRepositoryLocationTypes", c("awss3"))
 	.setCache("layerCodeTypeMap", kSupportedLayerCodeMap)
 	.setCache("supportedLayerStatus", kSupportedLayerStatus)
@@ -53,9 +54,9 @@ kSupportedPlatforms <- list(
 	.setCache("sessionRefreshDurationMin", 60)
 	.setCache("repoServicePath", "repo/v1")
 	.setCache("authServicePath", "auth/v1")
-	.setCache("curlOpts", list(ssl.verifypeer = FALSE))
+	.setCache("curlOpts", list(ssl.verifypeer = FALSE, verbose = FALSE))
 	.setCache("curlHeader", c('Content-Type'="application/json", Accept = "application/json"))
 	.setCache("anonymous", FALSE)
 	.setCache("downloadSuffix", "unpacked")
-	
+	.setCache("debug", FALSE)
 }

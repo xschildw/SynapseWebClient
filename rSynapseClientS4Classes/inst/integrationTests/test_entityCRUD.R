@@ -10,19 +10,20 @@ integrationTestCRUD <- function() {
 	dataset <- list()
 	dataset$name = 'R Integration Test Dataset'
 	dataset$status = 'test create'
-	createdDataset <- synapsePost('/dataset', dataset)
+	createdDataset <- createDataset(entity=dataset)
 	checkEquals(dataset$name, createdDataset$name)
 	checkEquals(dataset$status, createdDataset$status)
 	
 	# Get a dataset
-	storedDataset <- synapseGet(createdDataset$uri)
+	storedDataset <- getDataset(id=createdDataset$id)
 	checkEquals(dataset$name, storedDataset$name)
 	checkEquals(dataset$status, storedDataset$status)
 	
 	# Modify a dataset
 	storedDataset$status <- 'test update'
-	modifiedDataset <- synapsePut(storedDataset$uri, storedDataset)
+	modifiedDataset <- updateDataset(entity=storedDataset)
 	checkEquals(dataset$name, modifiedDataset$name)
+	checkEquals(storedDataset$id, modifiedDataset$id)
 	checkTrue(dataset$status != modifiedDataset$status)
 	checkEquals('test update', modifiedDataset$status)
 	
@@ -33,9 +34,9 @@ integrationTestCRUD <- function() {
 	checkEquals('my new annotation value', storedAnnotations$stringAnnotations$myNewAnnotationKey)
 	
 	# Delete a dataset
-	synapseDelete(modifiedDataset$uri)
+	deleteDataset(id=modifiedDataset$id)
 	
 	# Confirm that its gone
-	checkException(synapseGet(createdDataset$uri))
+	checkException(getDataset(id=modifiedDataset$id))
 }
 
