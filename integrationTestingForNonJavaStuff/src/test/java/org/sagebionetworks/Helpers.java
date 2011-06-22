@@ -37,9 +37,6 @@ public class Helpers {
 	 * @return The endpoint (including servlet prefix) for the auth service
 	 */
 	public static String getAuthServiceBaseUrl() {
-
-		System.getProperties().list(System.out);
-
 		return System.getProperty("org.sagebionetworks.auth.service.base.url");
 	}
 
