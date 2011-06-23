@@ -42,7 +42,7 @@ integrationTestTcgaWorkflow <- function() {
 	
 	#----- Download, unpack, and load the clinical layer of this TCGA dataset  
 	#      because we need it as additional input to this script
-	datasetLayers <- getLayers(entity=dataset)
+	datasetLayers <- getDatasetLayers(entity=dataset)
 	clinicalLayer <- datasetLayers$C
 	clinicalDataFiles <- synapseClient:::.cacheFiles(entity=clinicalLayer)
 	clinicalData <- read.table(clinicalDataFiles[[4]], sep='\t')
