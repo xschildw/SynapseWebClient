@@ -1,5 +1,6 @@
 .synapseGetDelete <- 
-		function(uri, requestMethod, host = synapseRepoServiceHostName(), curlHandle=getCurlHandle(), anonymous = .getCache("anonymous"), path = .getCache("repoServicePath"), opts = .getCache("curlOpts"))
+		function(uri, requestMethod, host = .getRepoEndpointLocation(), curlHandle=getCurlHandle(), 
+				anonymous = .getCache("anonymous"), path = .getRepoEndpointPrefix(), opts = .getCache("curlOpts"))
 {
 
 	## constants
@@ -16,9 +17,9 @@
 
 	# uris formed by the service already have their servlet prefix
 	if(grepl(path, uri)) {
-		uri <- paste(host, uri, sep="/")
+		uri <- paste(host, uri, sep="")
 	}else {
-		uri <- paste(host, path, uri, sep="/")
+		uri <- paste(host, path, uri, sep="")
 	}
 	
 	## Prepare the header. If not an anonymous request, stuff the

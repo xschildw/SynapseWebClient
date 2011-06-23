@@ -7,9 +7,19 @@
 	
 	attr(myCommandArgs, "origFCN") <- base:::commandArgs
 	assignInNamespace("commandArgs", myCommandArgs, "base")
+	
+	# this test can only be run against staging
+	.setCache("orig.authservice.endpoint", synapseAuthServiceEndpoint())
+	.setCache("orig.reposervice.endpoint", synapseRepoServiceEndpoint())
+	synapseAuthServiceEndpoint("https://staging-auth.elasticbeanstalk.com/auth/v1")
+	synapseRepoServiceEndpoint("https://staging-reposervice.elasticbeanstalk.com/repo/v1")
 }
 
 .tearDown <- function() {
+	synapseAuthServiceEndpoint(.getCache("orig.authservice.endpoint"))
+	synapseRepoServiceEndpoint(.getCache("orig.reposervice.endpoint"))
+	.deleteCache("orig.authservice.endpoint")
+	.deleteCache("orig.reposervice.endpoint")
 	assignInNamespace("commandArgs", attr(base:::commandArgs, "origFCN"), "base")
 }
 
@@ -26,12 +36,12 @@ integrationTestTcgaWorkflow <- function() {
 		skipWorkflowTask('this script only handles TCGA colon cancer data')
 	}
 	
-	inputLayer <- getLayer(id=inputLayerId)
+	inputLayer <- getDatasetLayers(id=inputLayerId)
 	if('E' != inputLayer$type) {
 		skipWorkflowTask('this script only handles expression data')
 	}
 	
-	layerAnnotations <- getAnnotations(inputLayer)
+	layerAnnotations <- getAnnotations(entity=inputLayer)
 	if('Level_2' != layerAnnotations$stringAnnotations$format) {
 		skipWorkflowTask('this script ony handles level 2 expression data from TCGA')
 	}
@@ -61,9 +71,9 @@ integrationTestTcgaWorkflow <- function() {
 	storedOutputLayer <- storeLayerData(layerMetadata=outputLayer, layerData=outputData)
 	
 	#----- Add some annotations to our newly stored output layer
-	outputLayerAnnotations <- getAnnotations(storedOutputLayer)
+	outputLayerAnnotations <- getAnnotations(entity=storedOutputLayer)
 	outputLayerAnnotations$stringAnnotations$format <- 'sageMatrix'
-	storedOutputLayerAnnotations <- updateAnnotations(outputLayerAnnotations)
+	storedOutputLayerAnnotations <- updateAnnotations(annotations=outputLayerAnnotations)
 	
 	checkEquals('sageMatrix', storedOutputLayerAnnotations$stringAnnotations$format)
 	

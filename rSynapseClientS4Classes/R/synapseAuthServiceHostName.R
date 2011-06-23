@@ -1,10 +1,21 @@
-synapseAuthServiceHostName <- 
-		function(host)
+synapseAuthServiceEndpoint <- 
+		function(endpoint)
 {
-	if (!missing(host)) {
-		.setCache("authservice.host", host)
+	if (!missing(endpoint)) {
+		.setCache("authservice.endpoint", endpoint)
+		url <- URL(url=endpoint)
+		.setCache("authservice.endpointLocation", paste(url@protocol, '://', url@authority, sep=''))
+		.setCache("authservice.endpointPrefix", url@path)
 	}
 	else {
-		return(.getCache("authservice.host"))
+		return(.getCache("authservice.endpoint"))
 	}
+}
+
+.getAuthEndpointLocation <- function() {
+	.getCache("authservice.endpointLocation")	
+}
+
+.getAuthEndpointPrefix <- function() {
+	.getCache("authservice.endpointPrefix")	
 }
