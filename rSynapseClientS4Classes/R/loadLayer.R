@@ -7,7 +7,7 @@ setGeneric(
 
 setMethod(
 		f = "loadLayer",
-		signature = "layerList",
+		signature = "list",
 		def = function(object){
 			loadLayer(Layer(object))
 		}

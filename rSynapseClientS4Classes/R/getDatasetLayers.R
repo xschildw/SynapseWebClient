@@ -1,4 +1,4 @@
-getLayers <-
+getDatasetLayers <-
 		function(entity=entity, returnS4Objects = FALSE, curlHandle = getCurlHandle(), anonymous = .getCache("anonymous"))
 {
 
@@ -13,7 +13,6 @@ getLayers <-
 	returnVal <- NULL
 	for(i in 1:length(layers)){
 		names(layers)[i] <- layers[[i]]$type
-		class(layers[[i]]) <- 'layerList'
 		if(returnS4Objects) {
 			returnVal <- c(returnVal, Layer(layers[[i]]))
 		}

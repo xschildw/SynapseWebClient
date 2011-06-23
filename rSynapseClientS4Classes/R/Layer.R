@@ -1,37 +1,14 @@
-### class definitions
-#
-#setClass(Class="layerList")
-##setClass(Class="layerFiles")
-
 setClass(
 		Class = "Layer",
 		representation(
-				id = "character",
-				parentId = "character",
-				status = "character",
-				numSamples = "numeric",
-				platform = "character",
-				locations = "character",
-				version = "character",
-				description = "character",
-				processingFacility = "character",
-				creationDate = "character",
-				publicationDate = "character",
-				qcDate = "character",
-				uri = "character",
-				name = "character",
-				previews = "character",
-				cachedFiles = "layerFiles"
+				annotations = "list",
+				cachedFiles = "character"
 		),
 		prototype = NULL
 )
 
 setClass(
 		Class = "MicroArrayLayer",
-		representation(
-				vendor = "character",
-				platform = "character"
-		),
 		contains = "Layer",
 		prototype = NULL
 )
@@ -43,26 +20,17 @@ setClass(
 		),
 		contains = "MicroArrayLayer",
 		prototype = prototype(
-				id = NULL,
-				status = NULL,
-				tissueType = NULL,
-				vendor = NULL,
-				platform = NULL
+				annotations = list(),
+				cachedFiles = c()
 		)
 )
 
 setClass(
 		Class = "GenotypeLayer",
-		representation = representation(
-				
-				
-		),
 		contains = "MicroArrayLayer",
 		prototype = prototype(
-				id = NULL,
-				status = NULL,
-				vendor = NULL,
-				platform = NULL
+				annotations = list(),
+				cachedFiles = c()
 		)
 )
 
@@ -70,9 +38,8 @@ setClass(
 		Class = "PhenotypeLayer",
 		contains = "Layer",
 		prototype = prototype(
-				datasetId = NULL,
-				status = NULL,
-				numRecords = 0
+				annotations = list(),
+				cachedFiles = c()
 		)
 )
 #####
@@ -110,7 +77,7 @@ setGeneric(
 
 setMethod(
 		f = "Layer",
-		signature = "layerList",
+		signature = "list",
 		definition = function(object){
 				map <- .getCache("layerCodeTypeMap")
 				ind <- which(.getCache("layerCodeTypeMap") == object$type)
@@ -123,7 +90,7 @@ setMethod(
 
 setMethod(
 		f = "Layer",
-		signature = c("PhenotypeLayer", "layerList"),
+		signature = c("PhenotypeLayer", "list"),
 		definition = function(object, object2){
 			object@id <- object2$id
 			object@numSamples <- object2$numSamples
@@ -144,7 +111,7 @@ setMethod(
 
 setMethod(
 		f = "Layer",
-		signature = c("ExpressionLayer", "layerList"),
+		signature = c("ExpressionLayer", "list"),
 		definition = function(object, object2){
 			object@id <- object2$id
 			object@numSamples <- object2$numSamples
@@ -165,7 +132,7 @@ setMethod(
 
 setMethod(
 		f = "Layer",
-		signature = c("GenotypeLayer", "layerList"),
+		signature = c("GenotypeLayer", "list"),
 		definition = function(object, object2){
 			object@id <- object2$id
 			object@numSamples <- object2$numSamples
@@ -214,11 +181,11 @@ setMethod(
 		definition = function(object){
 			cat(as.character(class(object)), 
 					"\nlayer type: ",layerType(object),
-					"\n\tlayerId: ", object@id,
-					"\n\tstatus: ", object@status,
-					"\n\tplatform: ", object@platform,
-					"\n\tnumSamples: ", object@numSamples,
-					"\n\ttissue: ", object@tissueType,
+					"\n\tlayerId: ", object@annotations$id,
+					"\n\tstatus: ", object@annotations$status,
+					"\n\tplatform: ", object@annotations$platform,
+					"\n\tnumSamples: ", object@annotations$numSamples,
+					"\n\ttissue: ", object@annotations$tissueType,
 					"\n"
 			)
 			if(!is.null(object@cachedFiles)){
@@ -235,9 +202,9 @@ setMethod(
 			
 			cat(as.character(class(object)),
 					"\nlayer type: ", layerType(object),
-					"\n\tlayerId: ", object@id,
-					"\n\tstatus: ", object@status,
-					"\n\tnumSamples: ", object@numSamples
+					"\n\tlayerId: ", object@annotations$id,
+					"\n\tstatus: ", object@annotations$status,
+					"\n\tnumSamples: ", object@annotations$numSamples
 			)
 			if(!is.null(object@cachedFiles)){
 				cat("\n\tCachedFiles:\n")
