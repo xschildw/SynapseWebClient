@@ -51,22 +51,7 @@
 			<id>atlassian-m2-repository</id>
 			<url>https://m2proxy.atlassian.com/repository/public</url>
 		</repository>
-				<repository>
-			<id>springsource-milestone</id>
-			<url>http://repository.springsource.com/maven/bundles/milestone</url>
-		</repository>
-		<repository>
-			<id>springsource-release</id>
-			<url>http://repository.springsource.com/maven/bundles/release</url>
-		</repository>
-		<repository>
-			<id>springsource-external</id>
-			<url>http://repository.springsource.com/maven/bundles/snapshot</url>
-		</repository>
-		<repository>
-			<id>atlassian-m2-repository</id>
-			<url>https://m2proxy.atlassian.com/repository/public</url>
-		</repository>
+				
 		<repository>
 			<id>mvn-gae-plugin-repo</id>
 			<url>http://maven-gae-plugin.googlecode.com/svn/repository/</url>
