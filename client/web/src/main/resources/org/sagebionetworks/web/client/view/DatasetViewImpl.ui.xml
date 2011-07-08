@@ -175,8 +175,8 @@
 								<td class="last_modified">2-Apr-2011</td>
 							</tr>
 														<tr>
-								<td class="analysis"><a href="network_overview_predictor.html">Standard Predictor Pipeline</a></td>
-								<td class="project"><a href="project_details_predictor.html">Cell Line Predictor</a></td>
+								<td class="analysis"><a href="analysis_predictor.html">Biomarker Prediction</a></td>
+								<td class="project"><a href="project_details_predictor.html">Predictive Modeling</a></td>
 								<td class="last_modified">07-Jul-2011</td>
 							</tr>
 						</table>
