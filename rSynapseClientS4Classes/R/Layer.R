@@ -4,13 +4,10 @@ setClass(
 				annotations = "list",
 				cachedFiles = "character"
 		),
-		prototype = NULL
-)
-
-setClass(
-		Class = "MicroArrayLayer",
-		contains = "Layer",
-		prototype = NULL
+		prototype = prototype(
+				annotations = list(),
+				cachedFiles = character()
+		)
 )
 
 setClass(
@@ -18,55 +15,21 @@ setClass(
 		representation = representation(
 				tissueType = "character"
 		),
-		contains = "MicroArrayLayer",
-		prototype = prototype(
-				annotations = list(),
-				cachedFiles = c()
-		)
+		contains = "Layer"
 )
 
 setClass(
 		Class = "GenotypeLayer",
-		contains = "MicroArrayLayer",
-		prototype = prototype(
-				annotations = list(),
-				cachedFiles = c()
-		)
+		contains = "Layer"
 )
 
 setClass(
 		Class = "PhenotypeLayer",
-		contains = "Layer",
-		prototype = prototype(
-				annotations = list(),
-				cachedFiles = c()
-		)
+		contains = "Layer"
 )
 #####
 ### Constructors for the various Layer types
 #####
-
-Layer <- function(layerType){
-	if(length(layerType) != 1) stop("must supply only one layer type")
-	map <- .getCache("layerCodeTypeMap")
-	ind <- match(layerType, as.character(map))
-	if(is.na(ind)){
-		# unknown layer code
-		className <- "Layer"
-	}else {
-		className <- names(map)[ind]
-	}
-	new(Class=className)
-}
-
-setGeneric(
-	name = "Layer",
-	def = function(object, object2){
-		standardGeneric("Layer")
-	},
-	valueClass = "Layer"
-)
-
 
 setGeneric(
 	name = "layerType",
@@ -75,81 +38,18 @@ setGeneric(
 	}
 )
 
-setMethod(
-		f = "Layer",
-		signature = "list",
-		definition = function(object){
+Layer <- 
+		function(annotations)
+{
 				map <- .getCache("layerCodeTypeMap")
-				ind <- which(.getCache("layerCodeTypeMap") == object$type)
+				ind <- which(.getCache("layerCodeTypeMap") == annotations$type)
 				if(length(ind) == 1){
 					layerClass <- names(map)[ind]
-					Layer(new(Class = layerClass), object)
+					layer <- new(Class = layerClass)
+					layer@annotations <- annotations
+					return(layer)
 				}
-		}	
-)
-
-setMethod(
-		f = "Layer",
-		signature = c("PhenotypeLayer", "list"),
-		definition = function(object, object2){
-			object@id <- object2$id
-			object@numSamples <- object2$numSamples
-			object@status <- as.character(object2$status)
-			object@processingFacility <- as.character(object2$processingFacility)
-			object@publicationDate <- as.character(object2$publicationDate)
-			object@version <- as.character(object2$version)
-			object@creationDate <- as.character(object2$creationDate)
-			object@uri <- as.character(object2$uri)
-			object@locations <- as.character(object2$locations)
-			object@parentId <- as.character(object2$parentId)
-			object@description <- as.character(object2$description)
-			object@name <- as.character(object2$name)
-			object@previews <- as.character(object2$previews)
-			return(object)
-		}
-)
-
-setMethod(
-		f = "Layer",
-		signature = c("ExpressionLayer", "list"),
-		definition = function(object, object2){
-			object@id <- object2$id
-			object@numSamples <- object2$numSamples
-			object@status <- as.character(object2$status)
-			object@processingFacility <- as.character(object2$processingFacility)
-			object@publicationDate <- as.character(object2$publicationDate)
-			object@version <- as.character(object2$version)
-			object@creationDate <- as.character(object2$creationDate)
-			object@uri <- as.character(object2$uri)
-			object@locations <- as.character(object2$locations)
-			object@parentId <- as.character(object2$parentId)
-			object@description <- as.character(object2$description)
-			object@name <- as.character(object2$name)
-			object@previews <- as.character(object2$previews)
-			return(object)
-		}
-)
-
-setMethod(
-		f = "Layer",
-		signature = c("GenotypeLayer", "list"),
-		definition = function(object, object2){
-			object@id <- object2$id
-			object@numSamples <- object2$numSamples
-			object@status <- as.character(object2$status)
-			object@processingFacility <- as.character(object2$processingFacility)
-			object@publicationDate <- as.character(object2$publicationDate)
-			object@version <- as.character(object2$version)
-			object@creationDate <- as.character(object2$creationDate)
-			object@uri <- as.character(object2$uri)
-			object@locations <- as.character(object2$locations)
-			object@parentId <- as.character(object2$parentId)
-			object@description <- as.character(object2$description)
-			object@name <- as.character(object2$name)
-			object@previews <- as.character(object2$previews)
-			return(object)
-		}
-)
+}	
 
 
 setGeneric(
@@ -161,9 +61,18 @@ setGeneric(
 
 setMethod(
 		f = "getLocations",
+		signature = "character",
+		definition = function(object){
+			return(synapseGet(object))
+		}
+		
+)
+
+setMethod(
+		f = "getLocations",
 		signature = "Layer",
 		definition = function(object){
-			return(synapseGet(object@locations))
+			return(synapseGet(annotations(object)$locations))
 		}
 )
 
@@ -175,78 +84,61 @@ setMethod(
 		}
 )
 
-setMethod(
-		f = "show",
-		signature = "ExpressionLayer",
-		definition = function(object){
-			cat(as.character(class(object)), 
-					"\nlayer type: ",layerType(object),
-					"\n\tlayerId: ", object@annotations$id,
-					"\n\tstatus: ", object@annotations$status,
-					"\n\tplatform: ", object@annotations$platform,
-					"\n\tnumSamples: ", object@annotations$numSamples,
-					"\n\ttissue: ", object@annotations$tissueType,
-					"\n"
-			)
-			if(!is.null(object@cachedFiles)){
-				cat("\n\tCachedFiles:\n")
-				cat(paste("\t",paste(object@cachedFiles, collapse="\n\t"), sep=""),"\n")
+setGeneric(
+		name = "annotations",
+		def = function(object){
+			standardGeneric("annotations")
 			}
+)
+
+setMethod(
+	f = "annotations",
+	signature = "Layer",
+	definition = function(object){
+		return(object@annotations)
+	}
+)
+
+setGeneric(
+		name="annotations<-", 
+		def=function(object,value){
+			standardGeneric("annotations<-")
 		}
 )
 
 setMethod(
-		f = "show",
+		f = "annotations<-",
 		signature = "Layer",
-		definition = function(object){
-			
-			cat(as.character(class(object)),
-					"\nlayer type: ", layerType(object),
-					"\n\tlayerId: ", object@annotations$id,
-					"\n\tstatus: ", object@annotations$status,
-					"\n\tnumSamples: ", object@annotations$numSamples
-			)
-			if(!is.null(object@cachedFiles)){
-				cat("\n\tCachedFiles:\n")
-				cat(paste("\t",paste(object@cachedFiles, collapse="\n\t"), sep=""),"\n")
-			}
+		definition = function(object, value){
+			object@annotations <- value
+			return(object)
 		}
 )
 
 setMethod(
-		f = "show",
-		signature = "MicroArrayLayer",
-		definition = function(object){
-			cat(as.character(class(object)), 
-					"\nlayer type: ",layerType(object),
-					"\n\tlayerId: ", object@id,
-					"\n\tstatus: ", object@status,
-					"\n\tplatform: ", object@platform,
-					"\n\tnumSamples: ", object@numSamples,
-					"\n"
-			)
-			if(!is.null(object@cachedFiles)){
-				cat("\n\tCachedFiles:\n")
-				cat(paste("\t",paste(object@cachedFiles, collapse="\n\t"), sep=""),"\n")
-			}
+	f = "show",
+	signature = "Layer",
+	definition = function(object){
+		for(slotName in slotNames(object)){
+			cat("@", slotName, "\n", sep="")
+			print(slot(object, slotName))
+			cat("\n")
+		}
+	}	
+)
+
+
+setReplaceMethod(
+		f = "annotations",
+		signature(object="Layer", value="list"),
+		function(object, value){
+			object@annotations <- value
+			return(object)
 		}
 )
 
-setMethod(
-		f = "show",
-		signature = "PhenotypeLayer",
-		definition = function(object){
-			
-			cat(as.character(class(object)),
-					"\nlayer type: ", layerType(object),
-					"\n\tlayerId: ", object@id,
-					"\n\tstatus: ", object@status,
-					"\n\tnumSamples: ", object@numSamples, 
-					"\n"
-			)
-			if(!is.null(object@cachedFiles)){
-				cat("\n\tCachedFiles:\n")
-				cat(paste("\t",paste(object@cachedFiles, collapse="\n\t"), sep=""),"\n")
-			}
-		}
-)
+
+
+
+
+

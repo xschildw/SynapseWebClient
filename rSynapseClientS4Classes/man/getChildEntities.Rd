@@ -4,53 +4,39 @@
 \alias{getLayerPreviews}
 \alias{getProjectDatasets}
 \alias{getDatasetLayers}
-%- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-TODO write documentation
+	Get Annotations for Child Entities
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
+	Returns an array of lists, each of which contain annotations for entities that are children
+	of the entity provided.
 }
 \usage{
-getLayerLocations(entity, offset=1, limit=100)
+	getLayerLocations(entity, offset=1, limit=100)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{entity}{
-	%%     ~~Describe \code{entity} here~~
+		The parent entity whose child entities should be returned
 	}
   \item{offset}{
-	%%     ~~Describe \code{offset} here~~
+		How many entities should be skipped
 	}
   \item{limit}{
-	%%     ~~Describe \code{limit} here~~
+		The maximum number of entities to return
 	}
 }
 \details{
 %%  ~~ If necessary, more details than the description above ~~
 }
 \value{
-%%  ~Describe the value returned
-%%  If it is a LIST, use
-%%  \item{comp1 }{Description of 'comp1'}
-%%  \item{comp2 }{Description of 'comp2'}
-%% ...
+	An array of lists, which each list containing the annotations for a single child entity.
 }
-\references{
-%% ~put references to the literature/web site here ~
-}
+
 \author{
-%%  ~~who you are~~
-}
-\note{
-%%  ~~further notes~~
+	Nicole Deflaux
 }
 
-%% ~Make other sections like Warning with \section{Warning }{....} ~
-
-\seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
-}
 \examples{
 ## Not Run
 
