@@ -1,44 +1,58 @@
 .deleteEntity <- 
-		function(kind, id, curlHandle = getCurlHandle(), anonymous = .getCache("anonymous"))
+		function(kind, entity)
 {
-	if(length(id) != 1){
-		stop("multiple ids provided")
+	
+	if(missing(entity)) {
+		stop("missing entity parameter")
 	}
 	
-	uri <- paste("/", kind, id, sep = "/")
-	
+	# entity parameter is an entity	
+	if(is.list(entity)){
+		if(!"uri" %in% names(entity)){
+			stop("the entity does not have a uri")
+		}
+		uri <- entity$uri
+	}
+	# entity parameter is an entity id
+	else {
+		if(length(entity) != 1){
+			stop("pass an entity or a single entity id to this method")
+		}
+		uri <- paste("/", kind, entity, sep = "/")
+	}	
+
 	## No results are returned by this
-	synapseDelete(uri = uri, curlHandle = curlHandle, anonymous = anonymous)
+	synapseDelete(uri=uri, anonymous=FALSE)
 }
 
 # TODO can we dynamically generate these functions?
 
 deleteDataset <- 
-		function(id, curlHandle = getCurlHandle(), anonymous = .getCache("anonymous"))
+		function(entity)
 {
-	.deleteEntity("dataset", id, curlHandle, anonymous)
+	.deleteEntity(kind="dataset", entity=entity)
 }
 
 deleteLayer <- 
-		function(id, curlHandle = getCurlHandle(), anonymous = .getCache("anonymous"))
+		function(entity)
 {
-	.deleteEntity("layer", id, curlHandle, anonymous)
+	.deleteEntity(kind="layer", entity=entity)
 }
 
 deleteLocation <- 
-		function(id, curlHandle = getCurlHandle(), anonymous = .getCache("anonymous"))
+		function(entity)
 {
-	.deleteEntity("location", id, curlHandle, anonymous)
+	.deleteEntity(kind="location", entity=entity)
 }
 
 deletePreview <- 
-		function(id, curlHandle = getCurlHandle(), anonymous = .getCache("anonymous"))
+		function(entity)
 {
-	.deleteEntity("preview", id, curlHandle, anonymous)
+	.deleteEntity(kind="preview", entity=entity)
 }
 
 deleteProject <- 
-		function(id, curlHandle = getCurlHandle(), anonymous = .getCache("anonymous"))
+		function(entity)
 {
-	.deleteEntity("project", id, curlHandle, anonymous)
+	.deleteEntity(kind="project", entity=entity)
 }

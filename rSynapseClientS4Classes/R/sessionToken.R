@@ -1,21 +1,24 @@
-sessionToken <- 
-		function(session.token, check.validity=FALSE, refresh.duration = .getCache("sessionRefreshDurationMin"))
+synapseSessionToken <- 
+		function(sessionToken, checkValidity=FALSE, refreshDuration = .getCache("sessionRefreshDurationMin"))
 {
-	if (!missing(session.token)) {
-		if(is.null(session.token)) session.token <- ""
-		if(check.validity){
-			refreshSessionToken(session.token)
+	if (!missing(sessionToken)) {
+		if(is.null(sessionToken)) sessionToken <- ""
+		if(checkValidity){
+			synapseRefreshSessionToken(sessionToken)
 		}
-		.setCache("session.token", session.token)
-	}else {
-		session.token <- .getCache("session.token")
-		elapsed.time.min <-  (as.numeric(Sys.time()) - as.numeric(.getCache("sessionTimestamp")))/60
-		if(!is.null(.getCache("sessionTimestamp")) 
-				&(check.validity || elapsed.time.min >= refresh.duration)){
-			refreshSessionToken(session.token)
+		.setCache("sessionToken", sessionToken)
+	} else {
+		# Refresh sessionToken as applicable
+		if(checkValidity) {
+			synapseRefreshSessionToken(sessionToken)
+		} else if(!is.null(.getCache("sessionTimestamp"))) {
+			elapsedTimeMin <-  (as.numeric(Sys.time()) - as.numeric(.getCache("sessionTimestamp")))/60
+			if(elapsedTimeMin >= refreshDuration) {
+				synapseRefreshSessionToken(sessionToken)
+			} 
 		}
-		if(is.null(session.token)) session.toke <- ""
-		return(session.token)
+		# This could be null, but that's ok
+		.getCache("sessionToken")
 	}
 }
 

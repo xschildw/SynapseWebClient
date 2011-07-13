@@ -5,22 +5,22 @@
 ###############################################################################
 
 setClass(
-		Class = "URL",
+		Class = ".ParsedUrl",
 		representation = representation(
-							url = "character",
-							protocol = "character",
-							authority = "character",
-							host = "character",
-							port = "character",
-							queryString = "character",
-							path = "character",
-							file = "character",
-							pathPrefix = "character"
-						),
+				url = "character",
+				protocol = "character",
+				authority = "character",
+				host = "character",
+				port = "character",
+				queryString = "character",
+				path = "character",
+				file = "character",
+				pathPrefix = "character"
+		),
 		prototype = prototype(url = NULL)
 )
 
-URL <- function(url){
+.ParsedUrl <- function(url){
 	
 	## protocol
 	if(length(grep("://", url)) == 0){
@@ -28,7 +28,7 @@ URL <- function(url){
 	}else{
 		protocol <- gsub("://.+$","",url)
 	}
-	## host
+	## authority which is host[:port]
 	if(protocol == ""){
 		tmp <- gsub("^/+", "", url)
 	}else{
@@ -45,7 +45,7 @@ URL <- function(url){
 	}
 	rm(tmp)
 	
-	##query string
+	## query string
 	queryString <- ""
 	if(length(grep("\\?", url)) != 0){
 		queryString <- gsub("^.+\\?", "", url)
@@ -63,15 +63,15 @@ URL <- function(url){
 	pathPrefix <- gsub(paste("/", file, "$", sep=""), "", path)
 	
 	new(
-		Class = "URL",
-		url = url,
-		protocol = protocol,
-    authority = authority,
-		host = host,
-    port = port,
-		queryString = queryString,
-		path = path,
-		file = file,
-		pathPrefix = pathPrefix
+			Class = ".ParsedUrl",
+			url = url,
+			protocol = protocol,
+			authority = authority,
+			host = host,
+			port = port,
+			queryString = queryString,
+			path = path,
+			file = file,
+			pathPrefix = pathPrefix
 	)
 }

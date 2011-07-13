@@ -23,6 +23,16 @@
 	assignInNamespace("commandArgs", attr(base:::commandArgs, "origFCN"), "base")
 }
 
+integrationTestSageBioTCGACurationProjectChildEntityGet <- function() {
+	projects <- synapseQuery(query='select * from project where project.name == "SageBio TCGA Curation"')
+	project <- getProject(entity=projects$project.id[1])
+	datasets <- getProjectDatasets(entity=project)
+	checkTrue(3 <= datasets$totalNumberOfResults)
+	checkTrue('coad' %in% lapply(datasets$results, function(x){x$name}))
+	checkTrue('cesc' %in% lapply(datasets$results, function(x){x$name}))
+	checkTrue('prad' %in% lapply(datasets$results, function(x){x$name}))
+}
+
 integrationTestTcgaWorkflow <- function() {
 	
 	#----- Unpack our command line parameters
@@ -31,12 +41,14 @@ integrationTestTcgaWorkflow <- function() {
 	
 	
 	#----- Decide whether this script wants to work on this input layer
-	dataset <- getDataset(id=inputDatasetId)
+	dataset <- getDataset(entity=inputDatasetId)
 	if('coad' != dataset$name) {
 		skipWorkflowTask('this script only handles TCGA colon cancer data')
 	}
 	
-	inputLayer <- getDatasetLayers(id=inputLayerId)
+
+	inputLayer <- getLayer(entity=inputLayerId)
+
 	if('E' != inputLayer$type) {
 		skipWorkflowTask('this script only handles expression data')
 	}
@@ -47,15 +59,29 @@ integrationTestTcgaWorkflow <- function() {
 	}
 	
 	#----- Download, unpack, and load the expression layer
-	expressionDataFiles <- synapseClient:::.cacheFiles(entity=inputLayer)
+	expressionDataFiles <- loadLayerData(entity=inputLayer)
 	# TODO load each of the files into R objects
 	
 	#----- Download, unpack, and load the clinical layer of this TCGA dataset  
 	#      because we need it as additional input to this script
+
 	datasetLayers <- getDatasetLayers(entity=dataset)
-	clinicalLayer <- datasetLayers$C
-	clinicalDataFiles <- synapseClient:::.cacheFiles(entity=clinicalLayer)
+	####
+	## TODO fix this hack. m.furia
+	layerTypes <- NULL
+	for(i in 1:length(datasetLayers$results)){
+		layerTypes[i] <- datasetLayers$results[[i]]$type
+	}
+	ind <- which(layerTypes == "C")
+	checkTrue(length(ind) > 0)
+	## end hack
+	####
+	clinicalLayer <- datasetLayers$results[[ind[1]]]
+	clinicalDataFiles <- loadLayerData(entity=clinicalLayer)
+
 	clinicalData <- read.table(clinicalDataFiles[[4]], sep='\t')
+	# TODO getting error "Error in !header : invalid argument type"
+	#clinicalData <- read.table(clinicalDataFiles[[4]], sep='\t', header='TRUE')
 	
 	#----- Do interesting work with the clinical and expression data R objects
 	#      e.g., make a matrix by combining expression and clinical data
@@ -64,7 +90,7 @@ integrationTestTcgaWorkflow <- function() {
 	#----- Now we have an analysis result, add the metadata for the new layer 
 	#      to Synapse and upload the analysis result
 	outputLayer <- list()
-	outputLayer$parentId <- inputDatasetId
+	outputLayer$parentId <- '1894' # a dataset in a project created for these tests
 	outputLayer$name <- paste(dataset$name, inputLayer$name, clinicalLayer$name, sep='-')
 	outputLayer$type <- 'E'
 	

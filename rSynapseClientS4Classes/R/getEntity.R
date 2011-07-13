@@ -1,43 +1,56 @@
 .getEntity <- 
-		function(kind, id, curlHandle = getCurlHandle(), anonymous = .getCache("anonymous"))
+		function(kind, entity)
 {
-	if(length(id) != 1){
-		stop("multiple ids provided")
+	if(missing(entity)) {
+		stop("missing entity parameter")
 	}
 	
-	uri <- paste("/", kind, id, sep = "/")
+	# entity parameter is an entity	
+	if(is.list(entity)){
+		if(!"uri" %in% names(entity)){
+			stop("the entity does not have a uri")
+		}
+		uri <- entity$uri
+	}
+	# entity parameter is an entity id
+	else {
+		if(length(entity) != 1){
+			stop("pass an entity or a single entity id to this method")
+		}
+		uri <- paste("/", kind, entity, sep = "/")
+	}	
 	
-	synapseGet(uri = uri, curlHandle = curlHandle, anonymous = anonymous)
+	synapseGet(uri=uri, anonymous=FALSE)
 }
 
 # TODO can we dynamically generate these functions?
 
 getDataset <- 
-		function(id, curlHandle = getCurlHandle(), anonymous = .getCache("anonymous"))
+		function(entity)
 {
-	.getEntity("dataset", id, curlHandle, anonymous)
+	.getEntity(kind="dataset", entity=entity)
 }
 
 getLayer <- 
-		function(id, curlHandle = getCurlHandle(), anonymous = .getCache("anonymous"))
+		function(entity)
 {
-	.getEntity("layer", id, curlHandle, anonymous)
+	.getEntity(kind="layer", entity=entity)
 }
 
 getLocation <- 
-		function(id, curlHandle = getCurlHandle(), anonymous = .getCache("anonymous"))
+		function(entity)
 {
-	.getEntity("location", id, curlHandle, anonymous)
+	.getEntity(kind="location", entity=entity)
 }
 
 getPreview <- 
-		function(id, curlHandle = getCurlHandle(), anonymous = .getCache("anonymous"))
+		function(entity)
 {
-	.getEntity("preview", id, curlHandle, anonymous)
+	.getEntity(kind="preview", entity=entity)
 }
 
 getProject <- 
-		function(id, curlHandle = getCurlHandle(), anonymous = .getCache("anonymous"))
+		function(entity)
 {
-	.getEntity("project", id, curlHandle, anonymous)
+	.getEntity(kind="project", entity=entity)
 }

@@ -21,17 +21,17 @@
 	httpBody <- .toJSON(entity)
 	
 	## Prepare the header. If not an anonymous request, stuff the
-	## session token into the header
+	## sessionToken into the header
 	header <- .getCache("curlHeader")
-	if(!anonymous){
-		header <- c(header, sessionToken = sessionToken())
+	if(!anonymous && !is.null(synapseSessionToken())){
+		header <- c(header, sessionToken = synapseSessionToken())
 	}
 	if("PUT" == requestMethod) {
 		# Add the ETag header
 		header <- c(header, ETag = entity$etag)
 	}
 	
-	# uris formed by the service already have their servlet prefix
+	## uris formed by the service already have their servlet prefix
 	if(grepl(path, uri)) {
 		uri <- paste(host, uri, sep="")
 	}
@@ -55,16 +55,17 @@
 		message("responseBody: ", response)
 	}
 	
-	checkCurlResponse(curlHandle, response)
+	.checkCurlResponse(curlHandle, response)
 	
 	## Parse response and prepare return value
 	tryCatch(
-			fromJSON(response),
+			rjson::fromJSON(response),
 			error = function(e){NULL}
 	)
 }
 
-# rjson does not correctly serialize empty lists, it represents them as empty arrays instead of empty dictionaries
+## Below is a modified version of rjson.toJSON
+## rjson does not correctly serialize empty lists, it represents them as empty arrays instead of empty dictionaries
 .toJSON <-
 		function (x) 
 {

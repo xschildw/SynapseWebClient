@@ -1,32 +1,51 @@
 .getChildEntities <- 
-		function(entity, childKind, curlHandle = getCurlHandle(), anonymous = .getCache("anonymous"))
+		function(entity, offset, limit, kind, childKind)
 {
-	uri <- paste(entity$uri, childKind, sep = "/")
-	synapseGet(uri = uri, curlHandle = curlHandle, anonymous = anonymous)
+	if(missing(entity)) {
+		stop("missing entity parameter")
+	}
+
+	# entity parameter is an entity	
+	if(is.list(entity)){
+		if(!"uri" %in% names(entity)){
+			stop("the entity does not have a uri")
+		}
+		## TODO figure out how to in R do something like entity${$childKind}
+		uri <- sprintf("%s/%s?limit=%s&offset=%s", entity$uri, childKind, limit, offset)
+	}
+	# entity parameter is an entity id
+	else {
+		if(length(entity) != 1){
+			stop("pass an entity or a single entity id to this method")
+		}
+		uri <- sprintf("/%s/%s/%s?limit=%s&offset=%s", kind, entity, childKind, limit, offset)
+	}	
+	
+	synapseGet(uri=uri, anonymous=FALSE)
 }
 
 # TODO can we dynamically generate these functions?
 
 getProjectDatasets <- 
-		function(entity, curlHandle = getCurlHandle(), anonymous = .getCache("anonymous"))
+		function(entity, offset=1, limit=100)
 {
-	.getChildEntities(entity=entity, childKind="dataset", curlHandle = curlHandle, anonymous = anonymous)
+	.getChildEntities(entity=entity, offset=offset, limit=limit, kind="project", childKind="dataset")
 }
 
 getDatasetLayers <- 
-		function(entity, curlHandle = getCurlHandle(), anonymous = .getCache("anonymous"))
+		function(entity, offset=1, limit=100)
 {
-	.getChildEntities(entity=entity, childKind="layer", curlHandle = curlHandle, anonymous = anonymous)
+	.getChildEntities(entity=entity, offset=offset, limit=limit, kind="dataset", childKind="layer")
 }
 
 getLayerLocations <- 
-		function(entity, curlHandle = getCurlHandle(), anonymous = .getCache("anonymous"))
+		function(entity, offset=1, limit=100)
 {
-	.getChildEntities(entity=entity, childKind="location", curlHandle = curlHandle, anonymous = anonymous)
+	.getChildEntities(entity=entity, offset=offset, limit=limit, kind="layer", childKind="location")
 }
 
 getLayerPreviews <- 
-		function(entity, curlHandle = getCurlHandle(), anonymous = .getCache("anonymous"))
+		function(entity, offset=1, limit=100)
 {
-	.getChildEntities(entity=entity, childKind="preview", curlHandle = curlHandle, anonymous = anonymous)
+	.getChildEntities(entity=entity, offset=offset, limit=limit, kind="layer", childKind="preview")
 }

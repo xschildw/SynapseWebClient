@@ -1,15 +1,8 @@
-#export(
-#	"getAnnotations",
-#	"getDatasetSummary",
-#	"getDatasetSummaries",
-#	"InitializeClientConfig",
-#	"sbnHostName",
-#	"sbnLogin",
-#	"sbnSslHostName",
-#	"sbnServiceName",
-#	"sbnServiceURI",
-#	"sbnServiceVersion"
-#)
+# TODO we need to fix our unit tests before we can Import instead of Depend upon RCurl
+# import(RCurl)
+importFrom(methods,new)
+
+# Export everything not beginning with a period
 exportPattern('*')
 
 

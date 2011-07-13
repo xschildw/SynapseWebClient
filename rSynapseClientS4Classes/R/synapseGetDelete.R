@@ -15,7 +15,7 @@
 		stop("a uri must be supplied of R type character")
 	}
 
-	# uris formed by the service already have their servlet prefix
+	## uris formed by the service already have their servlet prefix
 	if(grepl(path, uri)) {
 		uri <- paste(host, uri, sep="")
 	}else {
@@ -23,10 +23,10 @@
 	}
 	
 	## Prepare the header. If not an anonymous request, stuff the
-	## session token into the header
+	## sessionToken into the header
 	header <- .getCache("curlHeader")
-	if(!anonymous){
-		header <- c(header, sessionToken = sessionToken())
+	if(!anonymous && !is.null(synapseSessionToken())) {
+		header <- c(header, sessionToken = synapseSessionToken())
 	}
 	
 	## Submit request and check response code
@@ -40,14 +40,15 @@
 	)
 	if(.getCache("debug")) {
 		message(d$value())
-		message("response: ", response)
+		##message("requestBody: ", httpBody)
+		message("responseBody: ", response)
 	}
 	
-	checkCurlResponse(curlHandle, response)
+	.checkCurlResponse(curlHandle, response)
 	
 	if("GET" == requestMethod) {
 		## Parse response and prepare return value
-		fromJSON(response)
+		rjson::fromJSON(response)
 	}
 }
 
