@@ -9,10 +9,10 @@ synapseDownloadFile  <-
 }
 
 synapseDownloadFileToDestination  <- 
-		function (url, checksum, destfile, curlHandle = getCurlHandle(), opts = .getCache("curlOpts"))
+		function (url, destfile, checksum, curlHandle = getCurlHandle(), opts = .getCache("curlOpts"))
 {
 	## Download the file to a user-specified location
-	if(file.exists(destfile)) {
+	if(file.exists(destfile) & !missing(checksum)) {
 		localFileChecksum <- md5sum(destfile)
 		if(checksum == localFileChecksum) {
 			# No need to download
