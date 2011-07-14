@@ -1,4 +1,4 @@
-.curl_writer_open <-
+.curlWriterOpen <-
 		function(filename)
 {
 	if (!is.character(filename) || 1L != length(filename))
@@ -13,21 +13,20 @@
 	.Call("writer_open", filename)
 }
 
-.curl_writer_close <-
+.curlWriterClose <-
 		function(ext)
 {
 	.Call("writer_close", ext)
 }
 
-.curl_writer_download <-
-		function(url, filename=tempfile(), writeFunction=.getCache('curlWriter'))
+.curlWriterDownload <-
+		function(url, destfile=tempfile(), curlHandle = getCurlHandle(), writeFunction=.getCache('curlWriter'))
 {
 	
-	ext <- .curl_writer_open(filename)
-	on.exit(.curl_writer_close(ext))
-	status <- curlPerform(URL=url, writefunction=writeFunction,
+	ext <- .curlWriterOpen(destfile)
+	on.exit(.curlWriterClose(ext))
+	response <- curlPerform(URL=url, writefunction=writeFunction,
 			writedata=ext)
-	if (0L != status)
-		stop("'curlPerform' failed; status: ", status)
-	filename
+	.checkCurlResponse(curlHandle, response)
+	return(destfile)
 }

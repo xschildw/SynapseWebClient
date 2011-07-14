@@ -12,6 +12,8 @@ synapseDownloadFileToDestination  <-
 		function (url, destfile, checksum, curlHandle = getCurlHandle(), opts = .getCache("curlOpts"))
 {
 	## Download the file to a user-specified location
+	## if checksum is missing, don't check local file before 
+	## download
 	if(file.exists(destfile) & !missing(checksum)) {
 		localFileChecksum <- md5sum(destfile)
 		if(checksum == localFileChecksum) {
@@ -26,14 +28,17 @@ synapseDownloadFileToDestination  <-
 		dir.create(downloadDir, recursive=TRUE)
 	}
 	
-	writeBin(getBinaryURL(url, curl = curlHandle, .opts = opts), con = destfile)
+	## download to temp file first so that the existing local file (if there is one) is left in place
+	## if the download fails
+	tmpFile <- tempfile()
 	tryCatch(
-			.checkCurlResponse(curlHandle, paste(readLines(con=destfile, warn=FALSE), collapse='')), 
+			.curlWriterDownload(url=url, destfile=tmpFile),
 			error = function(ex){
-				file.remove(destfile)
+				file.remove(tmpFile)
 				stop(ex)
 			}
 	)
+	file.rename(tmpFile, destfile)
 	return(destfile)
 }
 
