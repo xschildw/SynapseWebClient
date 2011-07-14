@@ -2,6 +2,9 @@
 # import(RCurl)
 importFrom(methods,new)
 
+## package has a dynamic library
+useDynLib(synapseClient)
+
 # Export everything not beginning with a period
 exportPattern('*')
 
