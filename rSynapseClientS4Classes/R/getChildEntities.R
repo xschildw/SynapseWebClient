@@ -1,15 +1,13 @@
 .getChildEntities <- 
 		function(entity, offset, limit, kind, childKind)
 {
-	if(missing(entity)) {
-		stop("missing entity parameter")
-	}
-
+	retVal <- list()
 	# entity parameter is an entity	
 	if(is.list(entity)){
 		if(!"uri" %in% names(entity)){
 			stop("the entity does not have a uri")
 		}
+		retVal$parent <- .
 		## TODO figure out how to in R do something like entity${$childKind}
 		uri <- sprintf("%s/%s?limit=%s&offset=%s", entity$uri, childKind, limit, offset)
 	}
@@ -35,7 +33,8 @@ getProjectDatasets <-
 getDatasetLayers <- 
 		function(entity, offset=1, limit=100)
 {
-	.getChildEntities(entity=entity, offset=offset, limit=limit, kind="dataset", childKind="layer")
+	result <- 
+	children <- .jsonListToDataFrame(.getChildEntities(entity=entity, offset=offset, limit=limit, kind="dataset", childKind="layer")$results)
 }
 
 getLayerLocations <- 
