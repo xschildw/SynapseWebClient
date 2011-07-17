@@ -5,6 +5,8 @@
 static const R_CallMethodDef callMethods[] = {
     {".writer_open", (DL_FUNC) &writer_open, 1},
     {".writer_close", (DL_FUNC) &writer_close, 1},
+	{".reader_open", (DL_FUNC) &writer_open, 1},
+    {".reader_close", (DL_FUNC) &writer_close, 1},
     {NULL, NULL, 0}
 };
 

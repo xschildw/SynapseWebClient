@@ -22,7 +22,6 @@
 .curlWriterDownload <-
 		function(url, destfile=tempfile(), curlHandle = getCurlHandle(), writeFunction=.getCache('curlWriter'))
 {
-	
 	ext <- .curlWriterOpen(destfile)
 	on.exit(.curlWriterClose(ext))
 	response <- curlPerform(URL=url, writefunction=writeFunction,

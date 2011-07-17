@@ -31,12 +31,12 @@ setClass(
 ### Constructors for the various Layer types
 #####
 
-setGeneric(
-	name = "layerType",
-	def = function(object){
-		standardGeneric("layerType")
-	}
-)
+#setGeneric(
+#	name = "layerType",
+#	def = function(object){
+#		standardGeneric("layerType")
+#	}
+#)
 
 Layer <- 
 		function(annotations)
@@ -76,13 +76,13 @@ setMethod(
 		}
 )
 
-setMethod(
-		f = "layerType",
-		signature = "Layer",
-		definition = function(object){
-			return(.getCache("layerCodeTypeMap")[[as.character(class(object))]])
-		}
-)
+#setMethod(
+#		f = "layerType",
+#		signature = "Layer",
+#		definition = function(object){
+#			return(.getCache("layerCodeTypeMap")[[as.character(class(object))]])
+#		}
+#)
 
 setGeneric(
 		name = "annotations",

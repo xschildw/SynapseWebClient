@@ -1,9 +1,17 @@
 synapseLogin <- 
-		function(username, password, host = .getAuthEndpointLocation(), path = .getAuthEndpointPrefix())
+		function(username, password)
 {
 	## constants
 	kService <- "/session"
 	## end constants
+	
+	## get auth service endpoint and prefix from memory cache
+	host = .getAuthEndpointLocation()
+	path = .getAuthEndpointPrefix()
+	
+	if(missing(password)){
+		password <- .getPassword()
+	}
 	
 	entity <- list()
 	entity$email <- username
@@ -17,7 +25,42 @@ synapseLogin <-
 				)
 	
 	## Cache the sessionToken. No need to check validity since it was just created
-	synapseSessionToken(response$sessionToken, checkValidity=FALSE)
+	sessionToken(response$sessionToken, checkValidity=FALSE)
 	.setCache("sessionTimestamp", Sys.time())
 	message(paste("Welcome ", response$displayName, "!\n", sep=""))
+}
+
+synapseLogout <-
+		function(localOnly=FALSE)
+{
+	## constants
+	kService <- "/session"
+	## end constants
+	
+	## get auth service endpoint and prefix from memory cache
+	host = .getAuthEndpointLocation()
+	path = .getAuthEndpointPrefix()
+	
+	entity <- list(sessionToken = sessionToken())
+	
+	if(!localOnly){
+		response <- synapseDelete(uri = kService,
+				entity = entity,
+				host = host,
+				path = path
+		)
+	}
+	
+	sessionToken(NULL)
+}
+
+.getPassword <- function(){
+	cat("Password: ")
+	## this only suppresses output in unix-like terminals
+	## TODO: add support for suppressing output in DOS terminals and GUI interfaces
+	system("stty -echo")
+	password <- readline()
+	system("stty echo")
+	cat("\n")
+	return(password)
 }

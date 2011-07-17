@@ -1,29 +1,26 @@
 \name{synapseLogin}
 \alias{synapseLogin}
-%- Also NEED an '\alias' for EACH other topic documented here.
+\alias{synapseLogout}
+\alias{.getPassword}
 \title{
-TODO write documentation
+	Login to Synapse
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
+	Logs the user into synapse. 
 }
 \usage{
-synapseLogin(username, password, host = .getAuthEndpointLocation(), path = .getAuthEndpointPrefix())
+	synapseLogin(username, password)
+	synapseLogout()
+	.getPassword()
 }
-%- maybe also 'usage' for other objects documented here.
+
 \arguments{
   \item{username}{
-%%     ~~Describe \code{username} here~~
-}
+		Synapse username
+	}
   \item{password}{
-%%     ~~Describe \code{password} here~~
-}
-  \item{host}{
-%%     ~~Describe \code{host} here~~
-}
-  \item{path}{
-%%     ~~Describe \code{path} here~~
-}
+		API password associated with the username (see details)
+	}
 }
 \details{
 %%  ~~ If necessary, more details than the description above ~~

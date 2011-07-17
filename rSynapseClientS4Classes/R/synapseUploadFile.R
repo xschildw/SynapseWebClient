@@ -12,6 +12,11 @@
 synapseUploadFile <- 
 		function (url, srcfile, checksum, method = "curl", quiet = FALSE, mode = "w", cacheOK = TRUE)
 {
+	header = list("Content-Type"="application/binary",
+					"x-amz-acl"= "bucket-owner-full-control"
+				)
+	if(!missing(checksum))
+		header["Content-MD5"] = .hexMD5ToBase64MD5(checksum)
 	## TODO convert this to RCurl so that we do not depend on both RCurl and curl being installed on the system	
 	if (method == "curl") {
 		extra <- if (quiet)
@@ -20,14 +25,21 @@ synapseUploadFile <-
 					"-v"
 				}
 				else ""
-		status <- system(paste("curl", extra, " -k ", 
-						" -H Content-Type:application/binary",
-						" -H Content-MD5:", .hexMD5ToBase64MD5(checksum),
-						" -H x-amz-acl:bucket-owner-full-control",
-						" --data-binary ", "@", path.expand(srcfile),
-						" -X PUT ",
-						shQuote(url), sep=""))
+		cmdString <- paste("curl", extra, " -k ", 
+				" -H Content-Type:application/binary", sep="")
 		
+		if(!missing(checksum))
+			cmdString <- paste(cmdString, " -H Content-MD5:", .hexMD5ToBase64MD5(checksum), sep="")
+		
+		cmdString <- paste(cmdString,
+				" -H x-amz-acl:bucket-owner-full-control",
+				" --data-binary ", "@", path.expand(srcfile),
+				" -X PUT ",
+				shQuote(url), sep="")
+		
+		status <- system(cmdString)
+		
+		## .curlReaderUpload(url=url, srcfile=srcfile, header=header)
 	}else{
 		stop("unsupported method:", method)
 	}
