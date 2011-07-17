@@ -1,0 +1,39 @@
+This package takes data from the TCGA project and reformats it into a series of tab delimited text files suitable for analysis in msuppliessssany statistical software packages.  To use, the user supplies paths to the data and describes what samples they desire to use.  The output created is either an R binary data file containing the data in native Bioconductor objects or data.frames or a tab delimited text file.  Each is a user defined option.
+
+At present, Level 2 and Level 3 expression data and Level 3 CNV data is all that can be handled.
+
+An example can be found by changing the file names and paths below.
+
+# load the library
+library( tcga )
+
+# Directory where all output is dumped
+out.dir <- "/home/dhenders/Projects/DAT_002__TCGA_ovarian/11_2010/processed/data/"
+# Prefix to where the TCGA data has been extracted
+expr.prefix <- "/Shares/work/DAT_002__TCGA_Ovarian/10_2010/raw/"
+# Location of clinical data
+tcga.clinical.file <- paste( expr.prefix , "Clinical/BCR/clinical_patient_public_OV.txt" , sep = "" )
+# Location of CNV data
+cnvfile <- paste( expr.prefix , "SNP/BI__Genome_Wide_SNP_6/Level_3/broad.mit.edu__Genome_Wide_SNP_6__snp_analysis.seg.txt" )
+
+# Create list of expression files to be handled.  Change paths and file names to that which you downloaded
+data.list <- list()
+data.list[[1]] <- list( platform = "u133a" , tcgaLevel = 2 , log2 = FALSE , expr.path = paste( expr.prefix , "Expression-Genes/BI__HT_HG-U133A/Level_2/broad.mit.edu__HT_HG-U133A__probeset_rma.txt" , sep = "" ) , cancerType = "01" )
+data.list[[2]] <- list( platform = "u133a" , tcgaLevel = 3 ,log2 = FALSE , expr.path = paste( expr.prefix , "Expression-Genes/BI__HT_HG-U133A/Level_3/broad.mit.edu__HT_HG-U133A__gene_expression_analysis.txt" , sep = "" ) , cancerType = "01" )
+data.list[[3]] <- list( platform = "exon" , tcgaLevel = 3 , log2 = TRUE , expr.path = paste( expr.prefix , "Expression-Exon/LBL__HuEx-1_0-st-v2/Level_3/lbl.gov__HuEx-1_0-st-v2__exon_expression_analysis.gene.txt" , sep = "" ) , cancerType = "01" )
+data.list[[4]] <- list( platform = "agilent" , tcgaLevel = 3 , log2 = FALSE , expr.path = paste( expr.prefix , "Expression-Genes/UNC__AgilentG4502A_07_3/Level_3/unc.edu__AgilentG4502A_07_3__gene_expression_analysis.txt" , sep = "" ) , cancerType = "01" )
+
+# Adjust and format the clinical data
+clinical <- prepare.clinical( tcga.clinical.file )
+
+# Loop through the expression files defined above, performing a simple QC.
+for ( ds in data.list )
+{
+  eset.ret <- qc.expr( ds$platform , ds$expr.path , clinical , out.dir = out.dir , cancerType = ds$cancerType , tcgaLevel = ds$tcgaLevel , log2 = ds$log2 , RData = TRUE , textFile = TRUE , Impute = FALSE )
+}
+
+# Input CNV data and summarize the Level 3 data by taking the mean of the segmentation values within a user defined window.
+cnvOut <- buildLevel3CNVMatrices( cnvfile )
+wCnvOut <- windowLevel3CNVMatrices( cnvOut )
+writeLevel3CNVFile( out.dir , "broadSNP_CNV" , wCnvOut , RData = TRUE )
+

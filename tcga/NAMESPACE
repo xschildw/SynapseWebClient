@@ -1,0 +1,15 @@
+export(
+       age.correct,
+       ComBat,
+       plotCombat,
+       prepare.clinical,
+       qc.expr,
+       tcga.extractBatch,
+       tcga.extractCenter,
+       tcga.extractPatientIds,
+       tcga.extractSampleIds,
+       tcga.extractTissueType,
+       buildLevel3CNVMatrices,
+       windowLevel3CNVMatrices,
+       writeLevel3CNVFile
+       )

@@ -1,0 +1,12 @@
+Package: tcga
+Type: Package
+Title: Package to refactor The Cancer Genome Atlas data into Sage Data Format
+Version: 1.0
+Date: 2010-11-10
+Author: David Henderson and Justion Guinney
+Maintainer: Repository Data <RepData@SageBase.Org>
+Description: This package helps the user to refactor a data set downloaded from the TCGA and convert it to the basic format used by Sage Bionetworks
+Depends: Biobase, impute, IRanges
+License: Apache License Version 2.0
+LazyLoad: yes
+Packaged: 2010-11-18 09:08:39 UTC; david
