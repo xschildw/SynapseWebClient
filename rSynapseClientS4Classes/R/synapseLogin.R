@@ -9,6 +9,10 @@ synapseLogin <-
 	host = .getAuthEndpointLocation()
 	path = .getAuthEndpointPrefix()
 	
+	if(missing(username)){
+		username <- .getUsername()
+	}
+	
 	if(missing(password)){
 		password <- .getPassword()
 	}
@@ -27,7 +31,7 @@ synapseLogin <-
 	## Cache the sessionToken. No need to check validity since it was just created
 	sessionToken(response$sessionToken, checkValidity=FALSE)
 	.setCache("sessionTimestamp", Sys.time())
-	message(paste("Welcome ", response$displayName, "!\n", sep=""))
+	message(paste("Welcome ", response$displayName, "!", sep=""))
 }
 
 synapseLogout <-
@@ -50,8 +54,8 @@ synapseLogout <-
 				path = path
 		)
 	}
-	
 	sessionToken(NULL)
+	message("Goodbye.")
 }
 
 .getPassword <- function(){
@@ -59,8 +63,18 @@ synapseLogout <-
 	## this only suppresses output in unix-like terminals
 	## TODO: add support for suppressing output in DOS terminals and GUI interfaces
 	system("stty -echo")
-	password <- readline()
-	system("stty echo")
-	cat("\n")
+	tryCatch(
+			password <- readline(),
+			finally={
+				system("stty echo");cat("\n")
+			}
+	)
 	return(password)
 }
+
+.getUsername <- function(){
+	cat("Username: ")
+	username <- readline()
+	return(username)
+}
+

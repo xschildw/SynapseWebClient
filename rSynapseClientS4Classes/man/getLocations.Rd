@@ -8,12 +8,12 @@
 	Get a list of locations for the data files for the provided object
 }
 \usage{
-getLocations(object)
+	getLocations(object)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{object}{
-	The object whose locations should be returned
+		The object whose locations should be returned
 	}
 }
 \value{

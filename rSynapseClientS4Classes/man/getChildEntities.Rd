@@ -14,7 +14,6 @@
 \usage{
 	getLayerLocations(entity, offset=1, limit=100)
 }
-%- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{entity}{
 		The parent entity whose child entities should be returned
@@ -26,9 +25,7 @@
 		The maximum number of entities to return
 	}
 }
-\details{
-%%  ~~ If necessary, more details than the description above ~~
-}
+
 \value{
 	An array of lists, which each list containing the annotations for a single child entity.
 }
