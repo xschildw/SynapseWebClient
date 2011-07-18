@@ -35,9 +35,11 @@
 	opts <- .getCache("curlOpts")
 	opts$verbose <- TRUE
 	opts$put <- 1
+	opts$http.transfer.decoding <- 0
+	opts$infilesize.large <- file.info(srcfile)$size
 	if(missing(header))
 		header <- ""
-	response <- curlPerform(URL=url, readfunction=readFunction,readdata=ext, httpHeader=toJSON(header), .opts = opts)
+	response <- curlPerform(URL=url, readfunction=readFunction,readdata=ext, httpHeader=header, .opts = opts)
 	.checkCurlResponse(curlHandle, response)
 }
 	
