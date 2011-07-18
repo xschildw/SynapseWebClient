@@ -1,5 +1,5 @@
 synapseLogin <- 
-		function(username, password)
+		function(username = .getUsername(), password = .getPassword())
 {
 	## constants
 	kService <- "/session"
@@ -8,15 +8,7 @@ synapseLogin <-
 	## get auth service endpoint and prefix from memory cache
 	host = .getAuthEndpointLocation()
 	path = .getAuthEndpointPrefix()
-	
-	if(missing(username)){
-		username <- .getUsername()
-	}
-	
-	if(missing(password)){
-		password <- .getPassword()
-	}
-	
+
 	entity <- list()
 	entity$email <- username
 	entity$password <- password

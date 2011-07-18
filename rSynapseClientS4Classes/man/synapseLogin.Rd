@@ -10,9 +10,9 @@
 	Functions for handling Synapse authentication.
 }
 \usage{
-	synapseLogin(username, password)
+	function(username = .getUsername(), password=.getPassword())
 	synapseLogout(localOnly=FALSE)
-	.getUsername
+	.getUsername()
 	.getPassword()
 }
 
