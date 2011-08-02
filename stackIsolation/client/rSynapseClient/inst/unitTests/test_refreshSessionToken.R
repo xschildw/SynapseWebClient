@@ -1,0 +1,41 @@
+.setUp <-
+		function()
+{
+	.setCache("validToken", "thisIsAFakeValidSessionToken")
+	.setCache("inValidToken", "thisIsAFakeInValidSessionToken")
+	myGetURL <- 
+			function(uri, postfields, customrequest, httpheader, curl, .opts)
+	{
+		entity <- rjson::fromJSON(entity)
+		if(entity$sessionToken == .getCache("validToken")){
+			## return the response for a valid sessionToken and set the 
+			## curl handle HTTP response accordingly
+		}else if(entity$sessionToken == .getCache("inValidToken")){
+			## return the response for a valid sessionToken and set the 
+			## curl handle HTTP response accordingly
+		}
+	}
+	
+	attr(myGetURL, "origFcn") <- RCurl:::getURL
+	detach('package:synapseClient', force = TRUE)
+	detach('package:RCurl', force = TRUE)
+	assignInNamespace("getURL", myGetURL, "RCurl")
+	library(synapseClient, quietly = TRUE)
+}
+
+.tearDown <-
+		function()
+{
+	.deleteCache("validToken")
+	.deleteCache("inValidToken")
+	detach('package:synapseClient', force=TRUE)
+	detach('package:RCurl', force = TRUE)
+	assignInNamespace("getURL", attr(RCurl:::getURL,'origFcn'), "RCurl")
+	library(synapseClient, quietly = TRUE)
+}
+
+unitTestRefresh <-
+		function()
+{
+	
+}

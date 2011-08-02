@@ -1,0 +1,338 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>org.sagebionetworks</groupId>
+		<artifactId>platform</artifactId>
+		<version>parent-1.0</version>
+	</parent>
+
+	<groupId>org.sagebionetworks</groupId>
+	<artifactId>integration-test</artifactId>
+	<packaging>jar</packaging>
+	<version>${applicationVersion}</version>
+	<name>Integration Tests for All services</name>
+
+	<properties>
+		<tomcat-version>6.0.32</tomcat-version>
+		<tomcat-file>apache-tomcat-${tomcat-version}</tomcat-file>
+		<!-- This is where the repository war will be deployed -->
+		<org.sagebionetworks.auth.context>services-authentication-${project.version}</org.sagebionetworks.auth.context>
+		<org.sagebionetworks.repository.context>services-repository-${project.version}</org.sagebionetworks.repository.context>
+		<org.sagebionetworks.portal.context>portal-${project.version}</org.sagebionetworks.portal.context>
+		<tomcat.endpoint>http://localhost:8080</tomcat.endpoint>
+		<org.sagebionetworks.auth.servlet.prefix>/auth/v1</org.sagebionetworks.auth.servlet.prefix>
+		<org.sagebionetworks.repository.servlet.prefix>/repo/v1</org.sagebionetworks.repository.servlet.prefix>
+		<org.sagebionetworks.portal.servlet.prefix>/Portal</org.sagebionetworks.portal.servlet.prefix>
+		<org.sagebionetworks.auth.service.base.url>${tomcat.endpoint}/${org.sagebionetworks.auth.context}${org.sagebionetworks.auth.servlet.prefix}/</org.sagebionetworks.auth.service.base.url>
+		<org.sagebionetworks.repository.service.base.url>${tomcat.endpoint}/${org.sagebionetworks.repository.context}${org.sagebionetworks.repository.servlet.prefix}/</org.sagebionetworks.repository.service.base.url>
+		<org.sagebionetworks.portal.base.url>${tomcat.endpoint}/${org.sagebionetworks.portal.context}${org.sagebionetworks.portal.servlet.prefix}/</org.sagebionetworks.portal.base.url>
+		<org.sagebionetworks.stackEncryptionKey>${settings.org.sagebionetworks.stackEncryptionKey}</org.sagebionetworks.stackEncryptionKey>
+		<!-- Setting this to true will cause Cargo to setup and start both web 
+			applications and then wait for shutdown (ctrl-c) This is useful for debugging 
+			the deployed applications. -->
+		<org.sagebionetworks.integration.debug>false</org.sagebionetworks.integration.debug>
+	</properties>
+
+	<build>
+		<plugins>
+			<!-- Build number generator -->
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>buildnumber-maven-plugin</artifactId>
+			</plugin>
+			<!-- *** Compiler plugin: we must force test compile because we're using 
+				a pom packaging that doesn't have this lifecycle mapping. -->
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<executions>
+					<execution>
+						<goals>
+							<goal>testCompile</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+			<!-- Unpack Python and R assemblies with this -->
+			<plugin>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>unpack-non-java-dependencies</id>
+						<goals>
+							<goal>unpack-dependencies</goal>
+						</goals>
+						<phase>compile</phase>
+						<configuration>
+							<outputDirectory>${project.build.directory}/non-java-dependencies</outputDirectory>
+							<includeArtifacIds>synapse-python-client-assembly</includeArtifacIds>
+							<includeArtifacIds>dataset-metadata-loader-assembly</includeArtifacIds>
+							<includeTypes>zip</includeTypes>
+							<includeGroupIds>${project.groupId}</includeGroupIds>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+			<!-- This allows use to run the servlet container from maven via mvn tomcat:run 
+				or deploy to a local tomcat via tomcat:deploy -->
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>tomcat-maven-plugin</artifactId>
+				<configuration>
+					<!-- Deploy this as the root application -->
+					<path>/</path>
+				</configuration>
+			</plugin>
+
+			<!-- *** Surefire plugin: run unit and exclude integration tests *** -->
+			<plugin>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<excludes>
+						<exclude>**/IT*.java</exclude>
+					</excludes>
+				</configuration>
+			</plugin>
+
+			<!-- *** Failsafe plugin: run integration tests *** -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-failsafe-plugin</artifactId>
+				<version>2.8</version>
+				<configuration>
+					<excludes>
+						<exclude>**/IT*${bambooITExclude}.java</exclude>
+					</excludes>
+					<runOrder>alphabetical</runOrder>
+					<systemPropertyVariables>
+						<local.python27.path>${local.python27.path}</local.python27.path>
+						<local.r.path>${local.r.path}</local.r.path>
+						<org.sagebionetworks.integrationTestUser>admin</org.sagebionetworks.integrationTestUser>
+					</systemPropertyVariables>
+				</configuration>
+				<executions>
+					<execution>
+						<id>integration-test</id>
+						<goals>
+							<goal>integration-test</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>verify</id>
+						<goals>
+							<goal>verify</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+			<!-- *** Cargo plugin: start/stop application server and deploy the ear 
+				file before/after integration tests *** -->
+			<plugin>
+				<groupId>org.codehaus.cargo</groupId>
+				<artifactId>cargo-maven2-plugin</artifactId>
+				<version>1.1.1</version>
+				<configuration>
+					<wait>${org.sagebionetworks.integration.debug}</wait>
+					<!-- Container configuration -->
+					<container>
+						<containerId>tomcat6x</containerId>
+						<!-- Download and install tomcat -->
+						<zipUrlInstaller>
+							<url>http://sagebionetworks.artifactoryonline.com/sagebionetworks/libs-releases-local/apache/tomcat/${tomcat-version}/tomcat-${tomcat-version}.zip</url>
+							<installDir>${project.build.directory}/tomcat6x/container</installDir>
+						</zipUrlInstaller>
+						<systemProperties>
+							<org.sagebionetworks.stackEncryptionKey>${org.sagebionetworks.stackEncryptionKey}</org.sagebionetworks.stackEncryptionKey>
+							<org.sagebionetworks.stack.configuration.url>${org.sagebionetworks.stack.configuration.url}</org.sagebionetworks.stack.configuration.url>
+							<org.sagebionetworks.stack.iam.id>${org.sagebionetworks.stack.iam.id}</org.sagebionetworks.stack.iam.id>
+							<org.sagebionetworks.stack.iam.key>${org.sagebionetworks.stack.iam.key}</org.sagebionetworks.stack.iam.key>
+							<org.sagebionetworks.rest.api.endpoint>${tomcat.endpoint}/${org.sagebionetworks.repository.context}</org.sagebionetworks.rest.api.endpoint>
+							<!-- This will force the user of a Mock UserDao -->
+							<org.sagebionetworks.mockCrowdDAOClass>org.sagebionetworks.repo.manager.TestUserDAO</org.sagebionetworks.mockCrowdDAOClass>
+							<!-- Tells the authentication filter to allow this user through without 
+								really authenticating -->
+							<org.sagebionetworks.integrationTestUser>admin</org.sagebionetworks.integrationTestUser>
+						</systemProperties>
+					</container>
+					<configuration>
+						<type>standalone</type>
+						<home>${project.build.directory}/tomcat6x/container/${tomcat-file}/bin</home>
+						<deployables>
+							<deployable>
+								<groupId>org.sagebionetworks</groupId>
+								<artifactId>services-authentication</artifactId>
+								<type>war</type>
+								<!-- url to ping to know if deployable is done or not -->
+								<!-- <pingURL>${tomcat.endpoint}/${org.sagebionetworks.auth.context}</pingURL> -->
+								<!-- How long do we wait until the we timeout (in ms) -->
+								<!-- <pingTimeout>2000</pingTimeout> -->
+							</deployable>
+							<deployable>
+								<groupId>org.sagebionetworks</groupId>
+								<artifactId>services-repository</artifactId>
+								<type>war</type>
+								<!-- url to ping to know if deployable is done or not -->
+								<!-- <pingURL>${org.sagebionetworks.repository.service.base.url}/dataset/test</pingURL> -->
+								<!-- How long do we wait until the we timeout (in ms) -->
+								<!-- <pingTimeout>2000</pingTimeout> -->
+							</deployable>
+							<deployable>
+								<groupId>org.sagebionetworks</groupId>
+								<artifactId>portal</artifactId>
+								<type>war</type>
+								<!-- url to ping to know if deployable is done or not -->
+								<!-- <pingURL>${org.sagebionetworks.portal.base.url}</pingURL> -->
+								How long do we wait until the we timeout (in ms)
+								<!-- <pingTimeout>2000</pingTimeout> -->
+							</deployable>
+						</deployables>
+					</configuration>
+
+				</configuration>
+
+				<executions>
+					<!-- before integration tests are run: start server -->
+					<execution>
+						<id>start-container</id>
+						<phase>pre-integration-test</phase>
+						<goals>
+							<goal>start</goal>
+						</goals>
+					</execution>
+					<!-- after integration tests are run: stop server -->
+					<execution>
+						<id>stop-container</id>
+						<phase>post-integration-test</phase>
+						<goals>
+							<goal>stop</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+		</plugins>
+	</build>
+	<dependencies>
+
+		<!-- Sage Bionetworks Dependencies -->
+		<dependency>
+			<groupId>org.sagebionetworks</groupId>
+			<artifactId>services-authentication</artifactId>
+			<version>${applicationVersion}</version>
+			<type>war</type>
+		</dependency>
+
+		<dependency>
+			<groupId>org.sagebionetworks</groupId>
+			<artifactId>services-repository</artifactId>
+			<version>${applicationVersion}</version>
+			<type>war</type>
+		</dependency>
+
+		<dependency>
+			<groupId>org.sagebionetworks</groupId>
+			<artifactId>portal</artifactId>
+			<version>${applicationVersion}</version>
+			<type>war</type>
+		</dependency>
+
+		<!-- Pull in the GWT RPC data so we can make RPC calls -->
+		<dependency>
+			<groupId>org.sagebionetworks</groupId>
+			<artifactId>portal</artifactId>
+			<version>${applicationVersion}</version>
+			<classifier>gwt-rpc-assembly</classifier>
+			<scope>integration-test</scope>
+			<type>jar</type>
+		</dependency>
+
+		<dependency>
+			<groupId>org.sagebionetworks</groupId>
+			<artifactId>lib-models</artifactId>
+			<version>${applicationVersion}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.sagebionetworks</groupId>
+			<artifactId>lib-stackConfiguration</artifactId>
+			<version>${applicationVersion}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.sagebionetworks</groupId>
+			<artifactId>synapseJavaClient</artifactId>
+			<version>${applicationVersion}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.sagebionetworks</groupId>
+			<artifactId>synapsePythonClient</artifactId>
+			<version>${applicationVersion}</version>
+			<classifier>synapse-python-client-assembly</classifier>
+			<type>zip</type>
+			<!-- Make sure this isn't included on any classpath -->
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.sagebionetworks</groupId>
+			<artifactId>synapseRClient</artifactId>
+			<version>${applicationVersion}</version>
+			<classifier>synapse-r-client-assembly</classifier>
+			<type>zip</type>
+			<!-- Make sure this isn't included on any classpath -->
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.sagebionetworks</groupId>
+			<artifactId>DatasetMetadataLoader</artifactId>
+			<version>${applicationVersion}</version>
+			<classifier>dataset-metadata-loader-assembly</classifier>
+			<type>zip</type>
+			<!-- Make sure this isn't included on any classpath -->
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.sagebionetworks</groupId>
+			<artifactId>wikiutil</artifactId>
+			<version>${applicationVersion}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.google.develop</groupId>
+			<artifactId>gwt-syncproxy</artifactId>
+			<version>0.2</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>org.springframework.web</artifactId>
+		</dependency>
+
+		<!-- Jackson JSON Mapper -->
+		<dependency>
+			<groupId>org.codehaus.jackson</groupId>
+			<artifactId>jackson-mapper-asl</artifactId>
+			<version>${jackson.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>commons-logging</groupId>
+			<artifactId>commons-logging</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+		</dependency>
+
+	</dependencies>
+
+</project>
