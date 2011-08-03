@@ -65,13 +65,14 @@ public class IT700SynapseRClient {
 						+ StackConfiguration.getAuthenticationServiceEndpoint()
 						+ "')",
 				"-e",
+				"synapseRepoServiceEndpoint(endpoint='"
+						+ StackConfiguration.getRepositoryServiceEndpoint()
+						+ "')",
+				"-e",
 				"synapseLogin(username='" + Helpers.getIntegrationTestUser()
 						+ "', password='"
 						+ Helpers.getIntegrationTestUserPassword() + "')",
-				"-e",
-				"synapseRepoServiceEndpoint(endpoint='"
-						+ StackConfiguration.getRepositoryServiceEndpoint()
-						+ "')", "-e", "synapseClient:::.test()" };
+				"-e", "synapseClient:::.test()" };
 		ExternalProcessResult result = Helpers.runExternalProcess(cmd);
 		assertTrue(0 <= result.getStdout().indexOf(" 0 errors, 0 failures"));
 	}
@@ -93,13 +94,13 @@ public class IT700SynapseRClient {
 						+ StackConfiguration.getAuthenticationServiceEndpoint()
 						+ "')",
 				"-e",
+				"synapseRepoServiceEndpoint(endpoint='"
+						+ StackConfiguration.getRepositoryServiceEndpoint()
+						+ "')", "-e",
 				"synapseLogin(username='" + Helpers.getIntegrationTestUser()
 						+ "', password='"
 						+ Helpers.getIntegrationTestUserPassword() + "')",
 				"-e",
-				"synapseRepoServiceEndpoint(endpoint='"
-						+ StackConfiguration.getRepositoryServiceEndpoint()
-						+ "')", "-e",
 				"synapseClient:::.integrationTest(testFileRegexp=\"^test_[^_]*R$\")" };
 		ExternalProcessResult result = Helpers.runExternalProcess(cmd);
 		assertTrue(0 <= result.getStdout().indexOf(" 0 errors, 0 failures"));
