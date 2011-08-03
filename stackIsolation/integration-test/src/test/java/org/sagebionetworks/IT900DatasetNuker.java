@@ -6,22 +6,20 @@ import org.junit.Test;
 import org.sagebionetworks.Helpers.ExternalProcessResult;
 
 /**
- * Run this integration test to load in some realistic data
+ * Run this integration test to clean all datasets out of the database
  * 
  * @author deflaux
- *
+ * 
  */
-public class IT100DatasetMetadataLoaderNoBamboo {
+public class IT900DatasetNuker {
 
 	/**
 	 * @throws Exception
 	 */
 	@Test
-	public void testDatasetMetadataLoader() throws Exception {
-		String cmd[] = {
-				Helpers.getPython27Path(),
-				"target/non-java-dependencies/datasetCsvLoader.py",
-				"--fakeLocalData",
+	public void testDatasetNuker() throws Exception {
+		String cmd[] = { Helpers.getPython27Path(),
+				"target/non-java-dependencies/datasetNuker.py",
 				"--repoEndpoint",
 				StackConfiguration.getRepositoryServiceEndpoint(),
 				"--authEndpoint",
@@ -29,13 +27,9 @@ public class IT100DatasetMetadataLoaderNoBamboo {
 				"--user",
 				Helpers.getIntegrationTestUser(),
 				"--password",
-				Helpers.getIntegrationTestUser(),
-				"--datasetsCsv",
-				"target/non-java-dependencies/AllDatasets.csv",
-				"--layersCsv",
-				"target/non-java-dependencies/AllDatasetLayerLocations.csv" };
+				Helpers.getIntegrationTestUserPassword(),
+		};
 		ExternalProcessResult result = Helpers.runExternalProcess(cmd);
 		assertEquals("", result.getStderr());
 	}
-
 }

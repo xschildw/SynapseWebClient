@@ -22,7 +22,7 @@ import org.sagebionetworks.repo.WikiGenerator;
  * @author deflaux
  * 
  */
-public class IT550WikiGeneratorNoBamboo {
+public class IT550WikiGenerator {
 
 	Logger log;
 	StringWriter writer;
@@ -57,7 +57,7 @@ public class IT550WikiGeneratorNoBamboo {
 				StackConfiguration.getRepositoryServiceEndpoint(), "--authEndpoint",
 				StackConfiguration.getAuthenticationServiceEndpoint(), "--username",
 				Helpers.getIntegrationTestUser(), "--password",
-				Helpers.getIntegrationTestUser() };
+				Helpers.getIntegrationTestUserPassword() };
 		int numErrors = CRUDWikiGenerator.main(args);
 
 		String output = writer.toString();
@@ -86,7 +86,7 @@ public class IT550WikiGeneratorNoBamboo {
 				StackConfiguration.getRepositoryServiceEndpoint(), "--authEndpoint",
 				StackConfiguration.getAuthenticationServiceEndpoint(), "--username",
 				Helpers.getIntegrationTestUser(), "--password",
-				Helpers.getIntegrationTestUser() };
+				Helpers.getIntegrationTestUserPassword() };
 		int numErrors = ReadOnlyWikiGenerator.main(args);
 
 		String output = writer.toString();

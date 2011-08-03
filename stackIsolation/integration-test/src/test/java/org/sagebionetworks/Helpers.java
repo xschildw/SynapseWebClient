@@ -51,11 +51,12 @@ public class Helpers {
 				.getProperty("local.r.path");
 	}
 
-	/**
-	 * @return the Synapse username to use for integration tests
-	 */
+	// TODO fixme, need two users, need to move this to StackConfiguration, but first, just get it to work
 	public static String getIntegrationTestUser() {
-		return System.getProperty("org.sagebionetworks.integrationTestUser");
+		return System.getProperty("org.sagebionetworks.integrationTestUsername");
+	}
+	public static String getIntegrationTestUserPassword() {
+		return System.getProperty("org.sagebionetworks.integrationTestUserPassword");
 	}
 
 	private static final Logger log = Logger.getLogger(Helpers.class.getName());
