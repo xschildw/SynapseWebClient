@@ -388,9 +388,14 @@ storedProject = createOrUpdateEntity(kind="project",
                                      permissions=ROOT_PERMS)
     
 eula = {"name":SAGE_CURATION_EULA_NAME, "agreement":DEFAULT_TERMS_OF_USE}
-storedEula = createOrUpdateEntity(kind="eula",
-                                  entity=eula,
-                                  permissions=ROOT_PERMS)
+storedEula = {}
+try:
+    # Only admins can update eulas
+    storedEula = createOrUpdateEntity(kind="eula",
+                                      entity=eula,
+                                      permissions=ROOT_PERMS)
+except Exception, err:
+    storedEula = gSYNAPSE.getRepoEntityByName(kind="eula", name=SAGE_CURATION_EULA_NAME)
     
 loadDatasets(storedProject["id"], storedEula["id"])
     
