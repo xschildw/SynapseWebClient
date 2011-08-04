@@ -109,7 +109,7 @@ public class IT500SynapseJavaClient {
 			String locationType = locations.getJSONObject(j).getString(
 			"type");
 			if (locationType.equals("awss3")) {
-				HttpClientHelper.downloadFile(locationUri, tempFile.getAbsolutePath());
+//				HttpClientHelper.downloadFile(locationUri, tempFile.getAbsolutePath());
 			}
 		}
 		

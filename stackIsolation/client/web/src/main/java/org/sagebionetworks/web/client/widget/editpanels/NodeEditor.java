@@ -13,6 +13,7 @@ import org.sagebionetworks.web.client.events.CancelEvent;
 import org.sagebionetworks.web.client.events.CancelHandler;
 import org.sagebionetworks.web.client.events.PersistSuccessEvent;
 import org.sagebionetworks.web.client.events.PersistSuccessHandler;
+import org.sagebionetworks.web.client.ontology.Ontology;
 import org.sagebionetworks.web.client.ontology.OntologyTerm;
 import org.sagebionetworks.web.client.services.NodeServiceAsync;
 import org.sagebionetworks.web.client.transform.NodeModelCreator;
@@ -20,6 +21,7 @@ import org.sagebionetworks.web.client.widget.editpanels.FormField.ColumnType;
 import org.sagebionetworks.web.shared.NodeType;
 import org.sagebionetworks.web.shared.exceptions.RestServiceException;
 
+import com.extjs.gxt.ui.client.widget.MessageBox;
 import com.google.gwt.event.shared.HandlerManager;
 import com.google.gwt.json.client.JSONNumber;
 import com.google.gwt.json.client.JSONObject;
@@ -96,7 +98,10 @@ public class NodeEditor implements NodeEditorView.Presenter {
 					try {
 						nodeModelCreator.validate(schema);
 					} catch (RestServiceException ex) {
-						DisplayUtils.handleServiceException(ex, placeChanger);
+						if(!DisplayUtils.handleServiceException(ex, placeChanger)) {
+							onFailure(null);						
+						}
+						return;
 					}					
 					JSONObject schemaObj = JSONParser.parseStrict(schema).isObject();
 					originalNode = schemaObj;
@@ -118,7 +123,10 @@ public class NodeEditor implements NodeEditorView.Presenter {
 					try {
 						nodeModelCreator.validate(nodeJson);
 					} catch (RestServiceException ex) {
-						DisplayUtils.handleServiceException(ex, placeChanger);
+						if(!DisplayUtils.handleServiceException(ex, placeChanger)) {
+							onFailure(null);
+						}
+						return;
 					}					
 					JSONObject schemaObj = JSONParser.parseStrict(nodeJson).isObject();					
 					final SpecificNodeTypeDeviation deviation = nodeEditorDisplayHelper.getNodeTypeDeviation(type);										
@@ -131,7 +139,10 @@ public class NodeEditor implements NodeEditorView.Presenter {
 							try {
 								nodeModelCreator.validate(nodeJsonString);
 							} catch (RestServiceException ex) {
-								DisplayUtils.handleServiceException(ex, placeChanger);
+								if(!DisplayUtils.handleServiceException(ex, placeChanger)) {
+									onFailure(null);
+								}
+								return;
 							}					
 							originalNode = JSONParser.parseStrict(nodeJsonString).isObject();
 							view.generateEditForm(formFields, deviation.getDisplayString(), deviation.getEditText(), deviation.getCreationIgnoreFields(), deviation.getKeyToOntology(), originalNode);							
@@ -175,7 +186,7 @@ public class NodeEditor implements NodeEditorView.Presenter {
 	/*
 	 * Private Methods
 	 */
-	private static List<FormField> getSchemaFormFields(JSONObject schema, Map<String, OntologyTerm[]> getKeyToOntology) {
+	private static List<FormField> getSchemaFormFields(JSONObject schema, Map<String, Ontology> getKeyToOntology) {
 		List<FormField> formFields = new ArrayList<FormField>();
 		if(schema != null) {
 			if(schema.containsKey(SCHEMA_PROPERTIES_KEY)) {
@@ -207,7 +218,7 @@ public class NodeEditor implements NodeEditorView.Presenter {
 								// create an new form field
 								FormField field; 
 								if(getKeyToOntology.containsKey(propertyName)) {
-									field = new FormField(propertyName, null, getKeyToOntology.get(propertyName), colType);
+									field = new FormField(propertyName, null, getKeyToOntology.get(propertyName).getTerms(), colType);
 								} else {									
 									field = new FormField(propertyName, "", colType);
 								}
@@ -236,6 +247,8 @@ public class NodeEditor implements NodeEditorView.Presenter {
 						nodeModelCreator.validate(result);
 					} catch (RestServiceException ex) {
 						DisplayUtils.handleServiceException(ex, placeChanger);
+						onFailure(null);
+						return;
 					}					
 					view.showPersistSuccess();
 					handlerManager.fireEvent(new PersistSuccessEvent());
@@ -256,6 +269,8 @@ public class NodeEditor implements NodeEditorView.Presenter {
 						nodeModelCreator.validate(result);
 					} catch (RestServiceException ex) {
 						DisplayUtils.handleServiceException(ex, placeChanger);
+						onFailure(null);						
+						return;
 					}					
 					view.showPersistSuccess();
 					handlerManager.fireEvent(new PersistSuccessEvent());

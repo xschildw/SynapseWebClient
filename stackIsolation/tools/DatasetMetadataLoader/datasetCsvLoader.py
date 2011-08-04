@@ -44,8 +44,8 @@ SAGE_CURATION_EULA_NAME = "SageBioCurationEula"
 
 ROOT_PERMS = {
     "Sage Curators":["READ","CHANGE_PERMISSIONS","DELETE","UPDATE","CREATE"],
-    "AUTHENTICATED_USERS":["READ"],
-    "anonymous":["READ"]
+#    "AUTHENTICATED_USERS":["READ"],
+    "PUBLIC":["READ"]
     }
 
 LOCATION_PERMS = {
@@ -191,6 +191,10 @@ def createOrUpdateLocation(location):
     if(not gARGS.fakeLocalData and gARGS.uploadData):
         # TODO skip uploads for files if the checksum has not changed
         # TODO spawn a thread for each upload and proceed to get more throughput
+        ## 20110715, migration to bucket devdata01, skip this dataset since its laready there
+        #if('/mskcc_prostate_cancer.zip' == location['path']):
+        #    return
+
         localFilepath = SOURCE_DATA_DIRECTORY + location['path']
         synapse.utils.uploadToS3(localFilepath=localFilepath,
                                  s3url=storedLocation["path"],
@@ -347,6 +351,8 @@ def loadLayers():
         layer["qcBy"] = row[11]
         
         newLayer = createOrUpdateEntity(kind="layer", entity=layer)
+        if newLayer == None:
+            raise Exception("ENTITY_CREATION_ERROR")
         
         # Ignore column 8 (sage loc) and 9 (awsebs loc) for now
         for col in [10]:
@@ -378,9 +384,9 @@ def loadLayers():
 #--------------------[ Main ]-----------------------------
 gSYNAPSE.login(gARGS.user, gARGS.password)
 
-if not checkEmptyRepository():
-    print "Repository is not empty! Aborting..."
-    sys.exit(1)
+#if not checkEmptyRepository():
+#    print "Repository is not empty! Aborting..."
+#    sys.exit(1)
 
 project = {"name":SAGE_CURATION_PROJECT_NAME, "description":"Umbrella for Sage-curated projects", "creator":"x.schildwachter@sagebase.org"}
 storedProject = createOrUpdateEntity(kind="project",
