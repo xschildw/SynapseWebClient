@@ -5,6 +5,7 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 import org.sagebionetworks.Helpers.ExternalProcessResult;
+import org.sagebionetworks.StackConfiguration;
 
 /**
  * @author deflaux
@@ -69,9 +70,9 @@ public class IT700SynapseRClient {
 						+ StackConfiguration.getRepositoryServiceEndpoint()
 						+ "')",
 				"-e",
-				"synapseLogin(username='" + Helpers.getIntegrationTestUser()
+				"synapseLogin(username='" + StackConfiguration.getIntegrationTestUserOneName()
 						+ "', password='"
-						+ Helpers.getIntegrationTestUserPassword() + "')",
+						+ StackConfiguration.getIntegrationTestUserOnePassword() + "')",
 				"-e", "synapseClient:::.test()" };
 		ExternalProcessResult result = Helpers.runExternalProcess(cmd);
 		assertTrue(0 <= result.getStdout().indexOf(" 0 errors, 0 failures"));
@@ -97,9 +98,9 @@ public class IT700SynapseRClient {
 				"synapseRepoServiceEndpoint(endpoint='"
 						+ StackConfiguration.getRepositoryServiceEndpoint()
 						+ "')", "-e",
-				"synapseLogin(username='" + Helpers.getIntegrationTestUser()
+				"synapseLogin(username='" + StackConfiguration.getIntegrationTestUserOneName()
 						+ "', password='"
-						+ Helpers.getIntegrationTestUserPassword() + "')",
+						+ StackConfiguration.getIntegrationTestUserOnePassword() + "')",
 				"-e",
 				"synapseClient:::.integrationTest(testFileRegexp=\"^test_[^_]*R$\")" };
 		ExternalProcessResult result = Helpers.runExternalProcess(cmd);

@@ -111,8 +111,6 @@
 					<systemPropertyVariables>
 						<local.python27.path>${local.python27.path}</local.python27.path>
 						<local.r.path>${local.r.path}</local.r.path>
-						<org.sagebionetworks.integrationTestUsername>nicole.deflaux@sagebase.org</org.sagebionetworks.integrationTestUsername>
-						<org.sagebionetworks.integrationTestUserPassword>PutNicole'sPasswordHereToGetTestsToWorkForNow</org.sagebionetworks.integrationTestUserPassword>
 					</systemPropertyVariables>
 				</configuration>
 				<executions>
