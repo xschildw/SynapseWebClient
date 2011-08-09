@@ -12,6 +12,7 @@ import com.amazonaws.services.identitymanagement.model.AccessKey;
 import com.amazonaws.services.identitymanagement.model.AddUserToGroupRequest;
 import com.amazonaws.services.identitymanagement.model.CreateAccessKeyRequest;
 import com.amazonaws.services.identitymanagement.model.CreateAccessKeyResult;
+import com.amazonaws.services.identitymanagement.model.CreateAccountAliasRequest;
 import com.amazonaws.services.identitymanagement.model.CreateGroupRequest;
 import com.amazonaws.services.identitymanagement.model.CreateGroupResult;
 import com.amazonaws.services.identitymanagement.model.CreateLoginProfileRequest;
@@ -20,6 +21,7 @@ import com.amazonaws.services.identitymanagement.model.CreateUserRequest;
 import com.amazonaws.services.identitymanagement.model.CreateUserResult;
 import com.amazonaws.services.identitymanagement.model.DeactivateMFADeviceRequest;
 import com.amazonaws.services.identitymanagement.model.DeleteAccessKeyRequest;
+import com.amazonaws.services.identitymanagement.model.DeleteAccountAliasRequest;
 import com.amazonaws.services.identitymanagement.model.DeleteGroupPolicyRequest;
 import com.amazonaws.services.identitymanagement.model.DeleteGroupRequest;
 import com.amazonaws.services.identitymanagement.model.DeleteLoginProfileRequest;
@@ -28,6 +30,8 @@ import com.amazonaws.services.identitymanagement.model.DeleteSigningCertificateR
 import com.amazonaws.services.identitymanagement.model.DeleteUserPolicyRequest;
 import com.amazonaws.services.identitymanagement.model.DeleteUserRequest;
 import com.amazonaws.services.identitymanagement.model.EnableMFADeviceRequest;
+import com.amazonaws.services.identitymanagement.model.GetAccountSummaryRequest;
+import com.amazonaws.services.identitymanagement.model.GetAccountSummaryResult;
 import com.amazonaws.services.identitymanagement.model.GetGroupPolicyRequest;
 import com.amazonaws.services.identitymanagement.model.GetGroupPolicyResult;
 import com.amazonaws.services.identitymanagement.model.GetGroupRequest;
@@ -42,6 +46,8 @@ import com.amazonaws.services.identitymanagement.model.GetUserRequest;
 import com.amazonaws.services.identitymanagement.model.GetUserResult;
 import com.amazonaws.services.identitymanagement.model.ListAccessKeysRequest;
 import com.amazonaws.services.identitymanagement.model.ListAccessKeysResult;
+import com.amazonaws.services.identitymanagement.model.ListAccountAliasesRequest;
+import com.amazonaws.services.identitymanagement.model.ListAccountAliasesResult;
 import com.amazonaws.services.identitymanagement.model.ListGroupPoliciesRequest;
 import com.amazonaws.services.identitymanagement.model.ListGroupPoliciesResult;
 import com.amazonaws.services.identitymanagement.model.ListGroupsForUserRequest;
@@ -466,6 +472,56 @@ public class TestAmazonIdentityManagement implements
 	@Override
 	public ResponseMetadata getCachedResponseMetadata(
 			AmazonWebServiceRequest request) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+	@Override
+	public void createAccountAlias(CreateAccountAliasRequest arg0)
+			throws AmazonServiceException, AmazonClientException {
+		// TODO Auto-generated method stub
+		
+	}
+
+
+	@Override
+	public void deleteAccountAlias(DeleteAccountAliasRequest arg0)
+			throws AmazonServiceException, AmazonClientException {
+		// TODO Auto-generated method stub
+		
+	}
+
+
+	@Override
+	public GetAccountSummaryResult getAccountSummary()
+			throws AmazonServiceException, AmazonClientException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+	@Override
+	public GetAccountSummaryResult getAccountSummary(
+			GetAccountSummaryRequest arg0) throws AmazonServiceException,
+			AmazonClientException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+	@Override
+	public ListAccountAliasesResult listAccountAliases()
+			throws AmazonServiceException, AmazonClientException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+	@Override
+	public ListAccountAliasesResult listAccountAliases(
+			ListAccountAliasesRequest arg0) throws AmazonServiceException,
+			AmazonClientException {
 		// TODO Auto-generated method stub
 		return null;
 	}
