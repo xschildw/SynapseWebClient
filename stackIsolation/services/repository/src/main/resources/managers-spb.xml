@@ -69,10 +69,16 @@
 	    </property>
 	</bean>
 	
-	<!-- A controller profiler that logs performance data for all bean method calls. -->
-	<bean id="controllerProfiler" class="profiler.org.sagebionetworks.ControllerProfiler" autowire="byName"/>
+	<!-- A profiler that logs performance data for all bean method calls. -->
+	<bean id="profiler" class="profiler.org.sagebionetworks.Profiler">
+		<property name="handlers">
+			<list>
+				<bean name="loggingProfiler" class="profiler.org.sagebionetworks.LoggingProfiler" />
+			</list>
+		</property>
+	</bean>
 	
-	<!-- A consumer that logs performance data for all bean method calls. -->
+	<!-- A consumer that logs performance data for all bean method calls to Amazon CloudWatch. -->
 	<bean id="consumer" class="profiler.org.sagebionetworks.Consumer" scope="singleton" init-method="init" destroy-method="cleanup"/>
 	
 </beans>

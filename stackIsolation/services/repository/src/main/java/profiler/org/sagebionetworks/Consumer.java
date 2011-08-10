@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.sagebionetworks.StackConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.amazonaws.auth.AWSCredentials;
@@ -22,17 +23,19 @@ public class Consumer implements Runnable{
 	//volatile boolean to control how long each thread runs
 	private volatile boolean cancelled = false;
 	//string to hold namespace for the metric
-	String namespace = "Latency Times For Controller Profiler";
+	String namespace = "Latency Times For ControllerProfiler";
 	
-	@Autowired
 	static List<MetricDatum> LISTMDS = Collections.synchronizedList(new ArrayList<MetricDatum>());
 	
 	//constructor
 	public Consumer(){
 		//let's create our cloud watch client, and set up the credentials
+		//BasicAWSCredentials object takes two aparameters
+		//first is accessKey, second is secretKey
+		//StackConfiguration's getIAMUserID returns AccessKey
+		//StackConfiguration's getIAMUserKey returns SecretKey
 		BasicAWSCredentials credentials = new BasicAWSCredentials
-			("Dn1Jz8vnlRtygfXriILNWaqfRCCk9Ek++xX87cbf", "AKIAJZJIQ72YK2RSSXLA");
-		cw = new AmazonCloudWatchClient(credentials);
+		(StackConfiguration.getIAMUserId(), StackConfiguration.getIAMUserKey());		
 	}
 		 
 	//method to send list of MetricDatum objects to AWS CloudWatch
@@ -41,8 +44,8 @@ public class Consumer implements Runnable{
 		try 
 		{
 			//below is the line that sends to CloudWatch
-			cw.putMetricData(listForCW);
-			//System.out.println(listForCW.toString());
+			//cw.putMetricData(listForCW);
+			System.out.println("hereiswhatthePut " + listForCW.toString());
 		} 
 		catch (Exception e1) 
 		{

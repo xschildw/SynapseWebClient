@@ -34,8 +34,45 @@ public class ControllerProfiler {
 	//will print the timestamp, level, message, latency in ms, etc
 	static private Log log = LogFactory.getLog(ControllerProfiler.class);
 	
+	@Autowired
+	Consumer consumer;
+	
 	//synchronized list of MetricDatum objects
 	static List<MetricDatum> listOfMetricDatums;
+	
+private List<ProfileHandler> handlers = null;
+	
+
+	public List<ProfileHandler> getHandlers() {
+		return handlers;
+	}
+
+	/**
+	 * Injected via Spring.
+	 * @param handlers
+	 */
+	public void setHandlers(List<ProfileHandler> handlers) {
+		this.handlers = handlers;
+	}
+	
+	/**
+	 * Should we even profile.
+	 * @param args
+	 * @return
+	 */
+	private boolean shouldCaptureData(Object[] args){
+		if(handlers == null) return false;
+		for(ProfileHandler handler: this.handlers){
+			if(handler.shouldCaptureProfile(args)) return true;
+		}
+		return false;
+	}
+
+	//constructor
+	public ControllerProfiler(){
+		//why doesn't it want the getter?
+		listOfMetricDatums = Consumer.LISTMDS;
+	}
 	
 	//this is the Pointcut which handles all joinPoints for our Aspect
 	//@Around line represents what's included for our joinPoints (class/package)
@@ -81,7 +118,6 @@ public class ControllerProfiler {
 	}
 	
 	//initialization 
-	@Autowired
 	public void setListOfMetricDatums(List<MetricDatum> theList){
 		this.listOfMetricDatums = theList;
 	}
