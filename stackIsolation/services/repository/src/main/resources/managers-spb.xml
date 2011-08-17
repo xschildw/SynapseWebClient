@@ -76,9 +76,15 @@
 				<bean name="loggingProfiler" class="profiler.org.sagebionetworks.LoggingProfiler" />
 			</list>
 		</property>
-	</bean>
+	</bean>	
 	
-	<!-- A consumer that logs performance data for all bean method calls to Amazon CloudWatch. -->
-	<bean id="consumer" class="profiler.org.sagebionetworks.Consumer" scope="singleton" init-method="init" destroy-method="cleanup"/>
-	
+	<!-- controllerProfiler that collects latency information in the form of CloudWatch objects -->
+	<!--  
+	<bean id="controllerProfiler" class="profiler.org.sagebionetworks.ControllerProfiler"/>
+	-->
+	<!-- A consumer that logs performance data for all bean method calls to Amazon CloudWatch. --> 
+	<!--  
+	<bean id="consumer" class="profiler.org.sagebionetworks.Consumer" scope="singleton" init-method="init"/>
+	-->
+
 </beans>

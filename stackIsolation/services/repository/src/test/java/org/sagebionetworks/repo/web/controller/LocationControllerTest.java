@@ -11,6 +11,7 @@ import java.util.Map;
 import org.json.JSONObject;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.sagebionetworks.StackConfiguration;
@@ -263,6 +264,24 @@ public class LocationControllerTest {
 				.getString("uri"));
 		assertTrue(0 < storedLocation.getString("path").indexOf(
 				"unc.edu_COAD.AgilentG4502A_07_3.Level_2.2.0.0.zip"));
+	}
+	
+	//throws exception
+	@Test
+	@Ignore
+	public void testInvalidMD5checksum() throws Exception{
+		//my invalid checksum amtraGdmZmNmZ3Vpa21sQURSQUVRRU
+		
+		//need a test string with an invalid checksum
+		String badLocation = "{\"path\":\"unc.edu_COAD.AgilentG4502A_07_3.Level_2.2.0.0.tar.gz\", "
+			+ "\"type\":\"awss3\", \"md5sum\":\"amtraGdmZmNmZ3Vpa21sQURSQUVRRU\"}";
+		
+		JSONObject badMD5checksumLocation = new JSONObject(badLocation).put(
+				NodeConstants.COL_PARENT_ID, dataset.getString("id"));
+		
+		JSONObject results = helper.testCreateJsonEntity(helper
+				.getServletPrefix()
+				+ "/location", badMD5checksumLocation.toString()); 
 	}
 
 	/**

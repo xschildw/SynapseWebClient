@@ -36,42 +36,22 @@ public class ControllerProfiler {
 	
 	@Autowired
 	Consumer consumer;
-	
-	//synchronized list of MetricDatum objects
-	static List<MetricDatum> listOfMetricDatums;
-	
-private List<ProfileHandler> handlers = null;
-	
-
-	public List<ProfileHandler> getHandlers() {
-		return handlers;
-	}
-
-	/**
-	 * Injected via Spring.
-	 * @param handlers
-	 */
-	public void setHandlers(List<ProfileHandler> handlers) {
-		this.handlers = handlers;
-	}
-	
-	/**
-	 * Should we even profile.
-	 * @param args
-	 * @return
-	 */
-	private boolean shouldCaptureData(Object[] args){
-		if(handlers == null) return false;
-		for(ProfileHandler handler: this.handlers){
-			if(handler.shouldCaptureProfile(args)) return true;
-		}
-		return false;
+	//static Consumer consumer;
+	//static {
+       //consumer = new Consumer();
+       //consumer.init();
+    // }
+	// Called by Spring
+	public ControllerProfiler(){
 	}
 
 	//constructor
-	public ControllerProfiler(){
-		//why doesn't it want the getter?
-		listOfMetricDatums = Consumer.LISTMDS;
+	public ControllerProfiler(Consumer consumer){
+		this.consumer = consumer;
+	}	
+	
+	public void init(){
+		log.info("controllerProfiler.init called");
 	}
 	
 	//this is the Pointcut which handles all joinPoints for our Aspect
@@ -97,7 +77,7 @@ private List<ProfileHandler> handlers = null;
 		//use our latency time to make a MetricDatum, and
 		//add to synchronized list
 		MetricDatum addToListMDS = makeMD(methodNameForMetric, timeMS);
-		listOfMetricDatums.add(addToListMDS);
+		consumer.addMetric(addToListMDS);
 		
 		//in configuration file log is set to DEBUG
 		log.debug("let's see our MD  " + addToListMDS.toString());
@@ -115,10 +95,5 @@ private List<ProfileHandler> handlers = null;
 		nextMD.setTimestamp(jdkDate);
 		nextMD.setValue((double) latency);
 		return nextMD;
-	}
-	
-	//initialization 
-	public void setListOfMetricDatums(List<MetricDatum> theList){
-		this.listOfMetricDatums = theList;
 	}
 }
