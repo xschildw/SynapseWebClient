@@ -29,7 +29,7 @@ public class DatasetPresenterTest {
 	AuthenticationController mockAuthenticationController;
 	GlobalApplicationState mockGlobalApplicationState;
 	String datasetId = "1";
-	Dataset place = new Dataset("Dataset:"+ datasetId);
+	Dataset place = new Dataset("Dataset:"+ datasetId, false);
 	
 	@Before
 	public void setup(){

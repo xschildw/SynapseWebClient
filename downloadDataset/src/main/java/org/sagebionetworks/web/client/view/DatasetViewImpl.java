@@ -36,6 +36,7 @@ import com.extjs.gxt.ui.client.event.MenuEvent;
 import com.extjs.gxt.ui.client.event.MessageBoxEvent;
 import com.extjs.gxt.ui.client.event.SelectionListener;
 import com.extjs.gxt.ui.client.widget.Dialog;
+import com.extjs.gxt.ui.client.widget.Html;
 import com.extjs.gxt.ui.client.widget.Info;
 import com.extjs.gxt.ui.client.widget.MessageBox;
 import com.extjs.gxt.ui.client.widget.Window;
@@ -323,12 +324,25 @@ public class DatasetViewImpl extends Composite implements DatasetView {
 	public void disableLicensedDownloads(boolean disable) {
 		this.disableDownloads = true;
 	}
+	
+	@Override
+	public void showDownload() {	
+		if(!disableDownloads)
+			datasetLicensedDownloader.showWindow();
+	}
 
 	@Override
 	public void setDatasetDownloads(List<FileDownload> downloads) {		
 		datasetLicensedDownloader.setDownloadUrls(downloads);
 	}
 
+	@Override
+	public void setDownloadUnavailable() {
+		datasetLicensedDownloader.setDownloadUrls(null);
+		downloadPanel.clear();
+		downloadPanel.add(new Html(DisplayUtils.getIconHtml(iconsImageBundle.download16()) + " Download Unavailable"));		
+	}
+	
 	/*
 	 * Private Methods
 	 */
@@ -559,6 +573,11 @@ public class DatasetViewImpl extends Composite implements DatasetView {
 			returnStr += str;
 		}
 		return returnStr;
+	}
+
+	@Override
+	public void showDownloadsLoading() {
+		datasetLicensedDownloader.showLoading();
 	}
 
 

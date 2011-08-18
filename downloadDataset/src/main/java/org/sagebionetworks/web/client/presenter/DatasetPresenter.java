@@ -51,6 +51,7 @@ public class DatasetPresenter extends AbstractActivity implements DatasetView.Pr
 	private LicenseAgreement licenseAgreement;
 	private DatasetView view;
 	private String datasetId;
+	private Boolean showDownload;
 	private Dataset model;
 	private NodeModelCreator nodeModelCreator;
 	private AuthenticationController authenticationController;
@@ -98,7 +99,8 @@ public class DatasetPresenter extends AbstractActivity implements DatasetView.Pr
 	public void setPlace(org.sagebionetworks.web.client.place.Dataset place) {		
 		this.place = place;
 		this.datasetId = place.toToken(); 
-		
+		this.showDownload = place.getDownload();
+
 		refreshFromServer();
 	}
 
@@ -380,7 +382,42 @@ public class DatasetPresenter extends AbstractActivity implements DatasetView.Pr
 	}	
 
 	protected void loadDownloadLocations() {
-		// TODO Implement (Nicole)		
+		view.showDownloadsLoading();
+		nodeService.getNodeLocations(NodeType.DATASET, datasetId, new AsyncCallback<String>() {
+			@Override
+			public void onSuccess(String pagedResultString) {				
+				List<FileDownload> downloads = new ArrayList<FileDownload>();						
+				try {							
+					PagedResults pagedResult = nodeModelCreator.createPagedResults(pagedResultString);
+					List<String> results = pagedResult.getResults();
+					for(String fileDownloadString : results) {
+						DownloadLocation downloadLocation = nodeModelCreator.createDownloadLocation(fileDownloadString);
+						if(downloadLocation != null && downloadLocation.getPath() != null) { 
+							FileDownload dl = new FileDownload(downloadLocation.getPath(), "Download " + model.getName(), downloadLocation.getMd5sum(), downloadLocation.getContentType());
+							downloads.add(dl);
+						}	
+					}
+				} catch (RestServiceException ex) {
+					DisplayUtils.handleServiceException(ex, placeChanger, authenticationController.getLoggedInUser());
+					onFailure(null);					
+					return;
+				}				
+				view.setDatasetDownloads(downloads);
+				
+				// show download if requested
+				if(showDownload != null && showDownload == true) {
+					if(downloadAttempted()) {
+						view.showDownload();
+					}
+				}
+				setDatasetDetails(model, false, false);  // TODO is this correct?
+			}
+			@Override
+			public void onFailure(Throwable caught) {				
+				view.setDownloadUnavailable();
+				setDatasetDetails(model, false, false); // TODO is this correct?
+			}
+		});		// TODO Implement (Nicole)		
 	}
 
 	

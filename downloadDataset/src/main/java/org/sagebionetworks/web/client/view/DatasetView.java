@@ -40,6 +40,11 @@ public interface DatasetView extends IsWidget {
 	public void showInfo(String title, String message);
 	
 	/**
+	 * Removes the download button
+	 */
+	public void setDownloadUnavailable();
+	
+	/**
 	 * Send the view the details of the dataset to render.
 	 * @param id
 	 * @param name
@@ -124,6 +129,12 @@ public interface DatasetView extends IsWidget {
 	 * @param disable
 	 */
 	public void disableLicensedDownloads(boolean disable);
+	
+	/**
+	 * Shows a download modal for this dataset
+	 */
+	public void showDownload();
+
 		
 	/**
 	 * Defines the communication with the presenter.
@@ -163,9 +174,11 @@ public interface DatasetView extends IsWidget {
 		 * Delete this dataset 
 		 */
 		public void delete();
-}
+	}
 
-	
-
+	/**
+	 * Tells the view that the downloads are loading
+	 */
+	public void showDownloadsLoading();
 
 }

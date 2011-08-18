@@ -91,7 +91,7 @@ public class AppActivityMapperTest {
 		DatasetPresenter mockPresenter = Mockito.mock(DatasetPresenter.class);
 		when(mockInjector.getDatasetPresenter()).thenReturn(mockPresenter);
 		// This is the place
-		Dataset datasetPlace = new Dataset("ID");
+		Dataset datasetPlace = new Dataset("ID", false);
 		when(mockInjector.getGlobalApplicationState()).thenReturn(mockGlobalApplicationState);
 		
 		
