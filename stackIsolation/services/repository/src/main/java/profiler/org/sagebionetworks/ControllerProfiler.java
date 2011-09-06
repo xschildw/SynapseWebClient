@@ -36,12 +36,7 @@ public class ControllerProfiler {
 	
 	@Autowired
 	Consumer consumer;
-	//static Consumer consumer;
-	//static {
-       //consumer = new Consumer();
-       //consumer.init();
-    // }
-	// Called by Spring
+	
 	public ControllerProfiler(){
 	}
 
@@ -49,10 +44,6 @@ public class ControllerProfiler {
 	public ControllerProfiler(Consumer consumer){
 		this.consumer = consumer;
 	}	
-	
-	public void init(){
-		log.info("controllerProfiler.init called");
-	}
 	
 	//this is the Pointcut which handles all joinPoints for our Aspect
 	//@Around line represents what's included for our joinPoints (class/package)
@@ -86,6 +77,8 @@ public class ControllerProfiler {
 		return results;
 	}
 	
+	//method that takes a metric name and latency and conversts
+	//to MetricDatum object
 	public MetricDatum makeMD(String metricName, long latency){
 		MetricDatum nextMD = new MetricDatum();
 		nextMD.setMetricName(metricName);
@@ -95,5 +88,15 @@ public class ControllerProfiler {
 		nextMD.setTimestamp(jdkDate);
 		nextMD.setValue((double) latency);
 		return nextMD;
+	}
+	
+	//setter for consumer
+	public void setConsumer(Consumer consumer){
+		this.consumer = consumer;
+	}
+	
+	//getter for consumer
+	public Consumer getConsumer(){
+		return this.consumer;
 	}
 }

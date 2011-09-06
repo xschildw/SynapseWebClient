@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xmlns:aop="http://www.springframework.org/schema/aop"
 	xmlns:tx="http://www.springframework.org/schema/tx"
 	xmlns:util="http://www.springframework.org/schema/util"
 	xsi:schemaLocation="
@@ -17,7 +18,6 @@
 	<!-- The real Node DAO -->
 	<bean id="nodeManager" class="org.sagebionetworks.repo.manager.NodeManagerImpl" />
 	<bean id="nodeInheritanceManager" class="org.sagebionetworks.repo.manager.NodeInheritanceManagerImpl" />
-	
 	
 	<!-- The Entity manager-->
 	<bean id="entityManager" class="org.sagebionetworks.repo.manager.EntityManagerImpl" />
@@ -78,13 +78,35 @@
 		</property>
 	</bean>	
 	
-	<!-- controllerProfiler that collects latency information in the form of CloudWatch objects -->
-	<!--  
+	<!-- controllerProfiler that collects latency information in the form of CloudWatch objects --> 
 	<bean id="controllerProfiler" class="profiler.org.sagebionetworks.ControllerProfiler"/>
-	-->
-	<!-- A consumer that logs performance data for all bean method calls to Amazon CloudWatch. --> 
-	<!--  
-	<bean id="consumer" class="profiler.org.sagebionetworks.Consumer" scope="singleton" init-method="init"/>
-	-->
+	
+	<!-- A consumer that logs performance data for all bean method calls to Amazon CloudWatch. -->  
+	<bean id="consumer" class="profiler.org.sagebionetworks.Consumer" scope="singleton"/>
+	
+	<!-- watcher bean the consumer uses -->
+	<bean id="watcher" class="profiler.org.sagebionetworks.WatcherImpl" init-method="addWatcherToConsumerList"/>
+
+	<!--  bean saying we want to invoke the sendEm method in Consumer class -->
+	<bean id="methodInvoking" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+  		<property name="targetObject" ref="consumer" />
+  		<property name="targetMethod" value="sendEm" />
+	</bean>
+	
+	<!--  bean that creates trigger for the sendEm method of the consumer every 60 seconds -->
+	<bean id="simpleTrigger" class="org.springframework.scheduling.quartz.SimpleTriggerBean">
+    	<property name="jobDetail" ref="methodInvoking" />
+    	<property name="startDelay" value="0" />
+    	<property name="repeatInterval" value="6000" />
+	</bean>
+	
+	<!-- Trigger needs a scheduler to start it -->
+	<bean class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
+  		<property name="triggers">
+    		<list>
+      			<ref bean="simpleTrigger"/>
+    		</list>
+  		</property>
+	</bean>
 
 </beans>

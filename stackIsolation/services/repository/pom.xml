@@ -140,6 +140,22 @@
 			<artifactId>junit</artifactId>
 		</dependency>
 		
+		<dependency>
+  		<groupId>opensymphony</groupId>
+  		<artifactId>quartz-all</artifactId>
+  		<version>1.6.3</version>
+  		<type>jar</type>
+  		<scope>compile</scope>
+  	</dependency>
+  	
+  	<dependency>
+               	<groupId>commons-collections</groupId>
+               	<artifactId>commons-collections</artifactId>
+               	<version>20040616</version>
+               	<type>jar</type>
+               	<scope>compile</scope>
+ 	</dependency>
+		
  <!-- HTTPClient -->
                <dependency>
                        <groupId>commons-httpclient</groupId>
@@ -152,8 +168,6 @@
                        <artifactId>httpclient</artifactId>
                        <version>4.1.1</version>
                </dependency>
- 
-		
 	</dependencies>
 
 	<build>
