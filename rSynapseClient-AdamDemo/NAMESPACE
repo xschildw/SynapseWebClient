@@ -18,7 +18,7 @@ export(
 )
 
 ## S3 convenience methods
-export(getDatasets)
+export(getDatasets, loadLayerData)
 
 ## S4 convenience methods
 exportMethods(getDatasetLayers)

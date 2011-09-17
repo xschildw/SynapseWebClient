@@ -11,26 +11,26 @@ setMethod(
 setMethod(
 		f = "loadLayerData",
 		signature = "character",
-		definition = function(entity)
+		definition = function(entity, envir = new.env())
 		{
 			## get entity as S4 and dispatch to type-specific loader
-			loadLayerData(getEntity(entity))
+			loadLayerData(getEntity(entity), envir)
 		}
 )
 
 setMethod(
 		f = "loadLayerData",
 		signature = "integer",
-		definition = function(entity)
+		definition = function(entity, envir = new.env())
 		{
-			loadLayerData(as.character(entity))
+			loadLayerData(as.character(entity), envir)
 		}
 )
 
 setMethod(
 		f = "loadLayerData",
 		signature = "PhenotypeLayer",
-		definition = function(entity){
+		definition = function(entity, envir = new.env()){
 			files <- .cacheFiles(propertyValue(entity, "id"))
 			if(!is.null(annotValue(entity, "format")) && annotValue(entity, "format") == "sageBioCurated"){
 				## look in phenotype directory for 
@@ -57,7 +57,7 @@ setMethod(
 				return(new("AnnotatedDataFrame", data = d, varMetadata = desc))
 			}	
 			if(!is.null(annotValue(entity, "format")) && annotValue(entity, "format") == "rbin"){
-				return(.loadRbinaryFiles(files))
+				return(.loadRbinaryFiles(files, envir))
 			}
 			files
 		}
@@ -66,7 +66,7 @@ setMethod(
 setMethod(
 		f = "loadLayerData",
 		signature = "Layer",
-		definition = function(entity){
+		definition = function(entity, envir = new.env()){
 			## for a generic Layer, do format specific dispatch
 			files <- .cacheFiles(propertyValue(entity, "id"))
 			
@@ -74,14 +74,13 @@ setMethod(
 			if(is.null(annotValue(entity, "format")))
 				return(files)
 			switch(annotValue(entity, "format"),
-					rbin = .loadRbinaryFiles(files),
+					rbin = .loadRbinaryFiles(files, envir),
 					files
 			)
 		}
 )
 
-.loadRbinaryFiles <- function(files){
-	layerData <- new.env()
+.loadRbinaryFiles <- function(files, layerData = new.env()){
 	for(f in files){
 		tryCatch(
 				load(f, envir = layerData),
@@ -90,7 +89,7 @@ setMethod(
 			}
 		)
 	}
-	return(layerData)
+	invisible(layerData)
 }
 
 .loadTsvFiles <- function(files){

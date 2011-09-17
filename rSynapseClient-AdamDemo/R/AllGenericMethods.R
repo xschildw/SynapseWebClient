@@ -238,7 +238,7 @@ setGeneric(
 
 setGeneric(
 		name = "loadLayerData",
-		def = function(entity){
+		def = function(entity, ...){
 			standardGeneric("loadLayerData")
 		}
 )
