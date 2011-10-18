@@ -1,0 +1,30 @@
+{
+    "description":"Metadata about entities",
+    "id":"EntityTypeMetadata.json",
+    "properties":{
+        "urlPrefix":{
+            "type":"string",
+            "description":"The URL prefix for an entity type.",
+            "required":"true"
+        },
+        "typeId":{
+            "description":"The ID used to uniquely identify an entity type.",
+            "type":"integer"
+        },
+        "entitySchemaPath":{
+            "type":"string",
+            "description":"The full path of the entity schema."
+        },
+        "defaultParentPath":{
+            "type":"string",
+            "description":"The full path of the entity schema."
+        },
+        "validParentTypes":{
+            "type":"array",
+            "description":"The full path of the entity schema.",
+            "items":{
+                "type":"string"
+            }
+        }
+    }
+}

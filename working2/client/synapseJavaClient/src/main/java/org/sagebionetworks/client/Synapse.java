@@ -18,7 +18,6 @@ import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.sagebionetworks.utils.HttpClientHelper;
 import org.sagebionetworks.utils.HttpClientHelperException;
 import org.sagebionetworks.utils.MD5ChecksumHelper;
 
@@ -48,13 +47,24 @@ public class Synapse {
 
 	private JSONObject profileData;
 	private boolean requestProfile;
+	private HttpClientProvider clientProvider;
 
 	/**
 	 * Default constructor uses the default repository and auth services
 	 * endpoints.
 	 */
 	public Synapse() {
-
+		// Use the default provider
+		this(new HttpClientProviderImpl());
+	}
+	
+	/**
+	 * Used for mock testing.
+	 * 
+	 * @param provider
+	 */
+	Synapse(HttpClientProvider provider) {
+		if(provider == null) throw new IllegalArgumentException("Provider cannot be null");
 		setRepositoryEndpoint(DEFAULT_REPO_ENDPOINT);
 		setAuthEndpoint(DEFAULT_AUTH_ENDPOINT);
 
@@ -65,8 +75,9 @@ public class Synapse {
 		defaultPOSTPUTHeaders.putAll(defaultGETDELETEHeaders);
 		defaultPOSTPUTHeaders.put("Content-Type", "application/json");
 
-		HttpClientHelper.setGlobalConnectionTimeout(DEFAULT_TIMEOUT_MSEC);
-		HttpClientHelper.setGlobalSocketTimeout(DEFAULT_TIMEOUT_MSEC);
+		clientProvider = provider;
+		clientProvider.setGlobalConnectionTimeout(DEFAULT_TIMEOUT_MSEC);
+		clientProvider.setGlobalSocketTimeout(DEFAULT_TIMEOUT_MSEC);
 
 		requestProfile = false;
 
@@ -319,7 +330,7 @@ public class Synapse {
 		headerMap.put("Content-MD5", base64Md5);
 		headerMap.put("Content-Type", s3Location.getString("contentType"));
 
-		HttpClientHelper.uploadFile(s3Location.getString("path"), dataFile
+		clientProvider.uploadFile(s3Location.getString("path"), dataFile
 				.getAbsolutePath(), s3Location.getString("contentType"),
 				headerMap);
 
@@ -586,7 +597,7 @@ public class Synapse {
 
 		JSONObject results = null;
 		try {
-			HttpResponse response = HttpClientHelper.performRequest(requestUrl
+			HttpResponse response = clientProvider.performRequest(requestUrl
 					.toString(), requestMethod, requestContent, requestHeaders);
 			String responseBody = (null != response.getEntity()) ? EntityUtils
 					.toString(response.getEntity()) : null;
