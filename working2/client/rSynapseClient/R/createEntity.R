@@ -62,9 +62,10 @@ setMethod(
 		definition = function(entity){
 			## create the entity
 			oldAnnotations <- annotations(entity)
-			
+			oldClass <- class(entity)
 			uri <- paste("/", synapseEntityKind(entity), sep = "")
 			entity <- SynapseEntity(synapsePost(uri=uri, entity=.extractEntityFromSlots(entity)))
+			class(entity) <- oldClass
 			
 			## update entity annotations
 			newAnnotations <- annotations(entity)
@@ -128,6 +129,7 @@ setMethod(
 			class(entity) <- oldClass
 			createdEntity@location <- entity@location
 			createdEntity@objects <- entity@objects
+			createdEntity@synapseWebUrl <- .buildSynapseUrl(propertyValue(createdEntity, "id"))
 			createdEntity
 		}
 )

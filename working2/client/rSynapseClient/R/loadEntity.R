@@ -97,6 +97,26 @@ setMethod(
 		}
 )
 
+setMethod(
+		f = "loadEntity",
+		signature = "ExpressionLayer",
+		definition = function(entity){
+			if(length(entity$files) == 0L)
+				entity <- downloadEntity(entity)
+			if(annotValue(entity,"format") == "GEO"){
+				cel.files <- list.celfiles(entity$cacheDir, full.names=TRUE)
+				cdfs <- sapply(cel.files, whatcdf) 
+				expression <- lapply(unique(cdfs), function(cdf){
+							ReadAffy(filenames=names(which(cdfs==cdf)))
+						}
+				)
+				names(expression) <- unique(cdfs)
+				entity <- addObject(entity, expression, unlist = FALSE)
+			}
+			entity
+		}
+)
+
 
 setMethod(
 		f = "loadEntity",
@@ -109,10 +129,15 @@ setMethod(
 			class(entity) <- oldClass
 			indx <- grep("\\.r$", tolower(entity$files))
 			setPackageName(sprintf("entity%s", propertyValue(entity, "id")), env = entity@objects)
-			lapply(entity$files[indx],
-					function(f){
-						f <- file.path(entity$cacheDir, f)
-						sys.source(f, env = entity@objects)
+			tryCatch(
+					lapply(entity$files[indx],
+							function(f){
+								f <- file.path(entity$cacheDir, f)
+								sys.source(f, env = entity@objects)
+							}
+					),
+					error = function(e){
+						warning(e)
 					}
 			)
 			entity
