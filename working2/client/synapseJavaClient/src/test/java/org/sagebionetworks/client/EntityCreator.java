@@ -9,7 +9,7 @@ import org.sagebionetworks.Dataset;
  * @author jmhill
  *
  */
-public class EntityFactory {
+public class EntityCreator {
 	
 	/**
 	 * Create a new dataset with all of the fields set.

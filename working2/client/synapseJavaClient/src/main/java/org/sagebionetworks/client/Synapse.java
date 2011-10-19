@@ -18,6 +18,12 @@ import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.sagebionetworks.Entity;
+import org.sagebionetworks.registry.EntityType;
+import org.sagebionetworks.schema.adapter.JSONAdapter;
+import org.sagebionetworks.schema.adapter.JSONObjectAdapterException;
+import org.sagebionetworks.schema.adapter.org.json.EntityFactory;
+import org.sagebionetworks.schema.adapter.org.json.JSONObjectAdapterImpl;
 import org.sagebionetworks.utils.HttpClientHelperException;
 import org.sagebionetworks.utils.MD5ChecksumHelper;
 
@@ -171,6 +177,30 @@ public class Synapse {
 			throws ClientProtocolException, IOException, JSONException,
 			SynapseUserException, SynapseServiceException {
 		return createSynapseEntity(repoEndpoint, uri, entity);
+	}
+	
+	/**
+	 * Create a new Entity.
+	 * @param <T>
+	 * @param entity
+	 * @return
+	 * @throws JSONObjectAdapterException 
+	 * @throws SynapseServiceException 
+	 * @throws SynapseUserException 
+	 * @throws JSONException 
+	 * @throws IOException 
+	 * @throws ClientProtocolException 
+	 */
+	public <T extends Entity> T createEntity(T entity) throws JSONObjectAdapterException, ClientProtocolException, IOException, JSONException, SynapseUserException, SynapseServiceException{
+		if(entity == null) throw new IllegalArgumentException("Entity cannot be null");
+		// Look up the EntityType for this entity.
+		EntityType type = EntityType.getNodeTypeForClass(entity.getClass());
+		// Get the json for this entity
+		JSONObject jsonObject = EntityFactory.createJSONObjectForEntity(entity);
+		// Create the entity
+		jsonObject = createEntity(type.getUrlPrefix(), jsonObject);
+		// Now convert to Object to an entity
+		return (T) EntityFactory.createEntityFromJSONObject(jsonObject, entity.getClass());
 	}
 
 	/**

@@ -23,11 +23,16 @@
 			<artifactId>lib-auto-generated</artifactId>
 			<version>${applicationVersion}</version>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>org.sagebionetworks</groupId>
 			<artifactId>lib-communicationUtilities</artifactId>
 			<version>${applicationVersion}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.sagebionetworks</groupId>
+			<artifactId>schema-to-pojo-org-json</artifactId>
 		</dependency>
 
 		<!-- JSON -->

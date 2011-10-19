@@ -1,102 +1,92 @@
 {
     "entityTypes":[
         {
-            "entitySchemaPath":"org/sagebionetworks/Step",
-            "validParentTypes":[
-                "/folder",
-                "/project",
-                "DEFAULT"
-            ],
-            "urlPrefix":"/step",
-            "defaultParentPath":"/root",
-            "typeId":9
-        },
-        {
-            "entitySchemaPath":"org/sagebionetworks/Folder",
-            "validParentTypes":[
-                "DEFAULT",
-                "/folder"
-            ],
-            "urlPrefix":"/folder",
-            "defaultParentPath":"/root",
-            "typeId":7
-        },
-        {
-            "entitySchemaPath":"org/sagebionetworks/Eula",
-            "validParentTypes":[
-                "DEFAULT",
-                "/folder"
-            ],
-            "urlPrefix":"/eula",
-            "defaultParentPath":"/root/eulas",
-            "typeId":5
-        },
-        {
-            "entitySchemaPath":"org/sagebionetworks/Dataset",
             "validParentTypes":[
                 "/project"
             ],
             "urlPrefix":"/dataset",
-            "defaultParentPath":"/root",
-            "typeId":0
+            "className":"org.sagebionetworks.Dataset",
+            "defaultParentPath":"/root"
         },
         {
-            "entitySchemaPath":"org/sagebionetworks/Location",
+            "validParentTypes":[
+                "/dataset"
+            ],
+            "urlPrefix":"/layer",
+            "className":"org.sagebionetworks.Layer",
+            "defaultParentPath":"/root"
+        },
+        {
             "validParentTypes":[
                 "/dataset",
                 "/layer"
             ],
             "urlPrefix":"/location",
-            "defaultParentPath":"/root",
-            "typeId":2
+            "className":"org.sagebionetworks.Location",
+            "defaultParentPath":"/root"
         },
         {
-            "entitySchemaPath":"org/sagebionetworks/Layer",
-            "validParentTypes":[
-                "/dataset"
-            ],
-            "urlPrefix":"/layer",
-            "defaultParentPath":"/root",
-            "typeId":1
-        },
-        {
-            "entitySchemaPath":"org/sagebionetworks/Analysis",
-            "validParentTypes":[
-                "/project"
-            ],
-            "urlPrefix":"/analysis",
-            "defaultParentPath":"/root",
-            "typeId":8
-        },
-        {
-            "entitySchemaPath":"org/sagebionetworks/Project",
             "validParentTypes":[
                 "/folder",
                 "/project",
                 "DEFAULT"
             ],
             "urlPrefix":"/project",
-            "defaultParentPath":"/root",
-            "typeId":3
+            "className":"org.sagebionetworks.Project",
+            "defaultParentPath":"/root"
         },
         {
-            "entitySchemaPath":"org/sagebionetworks/Agreement",
+            "validParentTypes":[
+                "/layer"
+            ],
+            "urlPrefix":"/preview",
+            "className":"org.sagebionetworks.Preview",
+            "defaultParentPath":"/root"
+        },
+        {
+            "validParentTypes":[
+                "DEFAULT",
+                "/folder"
+            ],
+            "urlPrefix":"/eula",
+            "className":"org.sagebionetworks.Eula",
+            "defaultParentPath":"/root/eulas"
+        },
+        {
             "validParentTypes":[
                 "DEFAULT",
                 "/folder"
             ],
             "urlPrefix":"/agreement",
-            "defaultParentPath":"/root/agreements",
-            "typeId":6
+            "className":"org.sagebionetworks.Agreement",
+            "defaultParentPath":"/root/agreements"
         },
         {
-            "entitySchemaPath":"org/sagebionetworks/Preview",
             "validParentTypes":[
-                "/layer"
+                "DEFAULT",
+                "/folder"
             ],
-            "urlPrefix":"/preview",
-            "defaultParentPath":"/root",
-            "typeId":4
+            "urlPrefix":"/folder",
+            "className":"org.sagebionetworks.Folder",
+            "defaultParentPath":"/root"
+        },
+        {
+            "validParentTypes":[
+                "/project"
+            ],
+            "urlPrefix":"/analysis",
+            "className":"org.sagebionetworks.Analysis",
+            "defaultParentPath":"/root"
+        },
+        {
+            "validParentTypes":[
+                "/folder",
+                "/project",
+                "DEFAULT"
+            ],
+            "urlPrefix":"/step",
+            "className":"org.sagebionetworks.Step",
+            "defaultParentPath":"/root"
         }
     ]
 }

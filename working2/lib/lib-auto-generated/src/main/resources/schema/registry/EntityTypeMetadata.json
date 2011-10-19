@@ -7,13 +7,9 @@
             "description":"The URL prefix for an entity type.",
             "required":"true"
         },
-        "typeId":{
-            "description":"The ID used to uniquely identify an entity type.",
-            "type":"integer"
-        },
-        "entitySchemaPath":{
+        "className":{
             "type":"string",
-            "description":"The full path of the entity schema."
+            "description":"Class Name for this Entity"
         },
         "defaultParentPath":{
             "type":"string",
