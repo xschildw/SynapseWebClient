@@ -34,6 +34,8 @@ exportMethods(
 	Dataset, 
 	Layer, 
 	Project,
+  Analysis,
+  Step,
 	Code,
 	Media
 )

@@ -39,6 +39,12 @@
 		uri <- paste(host, path, uri, sep="")
 	}
 	
+	## Add the provenance parameter, if applicable
+	step <- .getCache("currentStep")
+	if(!is.null(step)) {
+		uri <- paste(uri, "?stepId=", propertyValue(step, "id"), sep="")
+	}
+	
 	## Prepare the header. If not an anonymous request, stuff the
 	## sessionToken into the header
 	header <- .getCache("curlHeader")

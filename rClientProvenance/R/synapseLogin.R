@@ -17,6 +17,10 @@ synapseLogin <-
 	credentials <- list(username = username, password = password, mode=mode)
 	.doAuth(credentials)
 	.setCache("sessionTimestamp", Sys.time())
+	
+	# automatic provenance
+	startStep()
+	return()
 }
 
 .doHmac <-
