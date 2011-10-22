@@ -91,3 +91,11 @@ exportMethods(
  	properties
 )
 
+# Provenance Methods
+exportMethods(
+  startStep,
+  stopStep
+)
+
+export(showStep)
+              

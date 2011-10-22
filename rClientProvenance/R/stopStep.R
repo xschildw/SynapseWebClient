@@ -1,6 +1,6 @@
 setGeneric(
 	name = "stopStep",
-	def = function(parentEntity){
+	def = function(step){
 		standardGeneric("stopStep")
 	}
 	)
@@ -8,23 +8,23 @@ setGeneric(
 setMethod(
 	f = "stopStep",
 	signature = "SynapseEntity",
-	definition = function(parentEntity){
-		stopStep(propertyValue(parentEntity, id))
+	definition = function(step){
+		stopStep(propertyValue(step, id))
 	}
 	)
 
 setMethod(
 	f = "stopStep",
 	signature = "numeric",
-	definition = function(parentEntity) {
-		stopStep(as.character(parentEntity))
+	definition = function(step) {
+		stopStep(as.character(step))
 	}
 	)
 
 setMethod(
 	f = "stopStep",
 	signature = "missing",
-	definition = function(parentEntity) {
+	definition = function(step) {
 		stopStep(NA_character_)
 	}
 	)
@@ -32,12 +32,20 @@ setMethod(
 setMethod(
 	f = "stopStep",
 	signature = "character",
-	definition = function(parentEntity) {
-		step <-	.getCache("currentStep")
+	definition = function(step) {
+		# If we were not passed a step, stop the current step
+		if(missing(step) || is.na(step)) {
+			step <-	.getCache("currentStep")
+			if(is.null(step)) {
+				stop("There is no step to stop")
+			}
+		}
+		
 		step <- getEntity(step)
 		# TODO is there a better way to make ISO-8601 dates in R?
 		propertyValue(step, "endDate") <- format(Sys.time(), "%FT%H:%M:%S")
 		step <- updateEntity(step)
+		.setCache("previousStep", step)
 		.deleteCache("currentStep")
 		step
 	}

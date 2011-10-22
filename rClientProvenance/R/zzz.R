@@ -82,3 +82,7 @@ kLayerSubtypeMap <- list(
 	.setCache("synapseBannerPath", file.path(libname, pkgname, "images", "synapse_banner.gif"))
 	.setCache("rObjCacheDir", ".R_OBJECTS")
 }
+
+.Last.lib <- function() {
+	try(stoppedStep <- stopStep(), silent=TRUE)
+}

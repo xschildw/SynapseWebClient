@@ -18,9 +18,8 @@ synapseLogin <-
 	.doAuth(credentials)
 	.setCache("sessionTimestamp", Sys.time())
 	
-	# automatic provenance
-	startStep()
-	return()
+	# automatic provenance, don't return this object, but it is cached
+	currentStep = startStep()
 }
 
 .doHmac <-

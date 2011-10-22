@@ -33,6 +33,13 @@ setMethod(
 	f = "startStep",
 	signature = "character",
 	definition = function(parentEntity) {
+		# Stop the current step, if applicable
+		step <- .getCache("currentStep")
+		if(!is.null(step)) {
+			stopStep(step)
+		}
+		
+		# Create a new step
 		step <- Step(list(commandLine=paste(commandArgs(), collapse=" ")))
 		if(!missing(parentEntity)) {
 			propertyValue(step, "parentId") <- parentEntity
