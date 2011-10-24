@@ -94,6 +94,7 @@ exportMethods(
 # Provenance Methods
 exportMethods(
   startStep,
+  getStep,
   stopStep
 )
 

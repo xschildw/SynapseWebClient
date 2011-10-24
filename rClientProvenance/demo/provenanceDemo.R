@@ -55,6 +55,7 @@ analysis <- Analysis(list(description="glmnet algorithm applied to Cell Line Dat
 													name="myFirstAnalysis",
 													parentId=propertyValue(project, "id")))
 #onWeb()  !!
+showStep()
 
 # q() will also do this
 stoppedStep <- stopStep()

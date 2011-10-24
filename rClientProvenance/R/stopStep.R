@@ -9,7 +9,7 @@ setMethod(
 	f = "stopStep",
 	signature = "SynapseEntity",
 	definition = function(step){
-		stopStep(propertyValue(step, id))
+		stopStep(propertyValue(step, "id"))
 	}
 	)
 
@@ -42,8 +42,9 @@ setMethod(
 		}
 		
 		step <- getEntity(step)
-		# TODO is there a better way to make ISO-8601 dates in R?
-		propertyValue(step, "endDate") <- format(Sys.time(), "%FT%H:%M:%S")
+		propertyValue(step, "endDate") <- .nowAsString()
+		propertyValue(step, "environmentDescriptors")	<- .appendSessionInfoToDescriptors(propertyValue(step, "environmentDescriptors"))
+		annotValue(step, "rHistory") <- .getRHistory()
 		step <- updateEntity(step)
 		.setCache("previousStep", step)
 		.deleteCache("currentStep")
@@ -51,3 +52,37 @@ setMethod(
 	}
 	)
 
+.appendSessionInfoToDescriptors <- function(descriptors) {
+	info <- sessionInfo()
+	osDescriptor <- list(type="OS", name=info$R.version$platform)
+	rDescriptor <- list(type="application", name="R", quantifier=info$R.version$version.string)
+	listOfLists <- c(list(osDescriptor, 
+							 rDescriptor),
+					 lapply(info$basePkgs, .makeRPackageDescriptor),
+					 lapply(info$otherPkgs, .makeRPackageDescriptor))	
+	if(missing(descriptors) || is.null(descriptors)) {
+		array(listOfLists)
+	} else {
+		append(descriptors, array(listOfLists))
+	}
+}
+
+.makeRPackageDescriptor <- function(packageDescription) {
+	descriptor <- list()
+	descriptor['type'] <- 'rPackage'
+	if(is.character(packageDescription)) {
+		descriptor['name'] <- packageDescription
+	} else {
+		descriptor['name'] <- packageDescription$Package
+		descriptor['quantifier'] <- packageDescription$Version
+	}
+	descriptor
+}
+
+.getRHistory <- function(step) {
+	file1 <- tempfile("Rrawhist")
+	savehistory(file1)
+	rawhist <- readLines(file1)
+	unlink(file1)
+	rawhist
+}
