@@ -57,13 +57,13 @@ setMethod(
 	osDescriptor <- list(type="OS", name=info$R.version$platform)
 	rDescriptor <- list(type="application", name="R", quantifier=info$R.version$version.string)
 	listOfLists <- c(list(osDescriptor, 
-							 rDescriptor),
-					 lapply(info$basePkgs, .makeRPackageDescriptor),
-					 lapply(info$otherPkgs, .makeRPackageDescriptor))	
+												rDescriptor),
+									 lapply(info$basePkgs, .makeRPackageDescriptor),
+									 array(lapply(info$otherPkgs, .makeRPackageDescriptor)))	
 	if(missing(descriptors) || is.null(descriptors)) {
-		array(listOfLists)
+		listOfLists
 	} else {
-		append(descriptors, array(listOfLists))
+		c(descriptors, listOfLists)
 	}
 }
 

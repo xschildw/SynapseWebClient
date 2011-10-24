@@ -43,7 +43,7 @@ integrationTestProvenance <- function() {
 	inputLayer <- createdLayer
 
 	## Start a new step
-	startStep()
+	step <- startStep()
 
 	## The command line used to invoke this should be stored in the commandLine field
 	checkEquals(paste(commandArgs(), collapse=" "), propertyValue(step, 'commandLine'))
@@ -73,7 +73,7 @@ integrationTestProvenance <- function() {
 	checkEquals(propertyValue(analysis, "id"), propertyValue(step, "parentId"))
 	
 	step <- stopStep()
-	# check environment descriptor
-	
-	
+	checkTrue(0 < propertyValue(step, 'endDate'))
+	checkTrue(10 < length(propertyValue(step, 'environmentDescriptors')))
+	checkTrue(100 < length(annotValue(step, 'rHistory')))
 }
