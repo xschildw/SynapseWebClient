@@ -97,6 +97,4 @@ exportMethods(
   getStep,
   stopStep
 )
-
-export(showStep)
               

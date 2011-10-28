@@ -16,31 +16,33 @@
 integrationTestProvenance <- function() {
 
 	## Create Project
-	project <- new(Class="Project")
-	propertyValue(project,"name") <- synapseClient:::.getCache("testProjectName")
-	createdProject <- createEntity(project)
-	synapseClient:::.setCache("testProject", createdProject)
-	checkEquals(propertyValue(createdProject,"name"), synapseClient:::.getCache("testProjectName"))
-	project <- createdProject
+	project <- createEntity(
+		Project(
+			list(
+				name=synapseClient:::.getCache("testProjectName")
+				)))
+	synapseClient:::.setCache("testProject", project)
+	checkEquals(propertyValue(project,"name"), synapseClient:::.getCache("testProjectName"))
 	
 	## Create Dataset
-	dataset <- new(Class="Dataset")
-	propertyValue(dataset, "name") <- "testDatasetName"
-	propertyValue(dataset,"parentId") <- propertyValue(project, "id")
-	createdDataset <- createEntity(dataset)
-	checkEquals(propertyValue(createdDataset,"name"), propertyValue(dataset, "name"))
-	checkEquals(propertyValue(createdDataset,"parentId"), propertyValue(project, "id"))
-	dataset <- createdDataset
+	dataset <- createEntity(
+		Dataset(
+			list(
+				name="testDatasetName",
+				parentId=propertyValue(project, "id")
+				)))
+	checkEquals(propertyValue(dataset,"name"), "testDatasetName")
+	checkEquals(propertyValue(dataset,"parentId"), propertyValue(project, "id"))
 	
 	## Create Layer
 	layer <- new(Class = "PhenotypeLayer")
 	propertyValue(layer, "name") <- "testPhenoLayerName"
 	propertyValue(layer, "parentId") <- propertyValue(dataset,"id")
 	checkEquals(propertyValue(layer,"type"), "C")
-	createdLayer <- createEntity(layer)
-	checkEquals(propertyValue(createdLayer,"name"), propertyValue(layer, "name"))
-	checkEquals(propertyValue(createdLayer,"parentId"), propertyValue(dataset, "id"))
-	inputLayer <- createdLayer
+	layer <- createEntity(layer)
+	checkEquals(propertyValue(layer,"name"), "testPhenoLayerName")
+	checkEquals(propertyValue(layer,"parentId"), propertyValue(dataset, "id"))
+	inputLayer <- layer
 
 	## Start a new step
 	step <- startStep()
@@ -58,10 +60,10 @@ integrationTestProvenance <- function() {
 	propertyValue(layer, "name") <- "testExprLayerName"
 	propertyValue(layer, "parentId") <- propertyValue(dataset,"id")
 	checkEquals(propertyValue(layer,"type"), "E")
-	createdLayer <- createEntity(layer)
-	checkEquals(propertyValue(createdLayer,"name"), propertyValue(layer, "name"))
-	checkEquals(propertyValue(createdLayer,"parentId"), propertyValue(dataset, "id"))
-	outputLayer <- createdLayer
+	layer <- createEntity(layer)
+	checkEquals(propertyValue(layer,"name"), "testExprLayerName")
+	checkEquals(propertyValue(layer,"parentId"), propertyValue(dataset, "id"))
+	outputLayer <- layer
 	step <- getStep()
 	checkEquals(propertyValue(outputLayer, "id"), propertyValue(step, "output")[[1]]$targetId)
 	
@@ -75,5 +77,5 @@ integrationTestProvenance <- function() {
 	step <- stopStep()
 	checkTrue(0 < propertyValue(step, 'endDate'))
 	checkTrue(10 < length(propertyValue(step, 'environmentDescriptors')))
-	checkTrue(100 < length(annotValue(step, 'rHistory')))
+	checkTrue(0 < length(annotValue(step, 'rHistory')))
 }
