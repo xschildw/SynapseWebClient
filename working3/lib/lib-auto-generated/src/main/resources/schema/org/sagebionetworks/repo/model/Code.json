@@ -1,0 +1,27 @@
+{
+    "description":"JSON schema for Code POJO",
+    "implements":[
+        {
+            "$ref":"org.sagebionetworks.repo.model.Entity"
+        },
+        
+    ],
+    "properties":{
+        "startDate":{
+            "type":"string",
+            "format":"date-time",
+            
+        },
+        "endDate":{
+            "type":"string",
+            "format":"date-time",
+            
+        },
+        "version":{
+            "type":"string",
+            "description":"This is a fake version label.  The entity needs to be converted to versionable",
+            
+        },
+        
+    }
+}
