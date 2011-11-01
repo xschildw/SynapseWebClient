@@ -20,7 +20,8 @@ export(
 	synapseLogout, 
 	synapseQuery, 
 	synapseCacheDir,
-	hmacSecretKey
+	hmacSecretKey,
+    .Last.lib
 )
 
 ## S3 convenience methods

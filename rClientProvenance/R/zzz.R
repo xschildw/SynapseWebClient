@@ -83,6 +83,6 @@ kLayerSubtypeMap <- list(
 	.setCache("rObjCacheDir", ".R_OBJECTS")
 }
 
-.Last.lib <- function() {
+.Last.lib <- function(...) {
 	try(stoppedStep <- stopStep(), silent=TRUE)
 }
