@@ -1,15 +1,16 @@
 ## log into my local synapse stack
 goLocal()
+#goStaging()
 
 ## this is just to show what's happening under the covers, you don't need to call this
 onWeb(getStep())
 
 ## load some clinical data
-clinicalData <- getEntity(3032)
+clinicalData <- getEntity(2967)
 # --> refresh the Step web UI page and see how it changed
 
 ## load some expression data
-expressionData <- getEntity(3029)
+expressionData <- getEntity(2969)
 # --> refresh the Step web UI page and see how it changed
 
 ####
@@ -53,6 +54,7 @@ elasticNetLayer <- storeEntity(elasticNetLayer)
 analysis <- Analysis(list(description="glmnet algorithm applied to Cell Line Data and Sanger Drug Response data", 
 													name="myFirstAnalysis",
 													parentId=propertyValue(project, "id")))
+analysis <- createEntity(analysis)
 # --> refresh the Step web UI page and see how it changed
 
 ## q() will also do this
