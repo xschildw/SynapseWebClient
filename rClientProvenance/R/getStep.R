@@ -9,7 +9,7 @@ setMethod(
 	f = "getStep",
 	signature = "SynapseEntity",
 	definition = function(step){
-		getStep(propertyValue(step, id))
+		getStep(propertyValue(step, "id"))
 	}
 	)
 
