@@ -9,7 +9,7 @@ setMethod(
 	f = "startStep",
 	signature = "SynapseEntity",
 	definition = function(parentEntity){
-		startStep(propertyValue(parentEntity, id))
+		startStep(propertyValue(parentEntity, "id"))
 	}
 	)
 
