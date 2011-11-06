@@ -1,0 +1,51 @@
+<!DOCTYPE ui:UiBinder SYSTEM "http://dl.google.com/gwt/DTD/xhtml.ent">
+<ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"
+	xmlns:g="urn:import:com.google.gwt.user.client.ui">
+	<ui:style>
+		div.center {   
+			margin-left: auto;   
+			margin-right: auto;   
+			width: 8em;
+			padding:15px; 
+		}
+	</ui:style>
+	<g:HTMLPanel>
+	<!-- start header -->
+		<div id="container" class="clearfix">		
+			<g:SimplePanel ui:field="header" />
+			<div id="main" role="main">
+			<div style="margin-left: 35%;">
+	<!-- end header -->
+				<div id="logo" style="clear: right">					
+						<span class="large">Synapse</span>
+						<span class="tagline">CONTRIBUTE TO<br /> THE CURE</span>					
+				</div>
+				
+				<p>&nbsp;</p>
+				<p>&nbsp;</p> 
+				<p>&nbsp;</p>
+				<p>&nbsp;</p>
+
+				<!-- LoginView -->				
+				
+				<g:SimplePanel ui:field="loginWidgetPanel" />
+				<br/>
+				<table style="width: 350px;">
+					<tr>
+						<td><g:SimplePanel ui:field="passwordResetButtonPanel" /></td>
+						<td class="right" style="text-align: right"><g:SimplePanel ui:field="registerButtonPanel" /></td>
+					</tr>
+				</table>		
+
+				<!-- Logout View -->
+				<g:SimplePanel ui:field="logoutPanel" />
+				
+
+<!-- start footer -->
+				<g:SimplePanel ui:field="footer" />
+			</div>				
+			</div> <!-- id: main -->
+		</div> <!-- id: container -->
+<!-- end footer -->
+	</g:HTMLPanel>
+</ui:UiBinder> 
