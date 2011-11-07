@@ -128,13 +128,16 @@ setMethod(
 		f = "loadEntity",
 		signature = "Code",
 		definition = function(entity){
-			## call the super class load method
-			oldClass <- class(entity)
-			class(entity) <- "Layer"
-			entity <- loadEntity(entity)
-			class(entity) <- oldClass
+			if(length(entity@location@files) == 0)
+				entity <- downloadEntity(entity)
+			entity@objects <- new.env()
+			
 			indx <- grep("\\.r$", tolower(entity$files))
-			setPackageName(sprintf("entity%s", propertyValue(entity, "id")), env = entity@objects)
+			if(!is.null(propertyValue(entity, "id"))){
+				setPackageName(sprintf("entity%s", propertyValue(entity, "id")), env = entity@objects)
+			}else{
+				setPackageName(sprintf("code%s", propertyValue(entity, "name")), env = entity@objects)
+			}
 			tryCatch(
 					lapply(entity$files[indx],
 							function(f){
