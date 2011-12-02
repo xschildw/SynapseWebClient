@@ -34,10 +34,10 @@ public class LocationHelpersImpl implements LocationHelper {
 	// This will be increased to 64 characters some time in October
 	private static final int MAX_FEDERATED_NAME_LENGTH = 32;
 
-	private static final int READ_ACCESS_EXPIRY_MINUTES = StackConfiguration
-			.getS3ReadAccessExpiryMinutes();
-	private static final int WRITE_ACCESS_EXPIRY_MINUTES = StackConfiguration
-			.getS3WriteAccessExpiryMinutes();
+	private static final int READ_ACCESS_EXPIRY_HOURS = StackConfiguration
+			.getS3ReadAccessExpiryHours();
+	private static final int WRITE_ACCESS_EXPIRY_HOURS = StackConfiguration
+			.getS3WriteAccessExpiryHours();
 	private static final String S3_DOMAIN = "s3.amazonaws.com";
 	private static final String CANONICALIZED_ACL_HEADER = "x-amz-acl:bucket-owner-full-control";
 	private static final String SECURITY_TOKEN_HEADER = "x-amz-security-token";
@@ -56,6 +56,10 @@ public class LocationHelpersImpl implements LocationHelper {
 
 	@Autowired
 	private AmazonClientFactory amazonClientFactory;
+	
+	public LocationHelpersImpl(AmazonClientFactory amazonClientFactory) {
+		this.amazonClientFactory = amazonClientFactory;
+	}
 
 	/**
 	 * This throws DatastoreException. It could throw another exception if that
@@ -102,7 +106,7 @@ public class LocationHelpersImpl implements LocationHelper {
 				token.getSecretAccessKey());
 
 		DateTime now = new DateTime();
-		DateTime expires = now.plusMinutes(READ_ACCESS_EXPIRY_MINUTES);
+		DateTime expires = now.plusHours(READ_ACCESS_EXPIRY_HOURS);
 		String expirationInSeconds = Long.toString(expires.getMillis() / 1000L);
 
 		// Formulate the canonical string to sign
@@ -150,7 +154,7 @@ public class LocationHelpersImpl implements LocationHelper {
 
 		// Compute our expires time for this URL
 		DateTime now = new DateTime();
-		DateTime expires = now.plusMinutes(WRITE_ACCESS_EXPIRY_MINUTES);
+		DateTime expires = now.plusHours(WRITE_ACCESS_EXPIRY_HOURS);
 		String expirationInSeconds = Long.toString(expires.getMillis() / 1000L);
 
 		// Formulate the canonical string to sign
@@ -176,10 +180,12 @@ public class LocationHelpersImpl implements LocationHelper {
 			String expirationInSeconds, String token) throws DatastoreException {
 
 		String signature;
+		String encodedToken;
 		try {
 			byte[] sig = HMACUtils.generateHMACSHA1SignatureFromRawKey(data,
 					creds.getAWSSecretKey().getBytes());
-			signature = URLEncoder.encode(new String(sig), ("UTF-8"));
+			signature = URLEncoder.encode(new String(sig), "UTF-8");
+			encodedToken = URLEncoder.encode(token, "UTF-8");
 		} catch (Exception e) {
 			throw new DatastoreException("Failed to generate signature: "
 					+ e.getMessage(), e);
@@ -189,7 +195,7 @@ public class LocationHelpersImpl implements LocationHelper {
 		presignedUrl.append(S3_URL_PREFIX).append(s3Key).append("?");
 		presignedUrl.append("Expires").append("=").append(expirationInSeconds)
 				.append("&");
-		presignedUrl.append(SECURITY_TOKEN_HEADER).append("=").append(token)
+		presignedUrl.append(SECURITY_TOKEN_HEADER).append("=").append(encodedToken)
 				.append("&");
 		presignedUrl.append("AWSAccessKeyId").append("=").append(
 				creds.getAWSAccessKeyId()).append("&");
@@ -198,7 +204,7 @@ public class LocationHelpersImpl implements LocationHelper {
 		return presignedUrl.toString();
 	}
 
-	private Credentials createS3Token(String userId, HttpMethod method,
+	public Credentials createS3Token(String userId, HttpMethod method,
 			String s3Key) throws DatastoreException {
 
 		// Configuration is checked upon startup, we are being extra safe here
@@ -216,8 +222,8 @@ public class LocationHelpersImpl implements LocationHelper {
 					MAX_FEDERATED_NAME_LENGTH);
 		}
 
-		int durationSeconds = (HttpMethod.PUT == method) ? WRITE_ACCESS_EXPIRY_MINUTES
-				: READ_ACCESS_EXPIRY_MINUTES;
+		int durationSeconds = ((HttpMethod.PUT == method) ? WRITE_ACCESS_EXPIRY_HOURS
+				: READ_ACCESS_EXPIRY_HOURS) * 3600;
 		String policy = (HttpMethod.PUT == method) ? READWRITE_DATA_POLICY
 				: READONLY_DATA_POLICY;
 		policy.replace(S3_KEY_PLACEHOLDER, s3Key);

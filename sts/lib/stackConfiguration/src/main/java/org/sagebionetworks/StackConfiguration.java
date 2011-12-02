@@ -107,15 +107,15 @@ public class StackConfiguration {
 		return configuration.getProperty("org.sagebionetworks.s3.bucket");
 	}
 
-	public static Integer getS3ReadAccessExpiryMinutes() {
+	public static Integer getS3ReadAccessExpiryHours() {
 		return Integer.valueOf(configuration
-				.getProperty("org.sagebionetworks.s3.readAccessExpiryMinutes"));
+				.getProperty("org.sagebionetworks.s3.readAccessExpiryHours"));
 	}
 
-	public static Integer getS3WriteAccessExpiryMinutes() {
+	public static Integer getS3WriteAccessExpiryHours() {
 		return Integer
 				.valueOf(configuration
-						.getProperty("org.sagebionetworks.s3.writeAccessExpiryMinutes"));
+						.getProperty("org.sagebionetworks.s3.writeAccessExpiryHours"));
 	}
 
 	public static String getCrowdAPIApplicationKey() {
