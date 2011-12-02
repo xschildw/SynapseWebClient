@@ -10,8 +10,8 @@ import org.sagebionetworks.repo.model.DatastoreException;
 import org.sagebionetworks.repo.web.NotFoundException;
 import org.sagebionetworks.securitytools.HMACUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpMethod;
 
-import com.amazonaws.HttpMethod;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.securitytoken.AWSSecurityTokenService;
@@ -57,6 +57,15 @@ public class LocationHelpersImpl implements LocationHelper {
 	@Autowired
 	private AmazonClientFactory amazonClientFactory;
 	
+	/**
+	 * Default constructor
+	 */
+	public LocationHelpersImpl() {
+	}
+	
+	/**
+	 * @param amazonClientFactory
+	 */
 	public LocationHelpersImpl(AmazonClientFactory amazonClientFactory) {
 		this.amazonClientFactory = amazonClientFactory;
 	}
@@ -222,11 +231,15 @@ public class LocationHelpersImpl implements LocationHelper {
 					MAX_FEDERATED_NAME_LENGTH);
 		}
 
+		if(!s3Key.startsWith("/")) {
+			s3Key = "/" + s3Key;
+		}
+		
 		int durationSeconds = ((HttpMethod.PUT == method) ? WRITE_ACCESS_EXPIRY_HOURS
 				: READ_ACCESS_EXPIRY_HOURS) * 3600;
 		String policy = (HttpMethod.PUT == method) ? READWRITE_DATA_POLICY
 				: READONLY_DATA_POLICY;
-		policy.replace(S3_KEY_PLACEHOLDER, s3Key);
+		policy = policy.replace(S3_KEY_PLACEHOLDER, s3Key);
 
 		AWSSecurityTokenService client = amazonClientFactory
 				.getAWSSecurityTokenServiceClient();
