@@ -149,6 +149,33 @@ public class ServletTestHelper {
 		toDelete.add(returnedEntity.getId());
 		return returnedEntity;
 	}
+	
+	public <T extends Object> T createObject(String uri, T object) throws Exception {
+		MockHttpServletRequest request = new MockHttpServletRequest();
+		MockHttpServletResponse response = new MockHttpServletResponse();
+		request.setMethod("POST");
+		request.addHeader("Accept", "application/json");
+		request.setRequestURI(uri);
+		request.setParameter(AuthorizationConstants.USER_ID_PARAM, username);
+		request.addHeader("Content-Type", "application/json; charset=UTF-8");
+		StringWriter out = new StringWriter();
+		objectMapper.writeValue(out, object);
+		String body = out.toString();
+		
+		// TODO why is this adding the jsonschema property?
+		JSONObject obj = new JSONObject(body);
+		obj.remove("jsonschema");
+		body = obj.toString();
+		
+		request.setContent(body.getBytes("UTF-8"));
+		dispatchServlet.service(request, response);
+		log.debug("Results: " + response.getContentAsString());
+		if (response.getStatus() != HttpStatus.CREATED.value()) {
+			throw new ServletTestHelperException(response);
+		}
+		return (T) objectMapper.readValue(response.getContentAsString(),
+				object.getClass());
+	}
 
 	/**
 	 * @param <T>

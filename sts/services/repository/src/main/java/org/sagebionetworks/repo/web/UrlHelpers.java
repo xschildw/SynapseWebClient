@@ -17,6 +17,7 @@ import org.sagebionetworks.repo.model.Entity;
 import org.sagebionetworks.repo.model.EntityType;
 import org.sagebionetworks.repo.model.HasLayers;
 import org.sagebionetworks.repo.model.HasPreviews;
+import org.sagebionetworks.repo.model.Locationable;
 import org.sagebionetworks.repo.model.PrefixConst;
 import org.sagebionetworks.repo.model.Versionable;
 
@@ -71,6 +72,12 @@ public class UrlHelpers {
 	 */
 	public static final String ANNOTATIONS = "/annotations";
 	
+	/**
+	 * URL suffix for locationable entity S3Token
+	 * 
+	 */
+	public static final String S3TOKEN = "/s3Token";
+
 	/**
 	 * Used to get the path of a entity.
 	 */
@@ -132,6 +139,11 @@ public class UrlHelpers {
 	public static final String STEP_ANNOTATIONS 	= STEP_ID+ANNOTATIONS;
 	public static final String CODE_ANNOTATIONS 	= CODE_ID+ANNOTATIONS;
 
+	/**
+	 * All of the base URLs for locationable entity s3Tokens
+	 */
+	public static final String LAYER_S3TOKEN 	= LAYER_ID+S3TOKEN;
+	public static final String CODE_S3TOKEN 	= CODE_ID+S3TOKEN;
 	
 	/**
 	 * All of the base URLs for Synapse objects's paths.
@@ -185,6 +197,7 @@ public class UrlHelpers {
 	public static final String ANALYSIS_SCHEMA 	= ANALYSIS+SCHEMA;
 	public static final String STEP_SCHEMA 		= STEP+SCHEMA;
 	public static final String CODE_SCHEMA 		= CODE+SCHEMA;
+	public static final String S3TOKEN_SCHEMA	= S3TOKEN+SCHEMA;
 	
 	/**
 	 * Get a specific version of an entity
@@ -400,6 +413,10 @@ public class UrlHelpers {
 		entity.setAnnotations(entity.getUri()+ANNOTATIONS);
 		// Add the acl
 		entity.setAccessControlList(entity.getUri()+ACL);
+		if(entity instanceof Locationable) {
+			Locationable able = (Locationable) entity;
+			able.setS3Token(entity.getUri() + UrlHelpers.S3TOKEN);
+		}
 	}
 	
 	/**
@@ -510,6 +527,15 @@ public class UrlHelpers {
 			expected = object.getUri()+UrlHelpers.VERSION+"/"+able.getVersionNumber();
 			if(!expected.equals(able.getVersionUrl())){
 				throw new IllegalArgumentException("Expected versionUrl: "+expected+" but was: "+able.getVersionUrl());
+			}
+		}
+		
+		// Locationable
+		if(object instanceof Locationable) {
+			Locationable able = (Locationable) object;
+			expected = object.getUri() + UrlHelpers.S3TOKEN;
+			if(!expected.equals(able.getS3Token())) {
+				throw new IllegalArgumentException("Expected s3Token: " + expected + " but was " + able.getS3Token());
 			}
 		}
 	}

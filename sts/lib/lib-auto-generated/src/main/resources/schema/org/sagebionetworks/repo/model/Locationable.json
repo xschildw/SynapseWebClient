@@ -17,5 +17,9 @@
                 "$ref":"org.sagebionetworks.repo.model.LocationData"
             }
         },
+        "s3Token":{
+            "type":"string",
+            "description":"The URL to an S3 token for this entity. This URL is provided by Synapse."
+        }
     }
 }

@@ -21,7 +21,6 @@ import org.sagebionetworks.repo.model.EntityType;
 import org.sagebionetworks.repo.model.PaginatedResults;
 import org.sagebionetworks.repo.model.UnauthorizedException;
 import org.sagebionetworks.repo.model.Versionable;
-import org.sagebionetworks.repo.util.JSONEntityUtil;
 import org.sagebionetworks.repo.web.GenericEntityController;
 import org.sagebionetworks.repo.web.NotFoundException;
 import org.sagebionetworks.repo.web.PaginatedParameters;
@@ -439,7 +438,7 @@ public class DefaultController extends BaseController {
 		// Pass it along
 		return entityController.updateEntityAnnotations(userId, id, updatedAnnotations, request);
 	}
-
+	
 	/**
 	 * Called to delete an entity. 
 	 * @param userId - The user that is deleting the entity.
@@ -660,7 +659,8 @@ public class DefaultController extends BaseController {
 			UrlHelpers.AGREEMENT_SCHEMA,
 			UrlHelpers.ANALYSIS_SCHEMA,
 			UrlHelpers.STEP_SCHEMA,
-			UrlHelpers.CODE_SCHEMA
+			UrlHelpers.CODE_SCHEMA,
+			UrlHelpers.S3TOKEN_SCHEMA
 	}, method = RequestMethod.GET)
 	public @ResponseBody
 	ObjectSchema getEntitiesSchema(HttpServletRequest request) throws DatastoreException {
