@@ -142,6 +142,7 @@ public class UrlHelpers {
 	/**
 	 * All of the base URLs for locationable entity s3Tokens
 	 */
+	public static final String DATASET_S3TOKEN 	= DATASET_ID+S3TOKEN;
 	public static final String LAYER_S3TOKEN 	= LAYER_ID+S3TOKEN;
 	public static final String CODE_S3TOKEN 	= CODE_ID+S3TOKEN;
 	

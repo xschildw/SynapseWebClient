@@ -81,14 +81,14 @@ public class S3TokenController extends BaseController {
 	 */
 	@Transactional(readOnly = false)
 	@ResponseStatus(HttpStatus.CREATED)
-	@RequestMapping(value = { UrlHelpers.LAYER_S3TOKEN, UrlHelpers.CODE_S3TOKEN }, method = RequestMethod.POST)
+	@RequestMapping(value = { UrlHelpers.DATASET_S3TOKEN,
+			UrlHelpers.LAYER_S3TOKEN, UrlHelpers.CODE_S3TOKEN }, method = RequestMethod.POST)
 	public @ResponseBody
 	S3Token createS3Token(
 			@RequestParam(value = AuthorizationConstants.USER_ID_PARAM, required = false) String userId,
-			@PathVariable String id,
-			@RequestBody S3Token s3Token, HttpServletRequest request)
-			throws DatastoreException, NotFoundException,
-			UnauthorizedException, InvalidModelException {
+			@PathVariable String id, @RequestBody S3Token s3Token,
+			HttpServletRequest request) throws DatastoreException,
+			NotFoundException, UnauthorizedException, InvalidModelException {
 
 		// Infer one more parameter
 		EntityType type = EntityType.getFirstTypeInUrl(request.getRequestURI());
@@ -110,17 +110,21 @@ public class S3TokenController extends BaseController {
 		validateMd5(s3Token);
 		validateContentType(s3Token);
 		validatePath(id, s3Token);
-		
+
 		// Generate session credentials (needed for multipart upload)
-		Credentials sessionCredentials = locationHelper.createFederationTokenForS3(userId, HttpMethod.PUT, s3Token.getPath());
+		Credentials sessionCredentials = locationHelper
+				.createFederationTokenForS3(userId, HttpMethod.PUT, s3Token
+						.getPath());
 		s3Token.setAccessKeyId(sessionCredentials.getAccessKeyId());
 		s3Token.setSecretAccessKey(sessionCredentials.getSecretAccessKey());
 		s3Token.setSessionToken(sessionCredentials.getSessionToken());
 
 		// Generate the presigned url (needed for regular upload)
-		String presignedUrl = locationHelper.presignS3PUTUrl(sessionCredentials, s3Token.getPath(), s3Token.getMd5(), s3Token.getContentType());
+		String presignedUrl = locationHelper.presignS3PUTUrl(
+				sessionCredentials, s3Token.getPath(), s3Token.getMd5(),
+				s3Token.getContentType());
 		s3Token.setPresignedUrl(presignedUrl);
-		
+
 		return s3Token;
 	}
 
