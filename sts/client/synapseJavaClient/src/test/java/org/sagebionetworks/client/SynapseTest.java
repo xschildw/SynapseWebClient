@@ -67,7 +67,7 @@ public class SynapseTest {
 	
 	@Test (expected=IllegalArgumentException.class)
 	public void testGetEntityNullClass() throws Exception{
-		synapse.getEntity("123", Dataset.class);
+		synapse.getEntity("123", null);
 	}
 	
 	@Test

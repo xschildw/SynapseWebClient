@@ -2,8 +2,10 @@ package org.sagebionetworks.client;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.StringWriter;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -17,14 +19,17 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.sagebionetworks.repo.model.Base;
 import org.sagebionetworks.repo.model.Entity;
 import org.sagebionetworks.repo.model.EntityType;
 import org.sagebionetworks.repo.model.Location;
 import org.sagebionetworks.repo.model.LocationData;
 import org.sagebionetworks.repo.model.LocationTypeNames;
 import org.sagebionetworks.repo.model.Locationable;
+import org.sagebionetworks.repo.model.S3Token;
 import org.sagebionetworks.schema.adapter.JSONObjectAdapterException;
 import org.sagebionetworks.schema.adapter.org.json.EntityFactory;
 import org.sagebionetworks.utils.HttpClientHelper;
@@ -37,6 +42,7 @@ import org.sagebionetworks.utils.MD5ChecksumHelper;
 public class Synapse {
 
 	private static final Logger log = Logger.getLogger(Synapse.class.getName());
+	private static final ObjectMapper objectMapper = new ObjectMapper();
 
 	private static final int DEFAULT_TIMEOUT_MSEC = 5000;
 
@@ -226,6 +232,37 @@ public class Synapse {
 	}
 
 	/**
+	 * @param <T>
+	 * @param uri
+	 * @param object
+	 * @return the newly created object
+	 * @throws ClientProtocolException
+	 * @throws IOException
+	 * @throws JSONException
+	 * @throws SynapseUserException
+	 * @throws SynapseServiceException
+	 * @throws JSONObjectAdapterException
+	 */
+	public <T extends Object> T createObject(String uri, T object)
+			throws ClientProtocolException, IOException, JSONException,
+			SynapseUserException, SynapseServiceException,
+			JSONObjectAdapterException {
+		if (object == null)
+			throw new IllegalArgumentException("Object cannot be null");
+		StringWriter out = new StringWriter();
+		objectMapper.writeValue(out, object);
+
+		// TODO why is this adding the jsonschema property?
+		JSONObject hackObject= new JSONObject(out
+				.toString());
+		hackObject.remove("jsonschema");
+		
+		JSONObject jsonObject = createEntity(uri, hackObject);
+		return (T) objectMapper.readValue(jsonObject.toString(), object
+				.getClass());
+	}
+
+	/**
 	 * Get a dataset, layer, preview, annotations, etc...
 	 * 
 	 * @param uri
@@ -277,7 +314,6 @@ public class Synapse {
 	 * @throws ClientProtocolException
 	 * @throws JSONObjectAdapterException
 	 */
-	@SuppressWarnings("cast")
 	public <T extends Entity> T getEntity(String entityId,
 			Class<? extends T> clazz) throws IOException, JSONException,
 			SynapseUserException, SynapseServiceException,
@@ -289,8 +325,30 @@ public class Synapse {
 		EntityType type = EntityType.getNodeTypeForClass(clazz);
 		// Build the URI
 		String uri = createEntityUri(type.getUrlPrefix(), entityId);
+		return getObject(uri, clazz);
+	}
+
+	/**
+	 * @param <T>
+	 * @param uri
+	 * @param clazz
+	 * @return the entity
+	 * @throws IOException
+	 * @throws JSONException
+	 * @throws SynapseUserException
+	 * @throws SynapseServiceException
+	 * @throws JSONObjectAdapterException
+	 */
+	@SuppressWarnings("unchecked")
+	public <T extends Object> T getObject(String uri, Class clazz)
+			throws IOException, JSONException, SynapseUserException,
+			SynapseServiceException, JSONObjectAdapterException {
+		if (uri == null)
+			throw new IllegalArgumentException("uri cannot be null");
+		if (clazz == null)
+			throw new IllegalArgumentException("Entity class cannot be null");
 		JSONObject object = getEntity(uri);
-		return (T) EntityFactory.createEntityFromJSONObject(object, clazz);
+		return (T) objectMapper.readValue(object.toString(), clazz);
 	}
 
 	/**
@@ -387,6 +445,35 @@ public class Synapse {
 		JSONObject jsonObject = EntityFactory.createJSONObjectForEntity(entity);
 		jsonObject = putEntity(uri, jsonObject);
 		return (T) EntityFactory.createEntityFromJSONObject(jsonObject, entity
+				.getClass());
+	}
+
+	/**
+	 * TODO this is terrible, instead fix entity mapper to handle more than
+	 * entities
+	 * 
+	 * @param <T>
+	 * @param object
+	 * @return
+	 * @throws ClientProtocolException
+	 * @throws IOException
+	 * @throws JSONException
+	 * @throws SynapseUserException
+	 * @throws SynapseServiceException
+	 * @throws JSONObjectAdapterException
+	 */
+	public <T extends Base> T putObject(T object)
+			throws ClientProtocolException, IOException, JSONException,
+			SynapseUserException, SynapseServiceException,
+			JSONObjectAdapterException {
+		if (object == null)
+			throw new IllegalArgumentException("Object cannot be null");
+		StringWriter out = new StringWriter();
+		objectMapper.writeValue(out, object);
+
+		JSONObject jsonObject = putEntity(object.getUri(), new JSONObject(out
+				.toString()));
+		return (T) objectMapper.readValue(jsonObject.toString(), object
 				.getClass());
 	}
 
@@ -508,7 +595,8 @@ public class Synapse {
 		// Internal versus S3 versus GoogleStorage). For now we are just
 		// downloading from the first location
 		LocationData location = locations.get(0);
-		return downloadFromSynapse(location, destinationFile);
+		return downloadFromSynapse(location, locationable.getMd5(),
+				destinationFile);
 	}
 
 	/**
@@ -516,6 +604,7 @@ public class Synapse {
 	 * specific location from which to download
 	 * 
 	 * @param location
+	 * @param md5
 	 * @param destinationFile
 	 * @return destination file
 	 * @throws ClientProtocolException
@@ -523,16 +612,16 @@ public class Synapse {
 	 * @throws HttpClientHelperException
 	 * @throws SynapseUserException
 	 */
-	public File downloadFromSynapse(LocationData location, File destinationFile)
-			throws ClientProtocolException, IOException,
+	public File downloadFromSynapse(LocationData location, String md5,
+			File destinationFile) throws ClientProtocolException, IOException,
 			HttpClientHelperException, SynapseUserException {
 		HttpClientHelper.downloadFile(location.getPath(), destinationFile
 				.getAbsolutePath());
 		// Check that the md5s match, if applicable
-		if (null != location.getMd5()) {
+		if (null != md5) {
 			String localMd5 = MD5ChecksumHelper.getMD5Checksum(destinationFile
 					.getAbsolutePath());
-			if (!localMd5.equals(location.getMd5())) {
+			if (!localMd5.equals(md5)) {
 				throw new SynapseUserException(
 						"md5 of downloaded file does not match the one in Synapse"
 								+ destinationFile);
@@ -543,12 +632,10 @@ public class Synapse {
 	}
 
 	/**
-	 * TODO this will change with the collapse of layer and location
-	 * 
 	 * @param locationable
 	 * @param dataFile
 	 * 
-	 * @return the newly created location
+	 * @return the updated locationable
 	 * @throws IOException
 	 * @throws JSONException
 	 * @throws SynapseServiceException
@@ -557,7 +644,7 @@ public class Synapse {
 	 * @throws HttpClientHelperException
 	 * @throws JSONObjectAdapterException
 	 */
-	public Location uploadLocationableToSynapse(Locationable locationable,
+	public Locationable uploadLocationableToSynapse(Locationable locationable,
 			File dataFile) throws IOException, JSONException,
 			SynapseUserException, SynapseServiceException, DecoderException,
 			HttpClientHelperException, JSONObjectAdapterException {
@@ -568,12 +655,10 @@ public class Synapse {
 	}
 
 	/**
-	 * TODO this will change with the collapse of layer and location
-	 * 
 	 * @param locationable
 	 * @param dataFile
 	 * @param md5
-	 * @return the newly created location
+	 * @return the updated locationable
 	 * @throws IOException
 	 * @throws JSONException
 	 * @throws SynapseUserException
@@ -582,33 +667,43 @@ public class Synapse {
 	 * @throws HttpClientHelperException
 	 * @throws JSONObjectAdapterException
 	 */
-	public Location uploadLocationableToSynapse(Locationable locationable,
+	public Locationable uploadLocationableToSynapse(Locationable locationable,
 			File dataFile, String md5) throws IOException, JSONException,
 			SynapseUserException, SynapseServiceException, DecoderException,
 			HttpClientHelperException, JSONObjectAdapterException {
 
-		String s3Path = dataFile.getName();
-
-		Location s3Location = new Location();
-		s3Location.setPath("/" + s3Path);
-		s3Location.setMd5sum(md5);
-		s3Location.setParentId(locationable.getParentId());
-		s3Location.setType(LocationTypeNames.awss3);
-		s3Location = createEntity(s3Location);
-
-		// TODO find a more direct way to go from hex to base64
+		// Step 1: get the token
+		S3Token s3Token = new S3Token();
+		s3Token.setPath(dataFile.getName());
+		s3Token.setMd5(md5);
+		s3Token = createObject(locationable.getS3Token(), s3Token);
+		
+		// Step 2: perform the upload
 		byte[] encoded = Base64.encodeBase64(Hex.decodeHex(md5.toCharArray()));
 		String base64Md5 = new String(encoded, "ASCII");
 
 		Map<String, String> headerMap = new HashMap<String, String>();
 		headerMap.put("x-amz-acl", "bucket-owner-full-control");
 		headerMap.put("Content-MD5", base64Md5);
-		headerMap.put("Content-Type", s3Location.getContentType());
+		headerMap.put("Content-Type", s3Token.getContentType());
 
-		clientProvider.uploadFile(s3Location.getPath(), dataFile
-				.getAbsolutePath(), s3Location.getContentType(), headerMap);
+		clientProvider.uploadFile(s3Token.getPresignedUrl(), dataFile
+				.getAbsolutePath(), s3Token.getContentType(), headerMap);
 
-		return getEntity(s3Location.getId(), Location.class);
+		List<LocationData> locations = locationable.getLocations();
+		if (null == locationable.getLocations()) {
+			locations = new ArrayList<LocationData>(); 
+		}
+		
+		LocationData location = new LocationData();
+		location.setPath(s3Token.getPath());
+		location.setType(LocationTypeNames.awss3);
+		locations.add(location);
+		
+		locationable.setContentType(s3Token.getContentType());
+		locationable.setMd5(s3Token.getMd5());
+		locationable.setLocations(locations);
+		return putEntity(locationable);
 	}
 
 	/******************** Mid Level Authorization Service APIs ********************/
