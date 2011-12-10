@@ -29,8 +29,6 @@ public class StackStatusDaoImplTest {
 		assertNotNull(status);
 		// The current status should be read-write
 		assertEquals(StatusEnum.READ_WRITE, status.getStatus());
-		// The message should not be null
-		assertNotNull(status.getCurrentMessage());
 	}
 	
 	@Test
