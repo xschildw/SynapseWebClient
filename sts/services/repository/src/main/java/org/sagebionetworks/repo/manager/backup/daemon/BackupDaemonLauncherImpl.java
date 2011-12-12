@@ -1,12 +1,15 @@
 package org.sagebionetworks.repo.manager.backup.daemon;
 
+import java.util.Set;
+import java.util.concurrent.ExecutorService;
+
 import org.sagebionetworks.StackConfiguration;
 import org.sagebionetworks.repo.manager.backup.NodeBackupDriver;
-import org.sagebionetworks.repo.model.BackupRestoreStatus;
 import org.sagebionetworks.repo.model.BackupRestoreStatusDAO;
 import org.sagebionetworks.repo.model.DatastoreException;
 import org.sagebionetworks.repo.model.UnauthorizedException;
 import org.sagebionetworks.repo.model.UserInfo;
+import org.sagebionetworks.repo.model.daemon.BackupRestoreStatus;
 import org.sagebionetworks.repo.web.NotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -26,18 +29,20 @@ public class BackupDaemonLauncherImpl implements BackupDaemonLauncher {
 	BackupRestoreStatusDAO backupRestoreStatusDao;
 	@Autowired
 	NodeBackupDriver backupDriver;
+	@Autowired
+	ExecutorService backupDaemonThreadPool;
 
 	@Override
-	public BackupRestoreStatus startBackup(UserInfo username)	throws UnauthorizedException, DatastoreException {
+	public BackupRestoreStatus startBackup(UserInfo username, Set<String> entitiesToBackup) throws UnauthorizedException, DatastoreException {
 		UserInfo.validateUserInfo(username);
 		// Only an admin can start a backup Daemon
 		if(!username.isAdmin()) throw new UnauthorizedException("Must be an administrator to start a backup daemon");
 		
 		AmazonS3Client client = createNewAWSClient();
-		String bucket = StackConfiguration.getS3Bucket();
+		String bucket = StackConfiguration.getSharedS3BackupBucket();
 		if(bucket == null) 	throw new IllegalArgumentException("Bucket cannot be null null");
 		// Create a new daemon and start it
-		BackupDaemon daemon = new BackupDaemon(backupRestoreStatusDao, backupDriver, client, bucket);
+		BackupDaemon daemon = new BackupDaemon(backupRestoreStatusDao, backupDriver, client, bucket, backupDaemonThreadPool, entitiesToBackup);
 		// Start that bad boy up!
 		return daemon.startBackup(username.getUser().getUserId());
 	}
@@ -49,10 +54,10 @@ public class BackupDaemonLauncherImpl implements BackupDaemonLauncher {
 		if(!username.isAdmin()) throw new UnauthorizedException("Must be an administrator to start a restoration daemon");
 		
 		AmazonS3Client client = createNewAWSClient();
-		String bucket = StackConfiguration.getS3Bucket();
+		String bucket = StackConfiguration.getSharedS3BackupBucket();
 		if(bucket == null) 	throw new IllegalArgumentException("Bucket cannot be null null");
 		// Create a new daemon and start it
-		BackupDaemon daemon = new BackupDaemon(backupRestoreStatusDao, backupDriver, client, bucket);
+		BackupDaemon daemon = new BackupDaemon(backupRestoreStatusDao, backupDriver, client, bucket, backupDaemonThreadPool);
 		return daemon.startRestore(username.getUser().getUserId(), fileName);
 	}
 

@@ -4,10 +4,15 @@ import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.sagebionetworks.repo.model.registry.EntityRegistry;
 import org.sagebionetworks.repo.model.registry.EntityTypeMetadata;
+import org.sagebionetworks.schema.adapter.JSONEntity;
 import org.sagebionetworks.schema.adapter.JSONObjectAdapter;
 import org.sagebionetworks.schema.adapter.org.json.JSONObjectAdapterImpl;
 
@@ -18,7 +23,7 @@ import org.sagebionetworks.schema.adapter.org.json.JSONObjectAdapterImpl;
  * @author jmhill
  *
  */
-public class EntityType {
+public class EntityType {	
 	
 	@Deprecated // Only added for backwards compatibility.
 	public static final EntityType dataset = new EntityType();
@@ -45,8 +50,8 @@ public class EntityType {
 	 */
 	public static final String REGISTER_JSON_FILE_NAME = "Register.json";
 	
-	/**
-	 * 
+	/*
+	 * Static 
 	 */
 	private static EntityType[] values;
 	static{
@@ -61,10 +66,11 @@ public class EntityType {
 			EntityRegistry registry = new EntityRegistry(adapter);
 			List<EntityTypeMetadata> typeList = registry.getEntityTypes();
 			values = new EntityType[typeList.size()];
+						
 			// Build up the values.
 			for(short i=0; i<typeList.size(); i++){
-				EntityTypeMetadata meta = typeList.get(i);
-				EntityType type = null;
+				EntityTypeMetadata meta = typeList.get(i);				
+				EntityType type;				
 				if(PrefixConst.DATASET.equals(meta.getUrlPrefix())){
 					type = dataset;
 				}else if(PrefixConst.LAYER.equals(meta.getUrlPrefix())){
@@ -87,7 +93,8 @@ public class EntityType {
 					type = code;
 				}else{
 					type = new EntityType();
-				}
+				}				
+				
 				values[i] = type;
 				type.id = i;
 				type.clazz = (Class<? extends Entity>) Class.forName(meta.getClassName());
@@ -95,7 +102,25 @@ public class EntityType {
 				type.validParents = meta.getValidParentTypes().toArray(new String[meta.getValidParentTypes().size()]);
 				type.defaultParenPath = meta.getDefaultParentPath();
 				type.name = meta.getName();
-
+				type.metadata = meta;				
+			}
+			
+			// calculate children
+			Map<String, Set<String>> typeToChildTypes = new HashMap<String, Set<String>>();
+			for(EntityType type : values) {
+				for(String parentPrefix : type.validParents) {					
+					if(!typeToChildTypes.containsKey(parentPrefix)) {
+						typeToChildTypes.put(parentPrefix, new HashSet<String>());
+					}
+					// add this type to its parent
+					typeToChildTypes.get(parentPrefix).add(type.urlPrefix);
+				}
+			}
+			for(EntityType type : values) {
+				if(typeToChildTypes.containsKey(type.urlPrefix)) {
+					Set<String> children = typeToChildTypes.get(type.urlPrefix);
+					type.validChildren = children.toArray(new String[children.size()]);
+				}
 			}
 		}catch(Exception e){
 			// Convert to a runtime
@@ -125,12 +150,19 @@ public class EntityType {
 		}
 	}
 	
+	
+	
+	/*
+	 * Non Static
+	 */	
 	private Class<? extends Entity> clazz;
 	private short id;
 	private String urlPrefix;
 	private String[] validParents;
 	private String defaultParenPath;
 	private String name;
+	private EntityTypeMetadata metadata;
+	private String[] validChildren;
 	
 	/**
 	 * Do not make this public
@@ -174,27 +206,56 @@ public class EntityType {
 		return validParents;
 	}
 	
+	/***
+	 * These are the valid child types for this ObjectType.
+	 * @return
+	 */
+	public String[] getValidChildTypes(){
+		return validChildren;
+	}
+	
 	public String getDefaultParentPath(){
 		return defaultParenPath;
 	}
-	
+		
 	/**
-	 * 
+	 * The EntityTypeMetadata object
+	 * @return
+	 */
+	public EntityTypeMetadata getMetadata() {
+		return metadata;
+	}
+
+	/**
+	 *  
 	 * @param type, if null then the object must support a null parent.
 	 * @return
 	 */
 	public boolean isValidParentType(EntityType type){
+		return isValidTypeInList(type, validParents);
+	}
+
+	/**
+	 * Is this a valid child
+	 * @param type
+	 * @return
+	 */
+	public boolean isValidChildType(EntityType type){
+		return isValidTypeInList(type, validChildren);
+	}
+
+	private boolean isValidTypeInList(EntityType type, String[] typeUrlList) {
 		String prefix;
 		if(type == null){
 			prefix = "DEFAULT";
 		}else{
 			prefix = type.getUrlPrefix();
 		}
-		for(String validParent:  validParents){
+		for(String validParent:  typeUrlList){
 			if(validParent.equals(prefix)) return true;
 		}
 		// No match found
-		return false;
+		return false;				
 	}
 	
 	public static EntityType[] values(){
@@ -228,7 +289,7 @@ public class EntityType {
 	 * @param clazz
 	 * @return
 	 */
-	public static EntityType getNodeTypeForClass(Class<? extends Entity> clazz){
+	public static EntityType getNodeTypeForClass(Class<? extends JSONEntity> clazz){
 		if(clazz == null) throw new IllegalArgumentException("Clazz cannot be null");
 		EntityType[] array  = EntityType.values();
 		for(EntityType type: array){

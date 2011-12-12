@@ -5,8 +5,9 @@ import java.util.Date;
 
 import org.gwttime.time.DateTime;
 import org.gwttime.time.format.ISODateTimeFormat;
+import org.sagebionetworks.repo.model.Agreement;
 import org.sagebionetworks.repo.model.Entity;
-import org.sagebionetworks.schema.FORMAT;
+import org.sagebionetworks.repo.model.Eula;
 import org.sagebionetworks.web.client.place.Analysis;
 import org.sagebionetworks.web.client.place.Dataset;
 import org.sagebionetworks.web.client.place.Home;
@@ -14,6 +15,7 @@ import org.sagebionetworks.web.client.place.Layer;
 import org.sagebionetworks.web.client.place.LoginPlace;
 import org.sagebionetworks.web.client.place.Project;
 import org.sagebionetworks.web.client.place.Step;
+import org.sagebionetworks.web.shared.EntityType;
 import org.sagebionetworks.web.shared.NodeType;
 import org.sagebionetworks.web.shared.exceptions.BadRequestException;
 import org.sagebionetworks.web.shared.exceptions.ForbiddenException;
@@ -53,8 +55,10 @@ public class DisplayUtils {
 	
 	public static final String DEFAULT_PLACE_TOKEN = "0";
 	
+	public static final String R_CLIENT_DOWNLOAD_CODE = "source('http://sage.fhcrc.org/CRAN.R')<br/>pkgInstall(c(\"synapseClient\"))";
+	
 	private static final String ERROR_OBJ_REASON_KEY = "reason";
-		
+	
 	/*
 	 * Style names
 	 */
@@ -99,6 +103,12 @@ public class DisplayUtils {
 		table.setHTML(row, 2, value);
 	}
 	
+	/**
+	 * Use an EntityWrapper instead and check for an exception there
+	 * @param obj
+	 * @throws RestServiceException
+	 */
+	@Deprecated
 	public static void checkForErrors(JSONObject obj) throws RestServiceException {
 		if(obj == null) return;
 		if(obj.containsKey("error")) {
@@ -296,9 +306,47 @@ public class DisplayUtils {
 		return null;	
 	}
 	
+	/**
+	 * Returns the NodeType for this entitytype. 
+	 * TODO : This should be removed when we move to using the Synapse Java Client
+	 * @param entityType
+	 * @return
+	 */
+	public static NodeType getNodeTypeForEntityType(EntityType entityType) {
+		// 	DATASET, LAYER, PROJECT, EULA, AGREEMENT, ENTITY, ANALYSIS, STEP
+		if("/dataset".equals(entityType.getUrlPrefix())) {
+			return NodeType.DATASET;
+		} else if("/layer".equals(entityType.getUrlPrefix())) {
+			return NodeType.LAYER;
+		} else if("/project".equals(entityType.getUrlPrefix())) {
+			return NodeType.PROJECT;			
+		} else if("/eula".equals(entityType.getUrlPrefix())) {
+			return NodeType.EULA;
+		} else if("/agreement".equals(entityType.getUrlPrefix())) {
+			return NodeType.AGREEMENT;
+		} else if("/analysis".equals(entityType.getUrlPrefix())) {
+			return NodeType.ANALYSIS;
+		} else if("/step".equals(entityType.getUrlPrefix())) {
+			return NodeType.STEP;
+		} 
+		return null;	
+	}
+	
+	
+	
+	public static String getEntityTypeDisplay(Entity entity) {
+		NodeType type = getNodeTypeForEntity(entity);
+		String display = type.toString().toLowerCase();
+		return uppercaseFirstLetter(display);
+	}
+	
+	public static String uppercaseFirstLetter(String display) {
+		return display.substring(0, 1).toUpperCase() + display.substring(1);		
+	}
+	
 	public static String getRClientEntityLoad(String id) {
-		return "# Load in Synapse R Client:<br/>" +  
-			"entity."+ id +" <- getEntity("+ id +")";		
+		return "# " + DisplayConstants.LABEL_LOAD_ENTITY_IN_R_CLIENT + " <br/>" +
+				"entity_"+ id +" <- getEntity("+ id +")";		
 	}	
 	
 	public static String convertDateToString(Date toFormat) {

@@ -349,4 +349,37 @@ public class StackConfiguration {
 	public long getCloudWatchTriggerTime() {
 		return Long.valueOf(configuration.getProperty("org.sagebionetworks.cloud.watch.trigger"));
 	}
+	
+	/**
+	 * The maximum number of threads to be used for backup/restore
+	 * @return
+	 */
+	public int getBackupRestoreThreadPoolMaximum(){
+		return Integer.valueOf(configuration.getProperty("org.sagebionetworks.backup.restore.thread.pool.maximum"));
+	}
+		
+	/**
+	 * The maximum bytes allowed for a single query result.
+	 * @return
+	 */
+	public static long getMaximumBytesPerQueryResult(){
+		return Long.valueOf(configuration.getProperty("org.sagebionetworks.maximum.bytes.per.query.result"));
+	}
+	
+	/**
+	 * The maximum number entities returned in a single call
+	 * @return
+	 */
+	public static int getMaximumNumberOfEntitiesReturnedPerCall(){
+		return Integer.valueOf(configuration.getProperty("org.sagebionetworks.maximum.number.entities.returned.per.call"));
+	}
+	
+	/**
+	 * The S3 Bucket for backup file.  This is shared across stacks to enable data migration across a stack.
+	 * @return
+	 */
+	public static String getSharedS3BackupBucket(){
+		return configuration.getProperty("org.sagebionetworks.shared.s3.backup.bucket");
+	}
+
 }

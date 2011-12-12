@@ -11,18 +11,22 @@ import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.sagebionetworks.repo.manager.backup.NodeBackupDriver;
 import org.sagebionetworks.repo.manager.backup.Progress;
-import org.sagebionetworks.repo.model.BackupRestoreStatus;
-import org.sagebionetworks.repo.model.BackupRestoreStatus.STATUS;
-import org.sagebionetworks.repo.model.BackupRestoreStatus.TYPE;
 import org.sagebionetworks.repo.model.BackupRestoreStatusDAO;
+import org.sagebionetworks.repo.model.DaemonStatusUtil;
 import org.sagebionetworks.repo.model.DatastoreException;
 import org.sagebionetworks.repo.model.UnauthorizedException;
+import org.sagebionetworks.repo.model.daemon.BackupRestoreStatus;
+import org.sagebionetworks.repo.model.daemon.DaemonStatus;
+import org.sagebionetworks.repo.model.daemon.DaemonType;
 import org.sagebionetworks.repo.web.NotFoundException;
 
 import com.amazonaws.AmazonClientException;
@@ -47,6 +51,8 @@ public class BackupDaemonTest {
 	BackupRestoreStatusDAO stubDao = null;
 	BackupDaemon daemon = null;
 	String bucketName = "someFakeBucket";
+	ExecutorService threadPool = Executors.newFixedThreadPool(2);
+	
 	@Before
 	public void before(){
 		// Mock the AWS client
@@ -55,7 +61,7 @@ public class BackupDaemonTest {
 		// Using a stub for the dao gives us more control over the test.
 		stubDao = new BackupRestoreStatusDAOStub();
 		// The daemon is passed all mock data.
-		daemon = new BackupDaemon(stubDao, mockDriver, mockAwsClient, "someFakeBucket");
+		daemon = new BackupDaemon(stubDao, mockDriver, mockAwsClient, "someFakeBucket", threadPool);
 	}
 	
 	@Test
@@ -65,14 +71,14 @@ public class BackupDaemonTest {
 		assertNotNull(status);
 		assertNotNull(status.getId());
 		assertNotNull(status.getStatus());
-		assertEquals(TYPE.BACKUP.name(), status.getType());
+		assertEquals(DaemonType.BACKUP, status.getType());
 		assertEquals("someUser@sagebase.org", status.getStartedBy());
 		assertNotNull(status.getStartedOn());
 		
 		String id = status.getId();
 		
 		// Now wait for the daemon to finish
-		status = waitForStatus(STATUS.COMPLETED, id);
+		status = waitForStatus(DaemonStatus.COMPLETED, id);
 		// The url should start off a null
 		String fileName = daemon.getBackupFileName();
 		assertNotNull(fileName);
@@ -85,12 +91,12 @@ public class BackupDaemonTest {
 		assertTrue(status.getTotalTimeMS() > 10);
 		assertTrue(status.getErrorMessage() == null);
 		assertTrue(status.getErrorDetails() == null);
-		assertEquals(STATUS.COMPLETED.name(), status.getStatus());
+		assertEquals(DaemonStatus.COMPLETED, status.getStatus());
 		
 		// The AWS client should have been called with the file to update once.
 		verify(mockAwsClient, atLeastOnce()).putObject((String)any(), (String)any(), (File)any());
 		// the driver should have been called to create a backup onece
-		verify(mockDriver, atLeastOnce()).writeBackup((File)any(), (Progress)any());
+		verify(mockDriver, atLeastOnce()).writeBackup((File)any(), (Progress)any(), (Set<String>)any());
 	}
 	
 	@Test
@@ -100,14 +106,14 @@ public class BackupDaemonTest {
 		assertNotNull(status);
 		assertNotNull(status.getId());
 		assertNotNull(status.getStatus());
-		assertEquals(TYPE.RESTORE.name(), status.getType());
+		assertEquals(DaemonType.RESTORE, status.getType());
 		assertEquals("someUser@sagebase.org", status.getStartedBy());
 		assertNotNull(status.getStartedOn());
 		
 		String id = status.getId();
 		
 		// Now wait for the daemon to finish
-		status = waitForStatus(STATUS.COMPLETED, id);
+		status = waitForStatus(DaemonStatus.COMPLETED, id);
 		// The url should start off a null
 		String fileName = daemon.getBackupFileName();
 		assertNotNull(fileName);
@@ -118,7 +124,7 @@ public class BackupDaemonTest {
 		assertTrue(status.getTotalTimeMS() > 10);
 		assertTrue(status.getErrorMessage() == null);
 		assertTrue(status.getErrorDetails() == null);
-		assertEquals(STATUS.COMPLETED.name(), status.getStatus());
+		assertEquals(DaemonStatus.COMPLETED, status.getStatus());
 		
 		// The AWS client should have been called with the file to update once.
 		verify(mockAwsClient, atLeastOnce()).getObject((GetObjectRequest) any(), (File)any());
@@ -137,11 +143,11 @@ public class BackupDaemonTest {
 		stubDao.setForceTermination(id, true);
 		
 		// Now wait for the daemon to finish
-		status = waitForStatus(STATUS.FAILED, id);
+		status = waitForStatus(DaemonStatus.FAILED, id);
 		assertNotNull(status.getErrorMessage());
 		assertNotNull(status.getErrorDetails());
 		assertNotNull(status.getId());
-		assertEquals(STATUS.FAILED.name(), status.getStatus());
+		assertEquals(DaemonStatus.FAILED, status.getStatus());
 	}
 	
 	
@@ -156,17 +162,17 @@ public class BackupDaemonTest {
 		stubDao.setForceTermination(id, true);
 		
 		// Now wait for the daemon to finish
-		status = waitForStatus(STATUS.FAILED, id);
+		status = waitForStatus(DaemonStatus.FAILED, id);
 		assertNotNull(status.getErrorMessage());
 		assertNotNull(status.getErrorDetails());
 		assertNotNull(status.getId());
-		assertEquals(STATUS.FAILED.name(), status.getStatus());
+		assertEquals(DaemonStatus.FAILED, status.getStatus());
 	}
 	
 	@Test
 	public void testDriverFailureBackup() throws Exception, DatastoreException{
 		// Simulate a driver failure
-		when(mockDriver.writeBackup((File)any(), (Progress)any())).thenThrow(new InterruptedException());
+		when(mockDriver.writeBackup((File)any(), (Progress)any(), (Set<String>)any())).thenThrow(new InterruptedException());
 		BackupRestoreStatus status = daemon.startBackup("someUser@sagebase.org");
 		assertNotNull(status);
 		assertNotNull(status.getId());
@@ -174,10 +180,10 @@ public class BackupDaemonTest {
 		stubDao.setForceTermination(id, false);
 		
 		// Now wait for the daemon to finish
-		status = waitForStatus(STATUS.FAILED, id);
+		status = waitForStatus(DaemonStatus.FAILED, id);
 		assertNotNull(status.getErrorMessage());
 		assertNotNull(status.getErrorDetails());
-		assertEquals(STATUS.FAILED.name(), status.getStatus());
+		assertEquals(DaemonStatus.FAILED, status.getStatus());
 	}
 	
 	@Test
@@ -191,10 +197,10 @@ public class BackupDaemonTest {
 		stubDao.setForceTermination(id, false);
 		
 		// Now wait for the daemon to finish
-		status = waitForStatus(STATUS.FAILED, id);
+		status = waitForStatus(DaemonStatus.FAILED, id);
 		assertNotNull(status.getErrorMessage());
 		assertNotNull(status.getErrorDetails());
-		assertEquals(STATUS.FAILED.name(), status.getStatus());
+		assertEquals(DaemonStatus.FAILED, status.getStatus());
 	}
 	
 	@Test
@@ -208,10 +214,10 @@ public class BackupDaemonTest {
 		stubDao.setForceTermination(id, false);
 		
 		// Now wait for the daemon to finish
-		status = waitForStatus(STATUS.FAILED, id);
+		status = waitForStatus(DaemonStatus.FAILED, id);
 		assertNotNull(status.getErrorMessage());
 		assertNotNull(status.getErrorDetails());
-		assertEquals(STATUS.FAILED.name(), status.getStatus());
+		assertEquals(DaemonStatus.FAILED, status.getStatus());
 	}
 	
 	@Test
@@ -225,10 +231,10 @@ public class BackupDaemonTest {
 		stubDao.setForceTermination(id, false);
 		
 		// Now wait for the daemon to finish
-		status = waitForStatus(STATUS.FAILED, id);
+		status = waitForStatus(DaemonStatus.FAILED, id);
 		assertNotNull(status.getErrorMessage());
 		assertNotNull(status.getErrorDetails());
-		assertEquals(STATUS.FAILED.name(), status.getStatus());
+		assertEquals(DaemonStatus.FAILED, status.getStatus());
 	}
 	
 	/**
@@ -240,11 +246,11 @@ public class BackupDaemonTest {
 	 * @throws NotFoundException
 	 * @throws InterruptedException
 	 */
-	private BackupRestoreStatus waitForStatus(STATUS lookinFor, String id) throws DatastoreException, NotFoundException, InterruptedException{
+	private BackupRestoreStatus waitForStatus(DaemonStatus lookinFor, String id) throws DatastoreException, NotFoundException, InterruptedException{
 		BackupRestoreStatus status = stubDao.get(id);
 		long start = System.currentTimeMillis();
 		long elapse = 0;
-		while(!lookinFor.name().equals(status.getStatus())){
+		while(!lookinFor.equals(status.getStatus())){
 			// Wait for it to complete
 			Thread.sleep(100);
 			long end =  System.currentTimeMillis();
@@ -254,7 +260,7 @@ public class BackupDaemonTest {
 			}
 			status = stubDao.get(id);
 			assertEquals(id, status.getId());
-			System.out.println(status.printStatus());
+			System.out.println(DaemonStatusUtil.printStatus(status));
 		}
 		return status;
 	}

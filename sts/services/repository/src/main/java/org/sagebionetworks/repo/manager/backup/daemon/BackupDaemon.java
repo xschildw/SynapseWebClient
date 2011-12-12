@@ -4,17 +4,20 @@ import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Date;
+import java.util.Set;
+import java.util.concurrent.ExecutorService;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.sagebionetworks.StackConfiguration;
 import org.sagebionetworks.repo.manager.backup.NodeBackupDriver;
 import org.sagebionetworks.repo.manager.backup.Progress;
-import org.sagebionetworks.repo.model.BackupRestoreStatus;
-import org.sagebionetworks.repo.model.BackupRestoreStatus.STATUS;
-import org.sagebionetworks.repo.model.BackupRestoreStatus.TYPE;
 import org.sagebionetworks.repo.model.BackupRestoreStatusDAO;
 import org.sagebionetworks.repo.model.DatastoreException;
 import org.sagebionetworks.repo.model.UnauthorizedException;
+import org.sagebionetworks.repo.model.daemon.BackupRestoreStatus;
+import org.sagebionetworks.repo.model.daemon.DaemonStatus;
+import org.sagebionetworks.repo.model.daemon.DaemonType;
 import org.sagebionetworks.repo.web.NotFoundException;
 
 import com.amazonaws.services.s3.AmazonS3Client;
@@ -29,6 +32,8 @@ import com.amazonaws.services.s3.model.PutObjectResult;
  */
 public class BackupDaemon implements Runnable{
 	
+	private static final String PREFIX_BACKUP = "Backup-";
+	private static final String PREFIX_TEMP = "temp-";
 	static private Log log = LogFactory.getLog(BackupDaemon.class);
 	public static long NANO_SECONDS_PER_MILISECOND = 1000000;
 	private static final String S3_DOMAIN = "s3.amazonaws.com";
@@ -38,12 +43,15 @@ public class BackupDaemon implements Runnable{
 	private NodeBackupDriver backupDriver;
 	private AmazonS3Client awsClient;
 	private String awsBucket;
-	private TYPE type;
+	private DaemonType type;
 	private String backupFileName;
+	// The set of entities to backup
+	private Set<String> entitiesToBackup;
 	
 	private BackupRestoreStatus status;
 	private long startTimeNano;
-	private Thread thread;
+	// The thread pool controls how many daemon threads we start.
+	ExecutorService threadPool;
 	// Is the driver daemon done?
 	private volatile boolean isDriverDone;
 	private volatile Throwable driverError;
@@ -54,15 +62,27 @@ public class BackupDaemon implements Runnable{
 	 * @param dao
 	 * @param driver
 	 */
-	BackupDaemon(BackupRestoreStatusDAO dao, NodeBackupDriver driver, AmazonS3Client client, String bucket){
+	BackupDaemon(BackupRestoreStatusDAO dao, NodeBackupDriver driver, AmazonS3Client client, String bucket, ExecutorService threadPool){
 		if(dao == null) throw new IllegalArgumentException("BackupRestoreStatusDAO cannot be null");
 		if(driver == null) throw new IllegalArgumentException("NodeBackupDriver cannot be null");
 		if(client == null) throw new IllegalArgumentException("AmazonS3Client cannot be null");
 		if(bucket == null) throw new IllegalArgumentException("Bucket cannot be null");
+		if(threadPool == null) throw new IllegalArgumentException("Thread pool cannot be null");
 		this.backupRestoreStatusDao = dao;
 		this.backupDriver = driver;
 		this.awsClient = client;
 		this.awsBucket = bucket;
+		this.threadPool = threadPool;
+	}
+	
+	/**
+	 * Create a new daemon.  This is protected and should only be called from the launcher.
+	 * @param dao
+	 * @param driver
+	 */
+	BackupDaemon(BackupRestoreStatusDAO dao, NodeBackupDriver driver, AmazonS3Client client, String bucket, ExecutorService threadPool, Set<String> entitiesToBackup){
+		this(dao, driver, client, bucket, threadPool);
+		this.entitiesToBackup = entitiesToBackup;
 	}
 	
 	/**
@@ -81,15 +101,31 @@ public class BackupDaemon implements Runnable{
 			// Before we start, make sure it has not been terminated.
 			checkForTermination();
 			// Create the temporary file to write the backup too.
-			final File tempBackup = File.createTempFile("BackupDaemonJob"+status.getId()+"-", ".zip");
+			String stack = StackConfiguration.getStack();
+			String instance = StackConfiguration.getStackInstance();
+			String prefix = null;
+			if(entitiesToBackup == null){
+				// This is a full backup file.
+				prefix = PREFIX_BACKUP;
+			}else{
+				// Incremental backup files are temporary.
+				prefix = PREFIX_TEMP;
+			}
+			final File tempBackup = File.createTempFile(prefix+stack+"-"+instance+"-"+status.getId()+"-", ".zip");
 			tempToDelete = tempBackup;
+			// We have started.
+			status.setStatus(DaemonStatus.STARTED);
 
 			// If this is a restore then we need to download the file from S3
-			if(TYPE.RESTORE == type){
+			if(DaemonType.RESTORE == type){
 				status.setProgresssMessage("Starting to download the file from S3...");
 				status.setBackupUrl(getS3URL(this.awsBucket, this.backupFileName));
 				updateStatus();
 				downloadFileFromS3(tempBackup, awsBucket, backupFileName);
+				// If this backup file is a temp file then delete it from S3 after we finish the backup
+				if(backupFileName.startsWith(PREFIX_TEMP)){
+					deleteFileFromS3(awsBucket, backupFileName);
+				}
 				// Let the user know we finished dowloading file from S#
 				status.setProgresssMessage("Finished dowloading file from S3: "+this.backupFileName);
 				updateStatus();
@@ -122,7 +158,7 @@ public class BackupDaemon implements Runnable{
 				updateStatus();
 			}
 			// If this a backup then update the file to s3
-			if(TYPE.BACKUP == type){
+			if(DaemonType.BACKUP == type){
 				// Once the driver is done upload the file to S3.
 				status.setProgresssMessage("Starting to upload temp file: "+tempBackup.getAbsolutePath()+" to S3...");
 				updateStatus();
@@ -130,9 +166,17 @@ public class BackupDaemon implements Runnable{
 				String backupUrl = uploadFileToS3(tempBackup);
 				status.setBackupUrl(backupUrl);
 			}
+			
+			if(DaemonType.RESTORE == type){
+				// If this backup file is a temp file then delete it from S3 now that we have consumed it.
+				// We also want to cleanup backup files from builds.
+				if(backupFileName.startsWith(PREFIX_TEMP) || "dev".equals(stack) || "bamboo".equals(stack)){
+					deleteFileFromS3(awsBucket, backupFileName);
+				}
+			}
 
 			// We are done
-			status.setStatus(STATUS.COMPLETED.name());
+			status.setStatus(DaemonStatus.COMPLETED);
 			status.setProgresssMessage("Finished: "+this.type);
 			status.setProgresssCurrent(status.getProgresssTotal());
 			// update the status for the last time.
@@ -159,15 +203,15 @@ public class BackupDaemon implements Runnable{
 		isDriverDone = false;
 		// The type determines which driver method we call
 		// Start the working thread
-		Thread driverThread = new Thread(new Runnable(){
+		threadPool.execute(new Runnable(){
 			@Override
 			public void run() {
 				// Tell the driver to do its thing
 				try {
-					if(TYPE.BACKUP == type){
+					if(DaemonType.BACKUP == type){
 						// This is a backup
-						backupDriver.writeBackup(tempBackup, progress);							
-					}else if(TYPE.RESTORE == type){
+						backupDriver.writeBackup(tempBackup, progress, entitiesToBackup);							
+					}else if(DaemonType.RESTORE == type){
 						// This is a restore
 						backupDriver.restoreFromBackup(tempBackup, progress);		
 					}else{
@@ -179,11 +223,6 @@ public class BackupDaemon implements Runnable{
 					driverError = e;
 				} 
 		}});
-
-		// Start the driver thread
-		driverThread.setDaemon(true);
-		driverThread.setName("BakupDriverDaemon");
-		driverThread.start();
 	}
 
 	/**
@@ -204,7 +243,7 @@ public class BackupDaemon implements Runnable{
 		log.error(e);
 		// Set the status to failed
 		status.setProgresssMessage("");
-		status.setStatus(STATUS.FAILED.name());
+		status.setStatus(DaemonStatus.FAILED);
 		status.setErrorMessage(e.getMessage());
 		StringWriter writer = new StringWriter();
 		e.printStackTrace(new PrintWriter(writer));
@@ -237,7 +276,7 @@ public class BackupDaemon implements Runnable{
 	 */
 	public BackupRestoreStatus startBackup(String userName) throws DatastoreException {
 		if(userName == null) throw new IllegalArgumentException("Username cannot be null");
-		this.type = TYPE.BACKUP;
+		this.type = DaemonType.BACKUP;
 		return start(userName);
 	}
 	
@@ -251,7 +290,7 @@ public class BackupDaemon implements Runnable{
 	public BackupRestoreStatus startRestore(String userName, String fileName) throws DatastoreException {
 		if(userName == null) throw new IllegalArgumentException("Username cannot be null");
 		if(fileName == null) throw new IllegalArgumentException("Backup file name cannot be null");
-		this.type = TYPE.RESTORE;
+		this.type = DaemonType.RESTORE;
 		this.backupFileName = fileName;
 		return start(userName);
 	}
@@ -261,20 +300,18 @@ public class BackupDaemon implements Runnable{
 		status = new BackupRestoreStatus();
 		status.setStartedBy(userName);
 		status.setStartedOn(new Date());
-		status.setStatus(STATUS.STARTED.name());
-		status.setType(this.type.name());
-		status.setProgresssMessage("Starting...");
-		status.setProgresssCurrent(0);
-		status.setProgresssTotal(0);
+		status.setStatus(DaemonStatus.IN_QUEUE);
+		status.setType(this.type);
+		status.setProgresssMessage("Pushed to the thread pool queue...");
+		status.setProgresssCurrent(0l);
+		status.setProgresssTotal(0l);
+		status.setTotalTimeMS(0l);
 		startTimeNano = System.nanoTime();
 		// Create the new status.
 		String id = backupRestoreStatusDao.create(status);
 		status.setId(id);
 		// Now that we have our status we are ready to go
-		thread = new Thread(this);
-		thread.setDaemon(true);
-		thread.setName("BakupDaemon");
-		thread.start();
+		threadPool.execute(this);
 		// Return a copy of the status from the DB.
 		try {
 			return backupRestoreStatusDao.get(id);
@@ -321,6 +358,12 @@ public class BackupDaemon implements Runnable{
 		log.info("Atempting to dowload: "+getS3URL(bucket, fileName));
 		GetObjectRequest getObjectRequest = new GetObjectRequest(bucket, fileName);
 		this.awsClient.getObject(getObjectRequest, tempFile);
+		return true;
+	}
+	
+	private boolean deleteFileFromS3(String bucket, String fileName){
+		log.info("Atempting to delete a temp file from S3 dowload: "+getS3URL(bucket, fileName));
+		this.awsClient.deleteObject(bucket, fileName);
 		return true;
 	}
 

@@ -13,8 +13,8 @@ import org.json.JSONException;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.sagebionetworks.client.Synapse;
-import org.sagebionetworks.client.SynapseServiceException;
-import org.sagebionetworks.client.SynapseUserException;
+import org.sagebionetworks.client.exceptions.SynapseServiceException;
+import org.sagebionetworks.client.exceptions.SynapseUserException;
 import org.sagebionetworks.repo.model.Eula;
 import org.sagebionetworks.repo.model.Preview;
 import org.sagebionetworks.schema.adapter.JSONObjectAdapterException;
@@ -82,7 +82,7 @@ public class IT101LoadMigratedData {
 	 * 
 	 */
 	@Test
-	public void testLoadPreview() throws ClientProtocolException, IOException, JSONException, SynapseUserException, SynapseServiceException, JSONObjectAdapterException{
+	public void testLoadPreview() throws Exception {
 		// Load preview 149
 		Preview preview = synapse.getEntity("149", Preview.class);
 		assertNotNull(preview);
@@ -94,7 +94,7 @@ public class IT101LoadMigratedData {
 	}
 
 	@Test
-	public void testLoadAgreement() throws ClientProtocolException, IOException, JSONException, SynapseUserException, SynapseServiceException, JSONObjectAdapterException{
+	public void testLoadAgreement() throws Exception {
 		// Load preview 149
 		Eula agreement = synapse.getEntity("5", Eula.class);
 		assertNotNull(agreement);

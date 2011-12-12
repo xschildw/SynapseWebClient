@@ -1,5 +1,9 @@
 package org.sagebionetworks.web.client;
 
+import org.sagebionetworks.gwt.client.schema.adapter.JSONArrayGwt;
+import org.sagebionetworks.gwt.client.schema.adapter.JSONObjectGwt;
+import org.sagebionetworks.schema.adapter.JSONArrayAdapter;
+import org.sagebionetworks.schema.adapter.JSONObjectAdapter;
 import org.sagebionetworks.web.client.cookie.CookieProvider;
 import org.sagebionetworks.web.client.cookie.GWTCookieImpl;
 import org.sagebionetworks.web.client.security.AuthenticationController;
@@ -20,6 +24,8 @@ import org.sagebionetworks.web.client.view.DatasetView;
 import org.sagebionetworks.web.client.view.DatasetViewImpl;
 import org.sagebionetworks.web.client.view.DatasetsHomeView;
 import org.sagebionetworks.web.client.view.DatasetsHomeViewImpl;
+import org.sagebionetworks.web.client.view.EntityView;
+import org.sagebionetworks.web.client.view.EntityViewImpl;
 import org.sagebionetworks.web.client.view.HomeView;
 import org.sagebionetworks.web.client.view.HomeViewImpl;
 import org.sagebionetworks.web.client.view.LayerView;
@@ -64,6 +70,8 @@ import org.sagebionetworks.web.client.widget.editpanels.phenotype.PhenotypeMatri
 import org.sagebionetworks.web.client.widget.editpanels.phenotype.PhenotypeMatrixViewImpl;
 import org.sagebionetworks.web.client.widget.entity.EntityPageTopView;
 import org.sagebionetworks.web.client.widget.entity.EntityPageTopViewImpl;
+import org.sagebionetworks.web.client.widget.entity.menu.ActionMenuView;
+import org.sagebionetworks.web.client.widget.entity.menu.ActionMenuViewImpl;
 import org.sagebionetworks.web.client.widget.filter.QueryFilterView;
 import org.sagebionetworks.web.client.widget.filter.QueryFilterViewImpl;
 import org.sagebionetworks.web.client.widget.footer.FooterView;
@@ -106,6 +114,13 @@ public class PortalGinModule extends AbstractGinModule {
 		bind(HeaderView.class).to(HeaderViewImpl.class);
 		bind(FooterView.class).to(FooterViewImpl.class);
 
+		// EntityType
+		bind(EntityTypeProvider.class).in(Singleton.class);
+		
+		// JSONAdapters
+		bind(JSONObjectAdapter.class).to(JSONObjectGwt.class);
+		bind(JSONArrayAdapter.class).to(JSONArrayGwt.class);
+		
 		/*
 		 * Vanilla Implementation binding
 		 */
@@ -125,6 +140,10 @@ public class PortalGinModule extends AbstractGinModule {
 		bind(DatasetsHomeViewImpl.class).in(Singleton.class);
 		bind(DatasetsHomeView.class).to(DatasetsHomeViewImpl.class);
 		
+		// DatasetView
+		bind(EntityViewImpl.class).in(Singleton.class);
+		bind(EntityView.class).to(EntityViewImpl.class);
+
 		// DatasetView
 		bind(DatasetViewImpl.class).in(Singleton.class);
 		bind(DatasetView.class).to(DatasetViewImpl.class);
@@ -274,6 +293,9 @@ public class PortalGinModule extends AbstractGinModule {
 		bind(EntityPageTopViewImpl.class).in(Singleton.class);
 		bind(EntityPageTopView.class).to(EntityPageTopViewImpl.class);
 		
+		// ActionMenu
+		bind(ActionMenuViewImpl.class).in(Singleton.class);
+		bind(ActionMenuView.class).to(ActionMenuViewImpl.class);
 	}
 
 }

@@ -18,8 +18,8 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.sagebionetworks.client.Synapse;
-import org.sagebionetworks.client.SynapseServiceException;
-import org.sagebionetworks.client.SynapseUserException;
+import org.sagebionetworks.client.exceptions.SynapseServiceException;
+import org.sagebionetworks.client.exceptions.SynapseUserException;
 import org.sagebionetworks.repo.model.Agreement;
 import org.sagebionetworks.repo.model.Annotations;
 import org.sagebionetworks.repo.model.Dataset;
@@ -70,9 +70,8 @@ public class IT500SynapseJavaClient {
 	 * @throws SynapseServiceException
 	 */
 	@AfterClass
-	public static void afterClass() throws HttpException, IOException,
-			JSONException, SynapseUserException, SynapseServiceException {
-		if (null != project) {
+	public static void afterClass() throws Exception {
+		if(null != project) {
 			synapse.deleteEntity(project);
 		}
 	}
