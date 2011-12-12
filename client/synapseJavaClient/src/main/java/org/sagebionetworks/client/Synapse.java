@@ -20,6 +20,12 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.sagebionetworks.repo.model.Entity;
 import org.sagebionetworks.repo.model.EntityType;
+import org.sagebionetworks.repo.model.QueryResults;
+import org.sagebionetworks.repo.model.daemon.BackupRestoreStatus;
+import org.sagebionetworks.repo.model.daemon.BackupSubmission;
+import org.sagebionetworks.repo.model.daemon.RestoreSubmission;
+import org.sagebionetworks.repo.model.status.StackStatus;
+import org.sagebionetworks.schema.adapter.JSONEntity;
 import org.sagebionetworks.schema.adapter.JSONObjectAdapterException;
 import org.sagebionetworks.schema.adapter.org.json.EntityFactory;
 import org.sagebionetworks.utils.HttpClientHelperException;
@@ -42,6 +48,14 @@ public class Synapse {
 	private static final String REQUEST_PROFILE_DATA = "profile_request";
 	private static final String PROFILE_RESPONSE_OBJECT_HEADER = "profile_response_object";
 	private static final String QUERY_URI = "/query?query=";
+	
+	private static final String ADMIN			= "/admin";
+	public static final String DAEMOM			= ADMIN+"/daemon";
+	public static final String BACKUP			= "/backup";
+	public static final String RESTORE			= "/restore";
+	public static final String DAMEON_BACKUP	= DAEMOM+BACKUP;
+	public static final String DAMEON_RETORE	= DAEMOM+RESTORE;
+	public static final String STACK_STATUS		= ADMIN+"/synapse/status";
 
 	private String repoEndpoint;
 	private String authEndpoint;
@@ -193,12 +207,99 @@ public class Synapse {
 		if(entity == null) throw new IllegalArgumentException("Entity cannot be null");
 		// Look up the EntityType for this entity.
 		EntityType type = EntityType.getNodeTypeForClass(entity.getClass());
-		// Get the json for this entity
+		return createJSONEntity(type.getUrlPrefix(), entity);
+	}
+	
+	/**
+	 * Create a JSON Entity.
+	 * @param <T>
+	 * @param uri
+	 * @param entity
+	 * @return
+	 * @throws JSONObjectAdapterException
+	 * @throws ClientProtocolException
+	 * @throws IOException
+	 * @throws JSONException
+	 * @throws SynapseUserException
+	 * @throws SynapseServiceException
+	 */
+	public <T extends JSONEntity> T createJSONEntity(String uri, T entity) throws JSONObjectAdapterException, ClientProtocolException, IOException, JSONException, SynapseUserException, SynapseServiceException{
 		JSONObject jsonObject = EntityFactory.createJSONObjectForEntity(entity);
 		// Create the entity
-		jsonObject = createEntity(type.getUrlPrefix(), jsonObject);
+		jsonObject = createEntity(uri, jsonObject);
 		// Now convert to Object to an entity
 		return (T) EntityFactory.createEntityFromJSONObject(jsonObject, entity.getClass());
+	}
+	
+	/**
+	 * Start the backup daemon.
+	 * @param submission
+	 * @return
+	 * @throws JSONObjectAdapterException
+	 * @throws ClientProtocolException
+	 * @throws IOException
+	 * @throws JSONException
+	 * @throws SynapseUserException
+	 * @throws SynapseServiceException
+	 */
+	public BackupRestoreStatus startBackupDaemon(BackupSubmission submission) throws JSONObjectAdapterException, ClientProtocolException, IOException, JSONException, SynapseUserException, SynapseServiceException{
+		JSONObject jsonObject = EntityFactory.createJSONObjectForEntity(submission);
+		// Create the entity
+		jsonObject = createEntity(DAMEON_BACKUP, jsonObject);
+		return  EntityFactory.createEntityFromJSONObject(jsonObject, BackupRestoreStatus.class);
+	}
+	
+	/**
+	 * 
+	 * @param submission
+	 * @return
+	 * @throws JSONObjectAdapterException 
+	 * @throws SynapseServiceException 
+	 * @throws SynapseUserException 
+	 * @throws JSONException 
+	 * @throws IOException 
+	 * @throws ClientProtocolException 
+	 */
+	public BackupRestoreStatus startRestoreDaemon(RestoreSubmission submission) throws JSONObjectAdapterException, ClientProtocolException, IOException, JSONException, SynapseUserException, SynapseServiceException {
+		JSONObject jsonObject = EntityFactory.createJSONObjectForEntity(submission);
+		// Create the entity
+		jsonObject = createEntity(DAMEON_RETORE, jsonObject);
+		return  EntityFactory.createEntityFromJSONObject(jsonObject, BackupRestoreStatus.class);
+	}
+	
+	/**
+	 * Get the status of a daemon.
+	 * Note: Must be an administrator to make this call.
+	 * @param daemonId
+	 * @return
+	 * @throws JSONObjectAdapterException 
+	 * @throws SynapseServiceException 
+	 * @throws SynapseUserException 
+	 * @throws JSONException 
+	 * @throws IOException 
+	 * @throws ClientProtocolException 
+	 */
+	public BackupRestoreStatus getDaemonStatus(String daemonId) throws ClientProtocolException, IOException, JSONException, SynapseUserException, SynapseServiceException, JSONObjectAdapterException{
+		return getJSONEntity(DAEMOM+"/"+daemonId, BackupRestoreStatus.class);
+	}
+	
+	
+	/**
+	 * Get a dataset, layer, preview, annotations, etc...
+	 * 
+	 * @param uri
+	 * @return the retrieved entity
+	 * @throws SynapseServiceException
+	 * @throws SynapseUserException
+	 * @throws JSONException
+	 * @throws IOException
+	 * @throws ClientProtocolException
+	 * @throws JSONObjectAdapterException 
+	 */
+	public <T extends JSONEntity> T getJSONEntity(String uri, Class<? extends T> clazz) throws ClientProtocolException,
+			IOException, JSONException, SynapseUserException, SynapseServiceException, JSONObjectAdapterException {
+		JSONObject jsonObject = getEntity(uri);
+		return EntityFactory.createEntityFromJSONObject(jsonObject, clazz);
 	}
 
 	/**
@@ -217,6 +318,9 @@ public class Synapse {
 			SynapseServiceException {
 		return getSynapseEntity(repoEndpoint, uri);
 	}
+	
+	
+	
 	
 	/**
 	 * Get an entity given an Entity ID and the class of the Entity.
@@ -300,9 +404,7 @@ public class Synapse {
 		if(entity == null) throw new IllegalArgumentException("Entity cannot be null");
 		EntityType type = EntityType.getNodeTypeForClass(entity.getClass());
 		String uri = createEntityUri(type.getUrlPrefix(), entity.getId());
-		JSONObject jsonObject = EntityFactory.createJSONObjectForEntity(entity);
-		jsonObject = putEntity(uri, jsonObject);
-		return (T) EntityFactory.createEntityFromJSONObject(jsonObject, entity.getClass());
+		return putJSONEntity(uri, entity);
 	}
 
 	/**
@@ -322,6 +424,26 @@ public class Synapse {
 			SynapseUserException, SynapseServiceException {
 		return putSynapseEntity(repoEndpoint, uri, entity);
 	}
+	
+	/**
+	 * Put a JSON entity.
+	 * @param <T>
+	 * @param uri
+	 * @param entity
+	 * @return
+	 * @throws JSONObjectAdapterException
+	 * @throws ClientProtocolException
+	 * @throws JSONException
+	 * @throws IOException
+	 * @throws SynapseUserException
+	 * @throws SynapseServiceException
+	 */
+	public <T extends JSONEntity> T putJSONEntity(String uri, T entity) throws JSONObjectAdapterException, ClientProtocolException, JSONException, IOException, SynapseUserException, SynapseServiceException{
+		JSONObject jsonObject = EntityFactory.createJSONObjectForEntity(entity);
+		jsonObject = putEntity(uri, jsonObject);
+		return (T) EntityFactory.createEntityFromJSONObject(jsonObject, entity.getClass());
+	}
+	
 
 	/**
 	 * Delete a dataset, layer, etc..
@@ -377,6 +499,55 @@ public class Synapse {
 			IOException, JSONException, SynapseUserException,
 			SynapseServiceException {
 		return querySynapse(repoEndpoint, query);
+	}
+	
+//	/**
+//	 * Same as query(String query) but this returns a QueryResult instead of a JSON object.
+//	 * @param query
+//	 * @return
+//	 * @throws ClientProtocolException
+//	 * @throws IOException
+//	 * @throws JSONException
+//	 * @throws SynapseUserException
+//	 * @throws SynapseServiceException
+//	 * @throws JSONObjectAdapterException
+//	 */
+//	public QueryResults queryForResult(String query) throws ClientProtocolException, IOException, JSONException, SynapseUserException, SynapseServiceException, JSONObjectAdapterException{
+//		JSONObject jsonOb = query(query);
+//		return EntityFactory.createEntityFromJSONObject(jsonOb, QueryResults.class);
+//	}
+	
+	/**
+	 * Get the current status of the stack.
+	 * @return
+	 * @throws ClientProtocolException
+	 * @throws IOException
+	 * @throws JSONException
+	 * @throws SynapseUserException
+	 * @throws SynapseServiceException
+	 * @throws JSONObjectAdapterException
+	 */
+	public StackStatus getCurrentStackStatus() throws ClientProtocolException, IOException, JSONException, SynapseUserException, SynapseServiceException, JSONObjectAdapterException{
+		return getJSONEntity(STACK_STATUS, StackStatus.class);
+	}
+	
+	/**
+	 * Update the current stack status.  You must be an administrator to perform this action.
+	 * @param updated
+	 * @return
+	 * @throws ClientProtocolException
+	 * @throws JSONObjectAdapterException
+	 * @throws JSONException
+	 * @throws IOException
+	 * @throws SynapseUserException
+	 * @throws SynapseServiceException
+	 */
+	public StackStatus updateCurrentStackStatus(StackStatus updated) throws ClientProtocolException, JSONObjectAdapterException, JSONException, IOException, SynapseUserException, SynapseServiceException{
+		JSONObject jsonObject = EntityFactory.createJSONObjectForEntity(updated);
+		Map<String, String> requestHeaders = new HashMap<String, String>();
+		requestHeaders.putAll(defaultPOSTPUTHeaders);
+		jsonObject = dispatchSynapseRequest(repoEndpoint, STACK_STATUS, "PUT", jsonObject.toString(),requestHeaders);
+		return EntityFactory.createEntityFromJSONObject(jsonObject, StackStatus.class);
 	}
 
 	/**
@@ -761,4 +932,6 @@ public class Synapse {
 
 		return results;
 	}
+
+
 }
