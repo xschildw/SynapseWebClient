@@ -14,7 +14,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.sagebionetworks.StackConfiguration;
-import org.sagebionetworks.repo.model.Location;
 import org.sagebionetworks.repo.model.LocationTypeNames;
 import org.sagebionetworks.repo.model.NodeConstants;
 import org.sagebionetworks.repo.web.ServiceConstants;
@@ -37,6 +36,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
  * 
  * @author deflaux
  */
+@Deprecated
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(locations = { "classpath:test-context.xml" })
 public class LocationControllerTest {

@@ -267,7 +267,7 @@ public class DefaultController extends BaseController {
 			HttpServletRequest request)
 			throws NotFoundException, ConflictingUpdateException,
 			DatastoreException, InvalidModelException, UnauthorizedException, IOException {
-		// We currently do not create a new version when we update.
+		// Note that we auto-version for locationable entities whose md5 checksums have changed.
 		return updateEntityImpl(userId, header, etag, false, request);
 	}
 

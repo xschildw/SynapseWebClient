@@ -120,7 +120,7 @@ public class IT500SynapseJavaClient {
 		Dataset updatedDataset = synapse.putEntity(aNewDataset);
 		assertEquals("updated", updatedDataset.getStatus());
 
-		/* TODO upgrade the support for Annotations in the Synapse Java Client
+		/* TODO upgrade the support for Annotations in the Synapse Java Client PLFM-820
 		Annotations annots = synapse.getObject(aNewDataset.getAnnotations(), Annotations.class);
 
 		annots.addAnnotation("annotStatus", "created");

@@ -95,7 +95,7 @@ public class LocationableMetadataProviderTest {
 			NotFoundException, DatastoreException, UnauthorizedException {
 
 		LocationData location = new LocationData();
-		location.setType(LocationTypeNames.awss3);
+		location.setType(LocationTypeNames.external);
 		List<LocationData> locations = new LinkedList<LocationData>();
 		locations.add(location);
 

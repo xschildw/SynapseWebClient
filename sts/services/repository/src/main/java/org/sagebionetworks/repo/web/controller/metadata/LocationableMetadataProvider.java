@@ -73,8 +73,8 @@ public class LocationableMetadataProvider implements
 			return;
 		}
 
-		// TODO bump the version if applicable
-
+		// Dev Note: logic for auto-versioning of Locationales when their md5 changes can be found in EntityManagerImpl.updateEntity		
+		
 		Locationable locationable = (Locationable) entity;
 		List<LocationData> locations = locationable.getLocations();
 		if (null != locations) {
@@ -114,6 +114,26 @@ public class LocationableMetadataProvider implements
 				if (location.getType().equals(LocationTypeNames.awss3)) {
 					location.setPath(locationHelper.getS3KeyFromS3Url(location
 							.getPath()));
+
+					/*
+					 * VERY IMPORTANT, ensure the S3 key starts with the id of
+					 * this entity. The reason why this is important is to
+					 * enforce a relationship between objects in our S3 bucket
+					 * and entities in the repository service for the purposes
+					 * of authorization. If there was no relationship, a user
+					 * could toss the S3 key to data to which he does not have
+					 * access into an entity to which he does have access, and
+					 * then get a presigned url for that S3 key even though we
+					 * meant to disallow his access to that data for that user.
+					 */
+
+					String s3KeyPrefixPattern = "^/" + locationable.getId()
+							+ "/\\d+/.*$";
+					if (!location.getPath().matches(s3KeyPrefixPattern)) {
+						throw new InvalidModelException(
+								"path is malformed, it must match pattern "
+										+ s3KeyPrefixPattern);
+					}
 				}
 			}
 		}
@@ -129,45 +149,41 @@ public class LocationableMetadataProvider implements
 			return;
 		}
 
-		// If this is a GET and any of the locations are awss3 locations,
-		// provide presigned urls
-		if (RequestMethod.GET.name().equals(request.getMethod())) {
+		// If this is a GET ensure that the user has sufficient permission to
+		// see the LocationData for this locationable
+		if (EventType.GET == eventType) {
+			// TODO fix me!
+			// checkUseAgreement(user, entity);
+		}
 
-			// Ensure that the user has sufficient permission to see the
-			// LocationData for this locationable
-// TODO fix me!
-//			checkUseAgreement(user, entity);
+		// If any of the locations are awss3 locations, provide presigned urls
+		String method = request.getParameter(ServiceConstants.METHOD_PARAM);
 
-			// See if the user wants a pre-signed GET, HEAD, or DELETE
-			// request
-			String method = request.getParameter(ServiceConstants.METHOD_PARAM);
-
-			Locationable locationable = (Locationable) entity;
-			List<LocationData> locations = locationable.getLocations();
-			if (null != locations) {
-				for (LocationData location : locations) {
-					if (location.getType().equals(LocationTypeNames.awss3)) {
-						String signedPath = null;
-						if ((null != method)
-								&& (method.equals(RequestMethod.HEAD.name()))) {
-							signedPath = locationHelper
-									.presignS3HEADUrl(
-											request
-													.getParameter(AuthorizationConstants.USER_ID_PARAM),
-											location.getPath());
-						} else {
-							signedPath = locationHelper
-									.presignS3GETUrl(
-											request
-													.getParameter(AuthorizationConstants.USER_ID_PARAM),
-											location.getPath());
-						}
-
-						// Overwrite the path with a presigned S3 URL to use to
-						// get the
-						// data from S3
-						location.setPath(signedPath);
+		Locationable locationable = (Locationable) entity;
+		List<LocationData> locations = locationable.getLocations();
+		if (null != locations) {
+			for (LocationData location : locations) {
+				if (location.getType().equals(LocationTypeNames.awss3)) {
+					String signedPath = null;
+					if ((null != method)
+							&& (method.equals(RequestMethod.HEAD.name()))) {
+						signedPath = locationHelper
+								.presignS3HEADUrl(
+										request
+												.getParameter(AuthorizationConstants.USER_ID_PARAM),
+										location.getPath());
+					} else {
+						signedPath = locationHelper
+								.presignS3GETUrl(
+										request
+												.getParameter(AuthorizationConstants.USER_ID_PARAM),
+										location.getPath());
 					}
+
+					// Overwrite the path with a presigned S3 URL to use to
+					// get the
+					// data from S3
+					location.setPath(signedPath);
 				}
 			}
 		}

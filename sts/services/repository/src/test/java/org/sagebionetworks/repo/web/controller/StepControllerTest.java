@@ -200,7 +200,7 @@ public class StepControllerTest {
 			fail("expected exception");
 		}
 		catch(ServletTestHelperException e) {
-			assertEquals(TEST_USER2 + " lacks read access to the requested object.", e.getServiceErrorMessage());
+			assertEquals(TEST_USER2 + " lacks read access to the requested object.", e.getMessage());
 		}
 		
 		// Add a public read ACL to the project object

@@ -163,7 +163,7 @@ public class S3TokenControllerTest {
 			fail("expected exception not thrown");
 		}
 		catch(ServletTestHelperException ex) {
-			assertTrue(ex.getServiceErrorMessage().startsWith("update access is required to obtain an S3Token for entity"));
+			assertTrue(ex.getMessage().startsWith("update access is required to obtain an S3Token for entity"));
 		}
 	}
 
