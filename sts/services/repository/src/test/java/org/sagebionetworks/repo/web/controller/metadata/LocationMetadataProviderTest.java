@@ -30,7 +30,7 @@ public class LocationMetadataProviderTest {
 	@Before
 	public void before() throws DatastoreException, NotFoundException {
 		locationMetadataProvider = metadataProviderFactory
-				.getMetadataProvider(EntityType.location);
+				.getMetadataProvider(EntityType.location).get(0);
 	}
 
 

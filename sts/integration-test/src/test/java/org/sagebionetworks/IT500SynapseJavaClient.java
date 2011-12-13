@@ -28,6 +28,7 @@ import org.sagebionetworks.repo.model.LayerTypeNames;
 import org.sagebionetworks.repo.model.LocationData;
 import org.sagebionetworks.repo.model.LocationTypeNames;
 import org.sagebionetworks.repo.model.Project;
+import org.sagebionetworks.utils.HttpClientHelper;
 
 /**
  * Run this integration test as a sanity check to ensure our Synapse Java Client
@@ -216,8 +217,8 @@ public class IT500SynapseJavaClient {
 		assertEquals(LocationTypeNames.awss3, location.getType());
 		
 		assertNotNull(location.getPath());
-		//assertTrue(location.getPath().startsWith("http"));
-/*		
+		assertTrue(location.getPath().startsWith("http"));
+		
 		File dataDestinationFile = File.createTempFile("integrationTest",
 				".download");
 		dataDestinationFile.deleteOnExit();
@@ -226,7 +227,7 @@ public class IT500SynapseJavaClient {
 		assertTrue(dataDestinationFile.isFile());
 		assertTrue(dataDestinationFile.canRead());
 		assertTrue(0 < dataDestinationFile.length());
-*/		
+		
 		// TODO test auto versioning
 		
 	}
