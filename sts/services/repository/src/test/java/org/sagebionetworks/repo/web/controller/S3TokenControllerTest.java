@@ -24,6 +24,7 @@ import org.sagebionetworks.repo.model.S3Token;
 import org.sagebionetworks.repo.model.AuthorizationConstants.ACCESS_TYPE;
 import org.sagebionetworks.repo.web.UrlHelpers;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -164,6 +165,7 @@ public class S3TokenControllerTest {
 		}
 		catch(ServletTestHelperException ex) {
 			assertTrue(ex.getMessage().startsWith("update access is required to obtain an S3Token for entity"));
+			assertEquals(HttpStatus.FORBIDDEN, ex.getHttpStatus());
 		}
 	}
 

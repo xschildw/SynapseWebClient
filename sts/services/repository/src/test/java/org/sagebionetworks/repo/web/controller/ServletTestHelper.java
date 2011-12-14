@@ -31,6 +31,7 @@ import org.sagebionetworks.repo.model.Entity;
 import org.sagebionetworks.repo.model.EntityHeader;
 import org.sagebionetworks.repo.model.EntityType;
 import org.sagebionetworks.repo.model.PaginatedResults;
+import org.sagebionetworks.repo.model.QueryResults;
 import org.sagebionetworks.repo.model.UserInfo;
 import org.sagebionetworks.repo.model.Versionable;
 import org.sagebionetworks.repo.model.daemon.BackupRestoreStatus;
@@ -122,7 +123,7 @@ public class ServletTestHelper {
 		if (entityController != null && toDelete != null) {
 			for (String idToDelete : toDelete) {
 				try {
-					entityController.deleteEntity(username, idToDelete);
+					entityController.deleteEntity(TestUserDAO.ADMIN_USER_NAME, idToDelete);
 				} catch (NotFoundException e) {
 					// nothing to do here
 				} catch (DatastoreException e) {
@@ -180,13 +181,25 @@ public class ServletTestHelper {
 
 	/**
 	 * @param <T>
+	 * @param entity
+	 * @param extraParams
+	 * @return the entity
+	 * @throws Exception
+	 */
+	public <T extends Entity> T getEntity(T entity,
+			Map<String, String> extraParams) throws Exception {
+		return (T) getEntityById(entity.getClass(), entity.getId(),	extraParams);
+	}
+
+	/**
+	 * @param <T>
 	 * @param clazz
 	 * @param id
 	 * @param extraParams
 	 * @return the entity
 	 * @throws Exception
 	 */
-	public <T extends Entity> T getEntity(Class<? extends T> clazz, String id,
+	public <T extends Entity> T getEntityById(Class<? extends T> clazz, String id,
 			Map<String, String> extraParams) throws Exception {
 		return ServletTestHelper.getEntity(dispatchServlet, clazz, id,
 				username, extraParams);
@@ -216,6 +229,15 @@ public class ServletTestHelper {
 			String id, Map<String, String> extraParams) throws Exception {
 		ServletTestHelper.deleteEntity(dispatchServlet, clazz, id, username,
 				extraParams);
+	}
+	
+	/**
+	 * @param query 
+	 * @return the query results
+	 * @throws Exception
+	 */
+	public QueryResults query(String query) throws Exception {
+		return ServletTestHelper.query(dispatchServlet, query, username);
 	}
 
 	/**
@@ -943,13 +965,44 @@ public class ServletTestHelper {
 	}
 
 	/**
+	 * @param <T>
+	 * @param dispatchServlet
+	 * @param query
+	 * @param userId
+	 * @return the query results
+	 * @throws ServletException
+	 * @throws IOException
+	 */
+	public static <T extends Entity> QueryResults query(
+			HttpServlet dispatchServlet, String query,
+			 String userId) throws ServletException,
+			IOException {
+		if (dispatchServlet == null)
+			throw new IllegalArgumentException("Servlet cannot be null");
+		MockHttpServletRequest request = new MockHttpServletRequest();
+		MockHttpServletResponse response = new MockHttpServletResponse();
+		request.setMethod("GET");
+		request.addHeader("Accept", "application/json");
+		request.setRequestURI(UrlHelpers.QUERY);
+		request.setParameter(ServiceConstants.QUERY_PARAM, query);
+		request.setParameter(AuthorizationConstants.USER_ID_PARAM, userId);
+		dispatchServlet.service(request, response);
+		log.debug("Results: " + response.getContentAsString());
+		if (response.getStatus() != HttpStatus.OK.value()) {
+			throw new ServletTestHelperException(response);
+		}
+		return objectMapper.readValue(response.getContentAsString(),
+				QueryResults.class);
+	}
+	
+	/**
 	 * Get the schema
 	 * 
 	 * @param <T>
-	 * @param requestUrl
+	 * @param dispatchServlet 
 	 * @param clazz
-	 * @param id
-	 * @return
+	 * @param userId 
+	 * @return the schema
 	 * @throws Exception
 	 */
 	public static <T extends Entity> String getSchema(

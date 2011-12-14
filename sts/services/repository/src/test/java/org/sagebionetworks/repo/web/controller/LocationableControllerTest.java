@@ -20,6 +20,7 @@ import org.sagebionetworks.repo.model.LocationTypeNames;
 import org.sagebionetworks.repo.model.Project;
 import org.sagebionetworks.repo.web.ServiceConstants;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -102,7 +103,7 @@ public class LocationableControllerTest {
 		/*
 		 * Get the dataset, and check locations
 		 */
-		dataset = helper.getEntity(Dataset.class, dataset.getId(), null);
+		dataset = helper.getEntity(dataset, null);
 		assertS3UrlsArePresigned(dataset, externalLocation, 2);
 
 		/*
@@ -112,7 +113,7 @@ public class LocationableControllerTest {
 		Map<String, String> extraParams = new HashMap<String, String>();
 		extraParams
 				.put(ServiceConstants.METHOD_PARAM, RequestMethod.GET.name());
-		dataset = helper.getEntity(Dataset.class, dataset.getId(), extraParams);
+		dataset = helper.getEntity(dataset, extraParams);
 		assertS3UrlsArePresigned(dataset, externalLocation, 2);
 
 		/*
@@ -121,7 +122,7 @@ public class LocationableControllerTest {
 		 */
 		extraParams.put(ServiceConstants.METHOD_PARAM, RequestMethod.HEAD
 				.name());
-		dataset = helper.getEntity(Dataset.class, dataset.getId(), extraParams);
+		dataset = helper.getEntity(dataset, extraParams);
 		assertS3UrlsArePresigned(dataset, externalLocation, 2);
 
 		/*
@@ -199,6 +200,7 @@ public class LocationableControllerTest {
 					.getMessage()
 					.startsWith(
 							"path is malformed, it must match pattern"));
+			assertEquals(HttpStatus.BAD_REQUEST, ex.getHttpStatus());
 		}
 	}
 
