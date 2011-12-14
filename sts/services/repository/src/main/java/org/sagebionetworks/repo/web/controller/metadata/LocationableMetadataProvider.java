@@ -19,6 +19,7 @@ import org.sagebionetworks.repo.model.EntityType;
 import org.sagebionetworks.repo.model.InvalidModelException;
 import org.sagebionetworks.repo.model.Layer;
 import org.sagebionetworks.repo.model.LocationData;
+import org.sagebionetworks.repo.model.LocationStatusNames;
 import org.sagebionetworks.repo.model.LocationTypeNames;
 import org.sagebionetworks.repo.model.Locationable;
 import org.sagebionetworks.repo.model.NodeQueryDao;
@@ -73,8 +74,9 @@ public class LocationableMetadataProvider implements
 			return;
 		}
 
-		// Dev Note: logic for auto-versioning of Locationales when their md5 changes can be found in EntityManagerImpl.updateEntity		
-		
+		// Dev Note: logic for auto-versioning of Locationables when their md5
+		// changes can be found in EntityManagerImpl.updateEntity
+
 		Locationable locationable = (Locationable) entity;
 		List<LocationData> locations = locationable.getLocations();
 		if (null != locations) {
@@ -149,17 +151,20 @@ public class LocationableMetadataProvider implements
 			return;
 		}
 
-		// If this is a GET ensure that the user has sufficient permission to
-		// see the LocationData for this locationable
-		if (EventType.GET == eventType) {
-			// TODO fix me!
-			// checkUseAgreement(user, entity);
+		Locationable locationable = (Locationable) entity;
+
+		if (needsToAgreeToEula(user, locationable)) {
+			// We used to throw an exception, now we just change a field in
+			// the Locationable and null out the locations
+			locationable.setLocations(null);
+			locationable.setLocationStatus(LocationStatusNames.pendingEula);
+			return;
 		}
 
+		locationable.setLocationStatus(LocationStatusNames.available);
 		// If any of the locations are awss3 locations, provide presigned urls
 		String method = request.getParameter(ServiceConstants.METHOD_PARAM);
 
-		Locationable locationable = (Locationable) entity;
 		List<LocationData> locations = locationable.getLocations();
 		if (null != locations) {
 			for (LocationData location : locations) {
@@ -191,39 +196,44 @@ public class LocationableMetadataProvider implements
 
 	@Override
 	public void entityDeleted(Entity deleted) {
-		// TODO Auto-generated method stub
-
 	}
 
-	private void checkUseAgreement(UserInfo userInfo, Entity entity)
-			throws NotFoundException, DatastoreException, UnauthorizedException {
+	private boolean needsToAgreeToEula(UserInfo userInfo,
+			Locationable locationable) throws NotFoundException,
+			DatastoreException, UnauthorizedException {
 
-		if (permissionsManager.hasAccess(entity.getId(), ACCESS_TYPE.UPDATE,
-				userInfo)) {
+		if (null == locationable.getLocations()
+				|| 0 == locationable.getLocations().size()) {
+			// There are not locations to protect
+			return false;
+		}
+
+		if (permissionsManager.hasAccess(locationable.getId(),
+				ACCESS_TYPE.UPDATE, userInfo)) {
 			// Users that have sufficient permission to modify the location are
 			// not subject to signing the eula because they are either the
 			// dataset creator or someone the creator granted write access to
-			return;
+			return false;
 		}
 
 		// Users without write access must have agreed to the use
 		// agreement in order to see any location info about the dataset or
 		// layer
 		Dataset dataset = null;
-		if (entity instanceof Layer) {
-			dataset = entityManager.getEntity(userInfo, entity.getParentId(),
-					Dataset.class);
-		} else if (entity instanceof Dataset) {
-			dataset = (Dataset) entity;
+		if (locationable instanceof Layer) {
+			dataset = entityManager.getEntity(userInfo, locationable
+					.getParentId(), Dataset.class);
+		} else if (locationable instanceof Dataset) {
+			dataset = (Dataset) locationable;
 		} else {
 			// We do not enforce use agreements on other types of locationable
 			// objects
-			return;
+			return false;
 		}
 
 		if (null == dataset.getEulaId()) {
 			// If the dataset has no Eula, there is nothing to enforce
-			return;
+			return false;
 		}
 
 		BasicQuery query = new BasicQuery();
@@ -239,10 +249,9 @@ public class LocationableMetadataProvider implements
 
 		long numAgreements = nodeQueryDao.executeCountQuery(query, userInfo);
 		if (1 > numAgreements) {
-			throw new UnauthorizedException(
-					"The end-user license agreement for dataset '"
-							+ dataset.getName()
-							+ "' has not yet been agreed to.");
+			// No agreements have been made, one is needed
+			return true;
 		}
+		return false;
 	}
 }

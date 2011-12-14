@@ -200,7 +200,7 @@ public class LocationableControllerTest {
 					.getMessage()
 					.startsWith(
 							"path is malformed, it must match pattern"));
-			assertEquals(HttpStatus.BAD_REQUEST, ex.getHttpStatus());
+			assertEquals(HttpStatus.BAD_REQUEST.value(), ex.getHttpStatus());
 		}
 	}
 

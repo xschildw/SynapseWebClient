@@ -29,17 +29,6 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 /**
- * Unit tests for the Layer CRUD operations exposed by the LayerController with
- * JSON request and response encoding.
- * <p>
- * 
- * Note that test logic and assertions common to operations for all DAO-backed
- * entities can be found in the Helpers class. What follows are test cases that
- * make use of that generic test logic with some assertions specific to layers.
- * <p>
- * 
- * TODO refactor me, this file is too long
- * 
  * @author deflaux
  */
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -72,14 +61,15 @@ public class S3TokenControllerTest {
 		dataset = testHelper.createEntity(dataset, null);
 		
 		// Add a public read ACL to the project object
-		AccessControlList projectAcl = testHelper.getEntityACL(Project.class, project.getId());
+		AccessControlList projectAcl = testHelper.getEntityACL(project);
 		ResourceAccess ac = new ResourceAccess();
 		ac.setGroupName(AuthorizationConstants.DEFAULT_GROUPS.AUTHENTICATED_USERS.name());
 		ac.setAccessType(new HashSet<ACCESS_TYPE>());
 		ac.getAccessType().add(ACCESS_TYPE.READ);
 		projectAcl.getResourceAccess().add(ac);
-		projectAcl = testHelper.updateEntityAcl(Project.class, project.getId(), projectAcl);
+		projectAcl = testHelper.updateEntityAcl(project, projectAcl);
 	}
+	
 	/**
 	 * @throws java.lang.Exception
 	 */
@@ -165,7 +155,7 @@ public class S3TokenControllerTest {
 		}
 		catch(ServletTestHelperException ex) {
 			assertTrue(ex.getMessage().startsWith("update access is required to obtain an S3Token for entity"));
-			assertEquals(HttpStatus.FORBIDDEN, ex.getHttpStatus());
+			assertEquals(HttpStatus.FORBIDDEN.value(), ex.getHttpStatus());
 		}
 	}
 

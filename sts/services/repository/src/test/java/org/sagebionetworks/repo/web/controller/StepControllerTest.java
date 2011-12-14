@@ -202,18 +202,18 @@ public class StepControllerTest {
 		}
 		catch(ServletTestHelperException e) {
 			assertEquals(TEST_USER2 + " lacks read access to the requested object.", e.getMessage());
-			assertEquals(HttpStatus.FORBIDDEN, e.getHttpStatus());
+			assertEquals(HttpStatus.FORBIDDEN.value(), e.getHttpStatus());
 		}
 		
 		// Add a public read ACL to the project object
 		testHelper.setTestUser(TEST_USER1);
-		AccessControlList projectAcl = testHelper.getEntityACL(Project.class, project.getId());
+		AccessControlList projectAcl = testHelper.getEntityACL(project);
 		ResourceAccess ac = new ResourceAccess();
 		ac.setGroupName(AuthorizationConstants.DEFAULT_GROUPS.AUTHENTICATED_USERS.name());
 		ac.setAccessType(new HashSet<ACCESS_TYPE>());
 		ac.getAccessType().add(ACCESS_TYPE.READ);
 		projectAcl.getResourceAccess().add(ac);
-		projectAcl = testHelper.updateEntityAcl(Project.class, project.getId(), projectAcl);
+		projectAcl = testHelper.updateEntityAcl(project, projectAcl);
 
 		// Ensure that another user can now read the step
 		testHelper.setTestUser(TEST_USER2);

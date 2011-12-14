@@ -242,33 +242,30 @@ public class ServletTestHelper {
 
 	/**
 	 * @param <T>
-	 * @param clazz
-	 * @param id
+	 * @param entity 
 	 * @return
 	 * @throws ServletException
 	 * @throws IOException
 	 * @throws ACLInheritanceException
 	 */
-	public <T extends Entity> AccessControlList getEntityACL(
-			Class<? extends T> clazz, String id) throws ServletException,
+	public <T extends Entity> AccessControlList getEntityACL(T entity) throws ServletException,
 			IOException, ACLInheritanceException {
-		return ServletTestHelper.getEntityACL(dispatchServlet, clazz, id,
+		return ServletTestHelper.getEntityACL(dispatchServlet, entity.getClass(), entity.getId(),
 				username);
 	}
 
 	/**
 	 * @param <T>
-	 * @param clazz
-	 * @param id
+	 * @param entity 
 	 * @param entityACL
 	 * @return
 	 * @throws ServletException
 	 * @throws IOException
 	 */
 	public <T extends Entity> AccessControlList updateEntityAcl(
-			Class<? extends T> clazz, String id, AccessControlList entityACL)
+			T entity, AccessControlList entityACL)
 			throws ServletException, IOException {
-		return ServletTestHelper.updateEntityAcl(dispatchServlet, clazz, id,
+		return ServletTestHelper.updateEntityAcl(dispatchServlet, entity.getClass(), entity.getId(),
 				entityACL, username);
 	}
 
