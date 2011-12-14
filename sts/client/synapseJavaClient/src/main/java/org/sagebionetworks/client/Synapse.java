@@ -225,12 +225,28 @@ public class Synapse {
 			throw new IllegalArgumentException("Entity cannot be null");
 		// Look up the EntityType for this entity.
 		EntityType type = EntityType.getNodeTypeForClass(entity.getClass());
+		return createEntity(type.getUrlPrefix(), entity);
+	}
+	
+	/**
+	 * Create a new Entity.
+	 * 
+	 * @param <T>
+	 * @param entity
+	 * @return the newly created entity
+	 * @throws SynapseException
+	 */
+	@SuppressWarnings("unchecked")
+	public <T extends JSONEntity> T createEntity(String uri, T entity)
+			throws SynapseException {
+		if (entity == null)
+			throw new IllegalArgumentException("Entity cannot be null");
 		// Get the json for this entity
 		JSONObject jsonObject;
 		try {
 			jsonObject = EntityFactory.createJSONObjectForEntity(entity);
 			// Create the entity
-			jsonObject = createEntity(type.getUrlPrefix(), jsonObject);
+			jsonObject = createEntity(uri, jsonObject);
 			// Now convert to Object to an entity
 			return (T) EntityFactory.createEntityFromJSONObject(jsonObject,
 					entity.getClass());
@@ -553,7 +569,7 @@ public class Synapse {
 			S3Token s3Token = new S3Token();
 			s3Token.setPath(dataFile.getName());
 			s3Token.setMd5(md5);
-			s3Token = createEntity(s3Token);
+			s3Token = createEntity(locationable.getS3Token(), s3Token);
 
 			// Step 2: perform the upload
 			byte[] encoded = Base64.encodeBase64(Hex.decodeHex(md5

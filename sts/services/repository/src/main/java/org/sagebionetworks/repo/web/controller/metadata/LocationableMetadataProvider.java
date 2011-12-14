@@ -306,7 +306,7 @@ public class LocationableMetadataProvider implements
 			throw new DatastoreException(
 					"too many locations to migrate for entity "
 							+ locationable.getId()
-							+ "file a Jira to the platform team and include this message if you want this entity fixed");
+							+ " File a Jira to the platform team and include this message if you want this entity fixed");
 		}
 
 		List<LocationData> locations = new LinkedList<LocationData>();
@@ -318,7 +318,7 @@ public class LocationableMetadataProvider implements
 				throw new DatastoreException(
 						"md5 checksums do not match for entity "
 								+ locationable.getId()
-								+ "file a Jira to the platform team and include this message if you want this entity fixed");
+								+ " File a Jira to the platform team and include this message if you want this entity fixed");
 			}
 
 			if (null == locationable.getContentType()) {
@@ -328,7 +328,7 @@ public class LocationableMetadataProvider implements
 				throw new DatastoreException(
 						"content types do not match for entity "
 								+ locationable.getId()
-								+ "file a Jira to the platform team and include this message if you want this entity fixed");
+								+ "File a Jira to the platform team and include this message if you want this entity fixed");
 			}
 
 			LocationData locationData = new LocationData();
