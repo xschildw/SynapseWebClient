@@ -10,6 +10,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.junit.After;
 import org.junit.Before;
@@ -251,8 +252,18 @@ public class EulaControllerTest {
 		assertNull(layer.getLocations());
 		assertEquals(LocationStatusNames.pendingEula, layer.getLocationStatus());
 
-		// TODO test queries
-
+		// Make sure location data is also *not* available via query
+		QueryResults queryResult = testHelper.query("select * from dataset");
+		assertEquals(1, queryResult.getResults().size());
+		Map<String, Object> queryValues = queryResult.getResults().get(0);
+		assertEquals(LocationStatusNames.pendingEula.name(), queryValues.get("dataset.locationStatus"));
+		assertNull(queryValues.get("dataset.locations"));
+		queryResult = testHelper.query("select * from layer");
+		assertEquals(1, queryResult.getResults().size());
+		queryValues = queryResult.getResults().get(0);
+		assertEquals(LocationStatusNames.pendingEula.name(), queryValues.get("layer.locationStatus"));
+		assertNull(queryValues.get("layer.locations"));
+		
 		// Make an agreement for user2
 		Agreement agreement = new Agreement();
 		agreement.setEulaId(eula.getId());
@@ -268,6 +279,18 @@ public class EulaControllerTest {
 		layer = testHelper.getEntity(layer, null);
 		assertEquals(1, layer.getLocations().size());
 		assertEquals(LocationStatusNames.available, layer.getLocationStatus());
+		
+		// Make sure location data is also now available via query
+		queryResult = testHelper.query("select * from dataset");
+		assertEquals(1, queryResult.getResults().size());
+		queryValues = queryResult.getResults().get(0);
+		assertEquals(LocationStatusNames.available.name(), queryValues.get("dataset.locationStatus"));
+		assertNotNull(queryValues.get("dataset.locations"));
+		queryResult = testHelper.query("select * from layer");
+		assertEquals(1, queryResult.getResults().size());
+		queryValues = queryResult.getResults().get(0);
+		assertEquals(LocationStatusNames.available.name(), queryValues.get("layer.locationStatus"));
+		assertNotNull(queryValues.get("layer.locations"));
 	}
 
 }
