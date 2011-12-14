@@ -10,7 +10,6 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import org.junit.After;
 import org.junit.Before;
@@ -37,13 +36,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 /**
- * Unit tests for the Location CRUD operations on Eula entities exposed by the
- * GenericController with JSON request and response encoding.
- * <p>
- * 
- * Note that test logic and assertions common to operations for all DAO-backed
- * entities can be found in the Helpers class. What follows are test cases that
- * make use of that generic test logic with some assertions specific to eulas.
+ * Unit tests for the CRUD operations on Eula and Agreement entities and how those affect access to location data in Locationables 
  * 
  * @author deflaux
  */
