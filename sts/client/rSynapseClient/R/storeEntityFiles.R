@@ -67,57 +67,29 @@ setMethod(
 				stop(paste("File", filePath, "does not exist, current working directory is", getwd()))
 			}
 			
-			if(is.null(propertyValue(entity, "id"))){
-				## Create the layer in Synapse
-				entity <- createEntity(entity)
-			}else{
-				if(is.null(propertyValue(entity@location, "id"))){
-					## Check if the Layer already has an awss3 location
-					locations <- getLayerLocations(entity = propertyValue(entity,"id"))
-					
-					awss3Location <- grep("awss3", locations$type)
-					entity@location <- new(Class="CachedLocation")
-					if(1L < length(awss3Location)) {
-						stop("there are multiple awss3 locations for this layer")
-					} else if(1L == length(awss3Location)) {
-						entity@location <- getEntity(locations$id[awss3Location[1]])
-					}
-				}
-			}
+			## parse out the filename
+			filename <- gsub(sprintf("%s%s%s", "^.+",.Platform$file.sep, "+"), "",filePath)
+
 			## Compute the provenance checksum
 			checksum <- as.character(md5sum(filePath))
 			
-			## parse out the filename
-			filename <- gsub(sprintf("%s%s%s", "^.+",.Platform$file.sep, "+"), "",filePath)
+			if(is.null(propertyValue(entity, "id"))){
+				## Create the layer in Synapse
+				entity <- createEntity(entity)
+			} 
+
+			## Get credentials needed to upload to S3
+			s3Token <- list()
+			s3Token$md5 <- checksum
+			s3Token$path <- filename
+			s3Token <- synapsePost(propertyValue(entity, "s3Token"), s3Token)
 			
-			## Create or update the location, as appropriate
-			propertyValues(entity@location) <- list(
-					path = filename,
-					type = "awss3",
-					md5sum = checksum
-			)
-			
-			if(is.null(propertyValue(entity@location, "id"))){
-				## set the parent ID before creating
-				propertyValue(entity@location, "parentId") <- propertyValue(entity, "id")
-				## create the Location entity in Synapse
-				entity@location <- createEntity(entity = entity@location)
-			}else{
-				## update the Location entity in Synapse
-				entity@location <- updateEntity(entity@location)
-			}
-			
-			contentType <- propertyValue(entity@location, 'contentType')
-			if(is.null(contentType)) {
-				contentType <- 'application/binary'
-			}
-			
-			## Upload the data file
+			## Upload the data file to S3
 			tryCatch(
-					synapseUploadFile(url = propertyValue(entity@location, "path"),
-								srcfile = filePath,
-								checksum = propertyValue(entity@location, "md5sum"),
-								contentType = contentType
+					synapseUploadFile(url = s3Token$presignedUrl,
+							srcfile = filePath,
+							checksum = s3Token$md5,
+							contentType = s3Token$contentType
 					),
 					error = function(e){
 						warning(sprintf("failed to upload data file, please try again: %s", e))
@@ -126,8 +98,20 @@ setMethod(
 					}
 			)
 			
+			## Store the new location in Synapse
+			## Note, to future-proof this we would put in logic to merge locationData, 
+			## but we don't have any entities with data in two locations yet, so let's 
+			## save that for the java implementation of this
+			locationData <- list()
+			locationData$path <- s3Token$path
+			locationData$type <- "awss3"
+			propertyValue(entity, "locations") <- list(locationData)
+			propertyValue(entity, "md5") <- s3Token$md5
+			propertyValue(entity, "contentType") <- s3Token$contentType
+			entity <- updateEntity(entity)
+			
 			## move the data file from where it is to the local cache directory
-			parsedUrl <- .ParsedUrl(propertyValue(entity@location, "path"))
+			parsedUrl <- .ParsedUrl(s3Token$presignedUrl)
 			destdir <- file.path(synapseCacheDir(), gsub("^/", "", parsedUrl@pathPrefix))
 			destdir <- path.expand(destdir)
 			

@@ -36,7 +36,8 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 /**
- * Unit tests for the CRUD operations on Eula and Agreement entities and how those affect access to location data in Locationables 
+ * Unit tests for the CRUD operations on Eula and Agreement entities and how
+ * those affect access to location data in Locationables
  * 
  * @author deflaux
  */
@@ -169,11 +170,14 @@ public class EulaControllerTest {
 		// Ensure that this user can see their agreement for this dataset plus
 		// other one, all agreements are public read
 		queryResult = testHelper.query("select * from agreement");
-		assertEquals(2, queryResult.getTotalNumberOfResults());
-		assertEquals(TEST_USER1, queryResult.getResults().get(0).get(
-				"agreement.createdBy"));
-		assertEquals(TEST_USER2, queryResult.getResults().get(1).get(
-				"agreement.createdBy"));
+		boolean user2CanSeeUser1sAgreement = false;
+		for (Map<String, Object> allAgreementsResult : queryResult.getResults()) {
+			if (user1Agreement.getId().equals(
+					allAgreementsResult.get("agreement.id"))) {
+				user2CanSeeUser1sAgreement = true;
+			}
+		}
+		assertTrue(user2CanSeeUser1sAgreement);
 	}
 
 	/*************************************************************************************************************************
@@ -249,14 +253,16 @@ public class EulaControllerTest {
 		QueryResults queryResult = testHelper.query("select * from dataset");
 		assertEquals(1, queryResult.getResults().size());
 		Map<String, Object> queryValues = queryResult.getResults().get(0);
-		assertEquals(LocationStatusNames.pendingEula.name(), queryValues.get("dataset.locationStatus"));
+		assertEquals(LocationStatusNames.pendingEula.name(), queryValues
+				.get("dataset.locationStatus"));
 		assertNull(queryValues.get("dataset.locations"));
 		queryResult = testHelper.query("select * from layer");
 		assertEquals(1, queryResult.getResults().size());
 		queryValues = queryResult.getResults().get(0);
-		assertEquals(LocationStatusNames.pendingEula.name(), queryValues.get("layer.locationStatus"));
+		assertEquals(LocationStatusNames.pendingEula.name(), queryValues
+				.get("layer.locationStatus"));
 		assertNull(queryValues.get("layer.locations"));
-		
+
 		// Make an agreement for user2
 		Agreement agreement = new Agreement();
 		agreement.setEulaId(eula.getId());
@@ -272,17 +278,19 @@ public class EulaControllerTest {
 		layer = testHelper.getEntity(layer, null);
 		assertEquals(1, layer.getLocations().size());
 		assertEquals(LocationStatusNames.available, layer.getLocationStatus());
-		
+
 		// Make sure location data is also now available via query
 		queryResult = testHelper.query("select * from dataset");
 		assertEquals(1, queryResult.getResults().size());
 		queryValues = queryResult.getResults().get(0);
-		assertEquals(LocationStatusNames.available.name(), queryValues.get("dataset.locationStatus"));
+		assertEquals(LocationStatusNames.available.name(), queryValues
+				.get("dataset.locationStatus"));
 		assertNotNull(queryValues.get("dataset.locations"));
 		queryResult = testHelper.query("select * from layer");
 		assertEquals(1, queryResult.getResults().size());
 		queryValues = queryResult.getResults().get(0);
-		assertEquals(LocationStatusNames.available.name(), queryValues.get("layer.locationStatus"));
+		assertEquals(LocationStatusNames.available.name(), queryValues
+				.get("layer.locationStatus"));
 		assertNotNull(queryValues.get("layer.locations"));
 	}
 
