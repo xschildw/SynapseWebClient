@@ -12,9 +12,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.codec.binary.Hex;
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.ParseException;
@@ -82,6 +80,7 @@ public class Synapse {
 	private JSONObject profileData;
 	private boolean requestProfile;
 	private HttpClientProvider clientProvider;
+	private DataUploader dataUploader;
 
 	/**
 	 * Default constructor uses the default repository and auth services
@@ -90,6 +89,7 @@ public class Synapse {
 	public Synapse() {
 		// Use the default provider
 		this(new HttpClientProviderImpl());
+		this.dataUploader = new DataUploaderMultipartImpl();
 	}
 
 	/**
@@ -116,6 +116,10 @@ public class Synapse {
 
 		requestProfile = false;
 
+	}
+
+	public void setDataUploader(DataUploader dataUploader) {
+		this.dataUploader = dataUploader;
 	}
 
 	/**
@@ -203,7 +207,7 @@ public class Synapse {
 	 * @param uri
 	 * @param entity
 	 * @return the newly created entity
-	 * @throws SynapseException 
+	 * @throws SynapseException
 	 */
 	public JSONObject createEntity(String uri, JSONObject entity)
 			throws SynapseException {
@@ -227,7 +231,7 @@ public class Synapse {
 		EntityType type = EntityType.getNodeTypeForClass(entity.getClass());
 		return createEntity(type.getUrlPrefix(), entity);
 	}
-	
+
 	/**
 	 * Create a new Entity.
 	 * 
@@ -260,7 +264,7 @@ public class Synapse {
 	 * 
 	 * @param uri
 	 * @return the retrieved entity
-	 * @throws SynapseException 
+	 * @throws SynapseException
 	 */
 	public JSONObject getEntity(String uri) throws SynapseException {
 		return getSynapseEntity(repoEndpoint, uri);
@@ -314,7 +318,7 @@ public class Synapse {
 	 * @param entityId
 	 * @param clazz
 	 * @return the entity
-	 * @throws SynapseException 
+	 * @throws SynapseException
 	 */
 	@SuppressWarnings("cast")
 	public <T extends JSONEntity> T getEntity(String entityId,
@@ -329,8 +333,7 @@ public class Synapse {
 		JSONObject jsonObj = getEntity(uri);
 		// Now convert to Object to an entity
 		try {
-			return (T) EntityFactory.createEntityFromJSONObject(jsonObj,
-					clazz);
+			return (T) EntityFactory.createEntityFromJSONObject(jsonObj, clazz);
 		} catch (JSONObjectAdapterException e) {
 			throw new SynapseException(e);
 		}
@@ -446,7 +449,7 @@ public class Synapse {
 	 * @param query
 	 *            the query to perform
 	 * @return the query result
-	 * @throws SynapseException 
+	 * @throws SynapseException
 	 */
 	public JSONObject query(String query) throws SynapseException {
 		return querySynapse(repoEndpoint, query);
@@ -457,7 +460,7 @@ public class Synapse {
 	 * 
 	 * @param locationable
 	 * @return destination file
-	 * @throws SynapseException 
+	 * @throws SynapseException
 	 * @throws SynapseUserException
 	 */
 	public File downloadLocationableFromSynapse(Locationable locationable)
@@ -517,12 +520,12 @@ public class Synapse {
 					.getAbsolutePath());
 			// Check that the md5s match, if applicable
 			if (null != md5) {
-				String localMd5 = MD5ChecksumHelper.getMD5Checksum(destinationFile
-						.getAbsolutePath());
+				String localMd5 = MD5ChecksumHelper
+						.getMD5Checksum(destinationFile.getAbsolutePath());
 				if (!localMd5.equals(md5)) {
 					throw new SynapseUserException(
 							"md5 of downloaded file does not match the one in Synapse"
-							+ destinationFile);
+									+ destinationFile);
 				}
 			}
 
@@ -556,6 +559,11 @@ public class Synapse {
 	}
 
 	/**
+	 * Dev Note: this implementation allows only one location per Locationable,
+	 * ultimately we plan to support multiple locations (e.g., a copy in
+	 * GoogleStorage, S3, and on a local server), but we'll save that work for
+	 * later
+	 * 
 	 * @param locationable
 	 * @param dataFile
 	 * @param md5
@@ -564,51 +572,29 @@ public class Synapse {
 	 */
 	public Locationable uploadLocationableToSynapse(Locationable locationable,
 			File dataFile, String md5) throws SynapseException {
-		try {
-			// Step 1: get the token
-			S3Token s3Token = new S3Token();
-			s3Token.setPath(dataFile.getName());
-			s3Token.setMd5(md5);
-			s3Token = createEntity(locationable.getS3Token(), s3Token);
 
-			// Step 2: perform the upload
-			byte[] encoded = Base64.encodeBase64(Hex.decodeHex(md5
-					.toCharArray()));
-			String base64Md5 = new String(encoded, "ASCII");
+		// Step 1: get the token
+		S3Token s3Token = new S3Token();
+		s3Token.setPath(dataFile.getName());
+		s3Token.setMd5(md5);
+		s3Token = createEntity(locationable.getS3Token(), s3Token);
 
-			Map<String, String> headerMap = new HashMap<String, String>();
-			headerMap.put("x-amz-acl", "bucket-owner-full-control");
-			headerMap.put("Content-MD5", base64Md5);
-			headerMap.put("Content-Type", s3Token.getContentType());
+		// Step 2: perform the upload
+		dataUploader.uploadData(s3Token, dataFile);
 
-			clientProvider.uploadFile(s3Token.getPresignedUrl(), dataFile
-					.getAbsolutePath(), s3Token.getContentType(), headerMap);
+		// Step 3: set the upload location in the locationable so that Synapse
+		// is aware of the new data
+		LocationData location = new LocationData();
+		location.setPath(s3Token.getPath());
+		location.setType(LocationTypeNames.awss3);
 
-			List<LocationData> locations = locationable.getLocations();
-			if (null == locationable.getLocations()) {
-				locations = new ArrayList<LocationData>();
-			}
+		List<LocationData> locations = new ArrayList<LocationData>();
+		locations.add(location);
 
-			LocationData location = new LocationData();
-			location.setPath(s3Token.getPath());
-			location.setType(LocationTypeNames.awss3);
-			locations.add(location);
-
-			locationable.setContentType(s3Token.getContentType());
-			locationable.setMd5(s3Token.getMd5());
-			locationable.setLocations(locations);
-			return putEntity(locationable);
-		} catch (DecoderException e) {
-			throw new SynapseException(e);
-		} catch (UnsupportedEncodingException e) {
-			throw new SynapseException(e);
-		} catch (ClientProtocolException e) {
-			throw new SynapseException(e);
-		} catch (IOException e) {
-			throw new SynapseException(e);
-		} catch (HttpClientHelperException e) {
-			throw new SynapseException(e);
-		}
+		locationable.setContentType(s3Token.getContentType());
+		locationable.setMd5(s3Token.getMd5());
+		locationable.setLocations(locations);
+		return putEntity(locationable);
 	}
 
 	/******************** Mid Level Authorization Service APIs ********************/
@@ -763,7 +749,7 @@ public class Synapse {
 	 * 
 	 * @param endpoint
 	 * @param uri
-	 * @throws SynapseException 
+	 * @throws SynapseException
 	 */
 	public void deleteSynapseEntity(String endpoint, String uri)
 			throws SynapseException {
@@ -783,7 +769,7 @@ public class Synapse {
 	 * @param query
 	 *            the query to perform
 	 * @return the query result
-	 * @throws SynapseException 
+	 * @throws SynapseException
 	 */
 	public JSONObject querySynapse(String endpoint, String query)
 			throws SynapseException {
@@ -884,7 +870,7 @@ public class Synapse {
 						resultsStr = results.getString("reason");
 				}
 				String exceptionContent = "Service Error(" + statusCode + "): "
-						+ resultsStr + " "+e.getMessage();
+						+ resultsStr + " " + e.getMessage();
 
 				if (statusCode == 401) {
 					throw new SynapseUnauthorizedException(exceptionContent);
@@ -982,10 +968,11 @@ public class Synapse {
 
 	/**
 	 * Get a dataset, layer, preview, annotations, etc...
-	 * @param <T> 
+	 * 
+	 * @param <T>
 	 * 
 	 * @param uri
-	 * @param clazz 
+	 * @param clazz
 	 * @return the retrieved entity
 	 * @throws JSONObjectAdapterException
 	 * @throws SynapseException

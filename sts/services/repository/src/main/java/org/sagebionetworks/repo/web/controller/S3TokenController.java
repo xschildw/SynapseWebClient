@@ -6,6 +6,7 @@ import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.sagebionetworks.StackConfiguration;
 import org.sagebionetworks.ids.IdGenerator;
 import org.sagebionetworks.repo.manager.PermissionsManager;
 import org.sagebionetworks.repo.manager.UserManager;
@@ -125,6 +126,9 @@ public class S3TokenController extends BaseController {
 				s3Token.getContentType());
 		s3Token.setPresignedUrl(presignedUrl);
 
+		// Set the destination bucket
+		s3Token.setBucket(StackConfiguration.getS3Bucket());
+		
 		return s3Token;
 	}
 

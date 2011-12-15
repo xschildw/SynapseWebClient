@@ -11,6 +11,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.sagebionetworks.StackConfiguration;
 import org.sagebionetworks.repo.manager.TestUserDAO;
 import org.sagebionetworks.repo.model.AccessControlList;
 import org.sagebionetworks.repo.model.AuthorizationConstants;
@@ -59,17 +60,19 @@ public class S3TokenControllerTest {
 		dataset = new Dataset();
 		dataset.setParentId(project.getId());
 		dataset = testHelper.createEntity(dataset, null);
-		
+
 		// Add a public read ACL to the project object
 		AccessControlList projectAcl = testHelper.getEntityACL(project);
 		ResourceAccess ac = new ResourceAccess();
-		ac.setGroupName(AuthorizationConstants.DEFAULT_GROUPS.AUTHENTICATED_USERS.name());
+		ac
+				.setGroupName(AuthorizationConstants.DEFAULT_GROUPS.AUTHENTICATED_USERS
+						.name());
 		ac.setAccessType(new HashSet<ACCESS_TYPE>());
 		ac.getAccessType().add(ACCESS_TYPE.READ);
 		projectAcl.getResourceAccess().add(ac);
 		projectAcl = testHelper.updateEntityAcl(project, projectAcl);
 	}
-	
+
 	/**
 	 * @throws java.lang.Exception
 	 */
@@ -98,6 +101,7 @@ public class S3TokenControllerTest {
 
 		token = testHelper.createObject(layer.getS3Token(), token);
 
+		assertEquals(StackConfiguration.getS3Bucket(), token.getBucket());
 		assertTrue(token.getPath().matches(
 				"^/" + layer.getId() + "/\\d+" + initialPath + "$"));
 		assertEquals(TEST_MD5, token.getMd5());
@@ -123,7 +127,10 @@ public class S3TokenControllerTest {
 		S3Token token = new S3Token();
 		token.setPath(initialPath);
 		token.setMd5(TEST_MD5);
+
 		token = testHelper.createObject(code.getS3Token(), token);
+
+		assertEquals(StackConfiguration.getS3Bucket(), token.getBucket());
 		assertTrue(token.getPath().matches(
 				"^/" + code.getId() + "/\\d+/" + initialPath + "$"));
 		assertEquals(TEST_MD5, token.getMd5());
@@ -146,15 +153,17 @@ public class S3TokenControllerTest {
 		token.setMd5(TEST_MD5);
 		token = testHelper.createObject(dataset.getUri() + "/"
 				+ UrlHelpers.S3TOKEN, token);
-		
+
 		testHelper.setTestUser(TEST_USER2);
 		try {
 			token = testHelper.createObject(dataset.getUri() + "/"
 					+ UrlHelpers.S3TOKEN, token);
 			fail("expected exception not thrown");
-		}
-		catch(ServletTestHelperException ex) {
-			assertTrue(ex.getMessage().startsWith("update access is required to obtain an S3Token for entity"));
+		} catch (ServletTestHelperException ex) {
+			assertTrue(ex
+					.getMessage()
+					.startsWith(
+							"update access is required to obtain an S3Token for entity"));
 			assertEquals(HttpStatus.FORBIDDEN.value(), ex.getHttpStatus());
 		}
 	}

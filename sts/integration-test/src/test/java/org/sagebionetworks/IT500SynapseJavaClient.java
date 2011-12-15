@@ -21,7 +21,6 @@ import org.sagebionetworks.client.Synapse;
 import org.sagebionetworks.client.exceptions.SynapseServiceException;
 import org.sagebionetworks.client.exceptions.SynapseUserException;
 import org.sagebionetworks.repo.model.Agreement;
-import org.sagebionetworks.repo.model.Annotations;
 import org.sagebionetworks.repo.model.Dataset;
 import org.sagebionetworks.repo.model.Layer;
 import org.sagebionetworks.repo.model.LayerTypeNames;
@@ -194,6 +193,7 @@ public class IT500SynapseJavaClient {
 	 */
 	@Test
 	public void testJavaClientUploadDownloadLayerFromS3() throws Exception {
+		
 		File dataSourceFile = File.createTempFile("integrationTest", ".txt");
 		dataSourceFile.deleteOnExit();
 		FileWriter writer = new FileWriter(dataSourceFile);
@@ -248,6 +248,7 @@ public class IT500SynapseJavaClient {
 
 		LocationData externalLocation = new LocationData();
 		externalLocation.setPath(externalUrl);
+		externalLocation.setType(LocationTypeNames.external);
 		List<LocationData> locations = new ArrayList<LocationData>();
 		locations.add(externalLocation);
 
