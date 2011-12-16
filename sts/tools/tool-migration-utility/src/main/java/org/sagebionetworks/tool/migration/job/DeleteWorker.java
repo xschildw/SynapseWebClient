@@ -1,22 +1,18 @@
 package org.sagebionetworks.tool.migration.job;
 
+import java.io.IOException;
+import java.net.SocketTimeoutException;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.sagebionetworks.client.Synapse;
-import org.sagebionetworks.client.exceptions.SynapseException;
 import org.sagebionetworks.client.exceptions.SynapseNotFoundException;
-import org.sagebionetworks.repo.model.DaemonStatusUtil;
+import org.sagebionetworks.client.exceptions.SynapseServiceException;
 import org.sagebionetworks.repo.model.Entity;
-import org.sagebionetworks.repo.model.daemon.BackupRestoreStatus;
-import org.sagebionetworks.repo.model.daemon.BackupSubmission;
-import org.sagebionetworks.repo.model.daemon.DaemonStatus;
-import org.sagebionetworks.repo.model.daemon.RestoreSubmission;
-import org.sagebionetworks.schema.adapter.JSONObjectAdapterException;
 import org.sagebionetworks.tool.migration.ClientFactory;
-import org.sagebionetworks.tool.migration.Configuration;
+import org.sagebionetworks.tool.migration.Progress.BasicProgress;
 
 /**
  * A worker that will execute a single delete entity job.
@@ -30,16 +26,18 @@ public class DeleteWorker implements Callable<WorkerResult> {
 	
 	ClientFactory clientFactory = null;
 	Set<String> entites = null;
+	BasicProgress progress = null;
 
 	/**
 	 * Create a new delete worker
 	 * @param clientFactory
 	 * @param entites
 	 */
-	public DeleteWorker(ClientFactory clientFactory, Set<String> entites) {
+	public DeleteWorker(ClientFactory clientFactory, Set<String> entites, BasicProgress progress) {
 		super();
 		this.clientFactory = clientFactory;
 		this.entites = entites;
+		this.progress = progress;
 	}
 
 
@@ -54,10 +52,23 @@ public class DeleteWorker implements Callable<WorkerResult> {
 					client.deleteEntity(toDelete);
 				}catch (SynapseNotFoundException e){
 					// There is nothing to do if the entity does not exist
+				}catch(SynapseServiceException e){
+					if(e.getCause() instanceof SocketTimeoutException){
+						// Deletes can take a long to complete so we just continue when it happens
+						Thread.sleep(2000);
+					}else{
+						throw e;
+					}
 				}
-			}			
+				progress.setCurrent(progress.getCurrent()+1);
+				Thread.sleep(1000);
+			}
+			// done
+			progress.setCurrent(progress.getTotal());
 			return new WorkerResult(this.entites.size(), WorkerResult.JobStatus.SUCCEDED);
 		} catch (Exception e) {
+			// done
+			progress.setCurrent(progress.getTotal());
 			// Log any errors
 			log.error("CreateUpdateWorker Failed to run job: "+ entites.toString(), e);
 			return new WorkerResult(0, WorkerResult.JobStatus.FAILED);
