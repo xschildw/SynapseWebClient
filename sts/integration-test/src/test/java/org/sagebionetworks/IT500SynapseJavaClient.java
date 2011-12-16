@@ -27,6 +27,7 @@ import org.sagebionetworks.repo.model.LayerTypeNames;
 import org.sagebionetworks.repo.model.LocationData;
 import org.sagebionetworks.repo.model.LocationTypeNames;
 import org.sagebionetworks.repo.model.Project;
+import org.sagebionetworks.utils.DefaultHttpClientSingleton;
 import org.sagebionetworks.utils.HttpClientHelper;
 
 /**
@@ -217,15 +218,13 @@ public class IT500SynapseJavaClient {
 		assertEquals(1, locations.size());
 		LocationData location = locations.get(0);
 		assertEquals(LocationTypeNames.awss3, location.getType());
-		
 		assertNotNull(location.getPath());
 		assertTrue(location.getPath().startsWith("http"));
 		
 		File dataDestinationFile = File.createTempFile("integrationTest",
 				".download");
 		dataDestinationFile.deleteOnExit();
-		HttpClientHelper.downloadFile(location.getPath(), dataDestinationFile
-				.getAbsolutePath());
+		HttpClientHelper.downloadFile(DefaultHttpClientSingleton.getInstance(), location.getPath(), dataDestinationFile.getAbsolutePath());
 		assertTrue(dataDestinationFile.isFile());
 		assertTrue(dataDestinationFile.canRead());
 		assertTrue(0 < dataDestinationFile.length());
@@ -263,4 +262,30 @@ public class IT500SynapseJavaClient {
 		assertEquals(externalUrlFileSizeBytes, downloadedLayer.length());
 
 	}
+	
+	// tests signing requests using an API key, as an alternative to logging in
+	@Test
+	public void testAPIKey() throws Exception {
+		// get API key for integration test user
+		// must be logged in to do this, so use the global client 'synapse'
+		JSONObject keyJson = synapse.getSynapseEntity(StackConfiguration
+				.getAuthenticationServicePrivateEndpoint(), "/secretKey");
+		String apiKey = keyJson.getString("secretKey");
+		assertNotNull(apiKey);
+		// set user name and api key in a synapse client
+		// we don't want to log-in, so use a new Synapse client instance
+		Synapse synapseNoLogin = new Synapse();
+		synapseNoLogin.setAuthEndpoint(StackConfiguration
+				.getAuthenticationServicePrivateEndpoint());
+		synapseNoLogin.setRepositoryEndpoint(StackConfiguration
+				.getRepositoryServiceEndpoint());
+		synapseNoLogin.setUserName(StackConfiguration.getIntegrationTestUserOneName());
+		synapseNoLogin.setApiKey(apiKey);
+		// now try to do a query
+		JSONObject results = synapseNoLogin.query("select * from dataset limit 10");
+		// should get at least one result (since 'beforeClass' makes one dataset)
+		assertTrue(0 < results.getInt("totalNumberOfResults"));
+	}
+	
+
 }

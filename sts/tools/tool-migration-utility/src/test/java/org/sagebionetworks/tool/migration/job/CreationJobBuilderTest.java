@@ -59,7 +59,7 @@ public class CreationJobBuilderTest {
 		// now run the job
 		int batchSize = 5;
 		CreationJobBuilder builder = new CreationJobBuilder(source, destMap, jobQueue, batchSize);
-		CreatorResponse response = builder.call();
+		BuilderResponse response = builder.call();
 		assertNotNull(response);
 		// Just the root should have been submitted
 		int expectedSubmited = 1;
@@ -85,7 +85,7 @@ public class CreationJobBuilderTest {
 		// now run the job
 		int batchSize = 2;
 		CreationJobBuilder builder = new CreationJobBuilder(source, destMap, jobQueue, batchSize);
-		CreatorResponse response = builder.call();
+		BuilderResponse response = builder.call();
 		assertNotNull(response);
 		// Just the root should have been submitted
 		int expectedSubmited = 3;
@@ -115,7 +115,7 @@ public class CreationJobBuilderTest {
 		// now run the job
 		int batchSize = 2;
 		CreationJobBuilder builder = new CreationJobBuilder(source, destMap, jobQueue, batchSize);
-		CreatorResponse response = builder.call();
+		BuilderResponse response = builder.call();
 		assertNotNull(response);
 		// Just the root should have been submitted
 		int expectedSubmited = 9;

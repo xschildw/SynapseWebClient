@@ -7,6 +7,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -22,10 +23,12 @@ import org.sagebionetworks.tool.migration.dao.QueryRunner;
 import org.sagebionetworks.tool.migration.dao.QueryRunnerImpl;
 import org.sagebionetworks.tool.migration.job.AggregateResult;
 import org.sagebionetworks.tool.migration.job.CreationJobBuilder;
-import org.sagebionetworks.tool.migration.job.CreatorResponse;
+import org.sagebionetworks.tool.migration.job.BuilderResponse;
+import org.sagebionetworks.tool.migration.job.DeleteJobBuilder;
 import org.sagebionetworks.tool.migration.job.Job;
 import org.sagebionetworks.tool.migration.job.JobQueueWorker;
 import org.sagebionetworks.tool.migration.job.JobUtil;
+import org.sagebionetworks.tool.migration.job.UpdateJobBuilder;
 
 /**
  * The main driver for migration.
@@ -47,8 +50,11 @@ public class MigrationDriver {
 	public static void main(String[] args) throws IOException,
 			SynapseException, JSONException, InterruptedException, ExecutionException {
 		// Load the location of the configuration property file
-		if (args == null || args.length != 1) {
-			throw new IllegalArgumentException(	"The first argument must be the configuation property file path");
+		if (args == null) {
+			throw new IllegalArgumentException(	"The first argument must be the configuation property file path.");
+		}
+		if (args.length != 1) {
+			throw new IllegalArgumentException(	"The first argument must be the configuation property file path. args.length: "+args.length);
 		}
 		String path = args[0];
 		// Load all of the configuration information.
@@ -76,15 +82,20 @@ public class MigrationDriver {
 		}
 		ExecutorService threadPool = Executors.newFixedThreadPool(maxThreads);
 		// The JOB queue
-		Queue<Job> jobQueue = new LinkedList<Job>();
+		Queue<Job> jobQueue = new ConcurrentLinkedQueue<Job>();
 		
 		// Start up the thread 
 		int entitesProcessed = 0;
 		int failedJobs = 0;
 		int successJobs = 0;
+		// There are three parts to this loop.
+		// 1. Get all entity data from both the source and destination.
+		// 2. Calculate what needs to be created, updated, or deleted and create a job for each.
+		// 3. Process all jobs on the queue.
+		// Wash/rinse repeat.
 		long totalStart = System.currentTimeMillis();
 		while(true){
-			// Query for the data to test for
+			// 1. Get all entity data from both the source and destination.
 			long start = System.currentTimeMillis();
 			List<EntityData> sourceData = queryRunner.getAllEntityData(sourceClient);
 			long end = System.currentTimeMillis();
@@ -93,37 +104,75 @@ public class MigrationDriver {
 			List<EntityData> destData = queryRunner.getAllEntityData(destClient);
 			end = System.currentTimeMillis();
 			log.info("Get all entites from destination, count: "+destData.size()+" in: "+(end-start)+" ms");
-			Map<String, EntityData> destMap = JobUtil.buildMapFromList(destData);
-			// Build up the create jobs
-			CreationJobBuilder createBuilder = new CreationJobBuilder(sourceData, destMap, jobQueue, Configuration.getMaximumBatchSize());
-			Future<CreatorResponse> createFuture = threadPool.submit(createBuilder);
+			// 2. Calculate what needs to be created, updated, or deleted and create a job for each.
+			populateQueue(threadPool, jobQueue, sourceData, destData, Configuration.getMaximumBatchSize());
 			
-			// Wait for each to complete
-			CreatorResponse response = createFuture.get();
-			log.info("Summited "+response.getSubmitedToQueue()+" entites to create queue.  There are "+response.getPendingDependancies()+" entites pending dependancy creations.");
-			
-			// Now process the queue with all threads
-			JobQueueWorker queueWorker = new JobQueueWorker(jobQueue, threadPool, factory);
-			// Wait for the worker
-			Future<AggregateResult> workerFuture = threadPool.submit(queueWorker);
-			// Wait for it to finish
-			AggregateResult result = workerFuture.get();
+			// 3. Process all jobs on the queue.
+			AggregateResult result = consumeAllJobs(factory, threadPool, jobQueue);
 			entitesProcessed += result.getTotalEntitesProcessed();
 			failedJobs += result.getFailedJobCount();
 			successJobs += result.getSuccessfulJobCount();
 			String format = "FAILED jobs: %1$-10d SUCCESSFUL jobs: %2$-10d total entities processed: %3$-10d";
-
 			log.info("Cleared the queue: "+String.format(format, failedJobs, successJobs, entitesProcessed));
 			// If there are any failures exist
-//			if(failedJobs > 0 ){
-//				System.out.println("There are failed jobs, so existing");
-//				System.exit(1);
-//			}
 			long endTotal = System.currentTimeMillis();
 			log.info("Total elapse time: "+(endTotal-totalStart)+" ms");
 			Thread.sleep(1000*5);
 		}
 		
+	}
+
+	/**
+	 * Consume all jobs on the queue.  This method will block until the queue is empty.
+	 * @param factory
+	 * @param threadPool
+	 * @param jobQueue
+	 * @return
+	 * @throws InterruptedException
+	 * @throws ExecutionException
+	 */
+	public static AggregateResult consumeAllJobs(ClientFactoryImpl factory,	ExecutorService threadPool, Queue<Job> jobQueue)
+			throws InterruptedException, ExecutionException {
+		// Create a new worker job.
+		JobQueueWorker queueWorker = new JobQueueWorker(jobQueue, threadPool, factory);
+		// Start the worker job.
+		Future<AggregateResult> workerFuture = threadPool.submit(queueWorker);
+		// Wait for it to finish
+		AggregateResult result = workerFuture.get();
+		return result;
+	}
+
+	/**
+	 * Populate the queue with create, update, and delete jobs using what we know about the source and destination repositories.
+	 * This will block until the queue is populated.
+	 * @param threadPool
+	 * @param jobQueue
+	 * @param sourceData
+	 * @param sourceMap
+	 * @param destData
+	 * @param destMap
+	 * @throws InterruptedException
+	 * @throws ExecutionException
+	 */
+	public static void populateQueue(ExecutorService threadPool, Queue<Job> jobQueue, List<EntityData> sourceData, List<EntityData> destData, int maxBatchSize) throws InterruptedException,
+			ExecutionException {
+		// Build the maps
+		Map<String, EntityData> destMap = JobUtil.buildMapFromList(destData);
+		Map<String, EntityData> sourceMap = JobUtil.buildMapFromList(sourceData);
+		// Build up the create jobs
+		CreationJobBuilder createBuilder = new CreationJobBuilder(sourceData, destMap, jobQueue, maxBatchSize);
+		Future<BuilderResponse> createFuture = threadPool.submit(createBuilder);
+		// Build up the update jobs
+		UpdateJobBuilder updateBuilder = new UpdateJobBuilder(sourceData, destMap, jobQueue, maxBatchSize);
+		Future<BuilderResponse> updateFuture = threadPool.submit(updateBuilder);
+		// build up the delete jobs
+		DeleteJobBuilder deleteBuilder = new DeleteJobBuilder(sourceMap, destData, jobQueue, maxBatchSize);
+		Future<BuilderResponse> deleteFuture = threadPool.submit(deleteBuilder);
+		// Wait for each to complete
+		BuilderResponse createResponse = createFuture.get();
+		BuilderResponse updateResponse = updateFuture.get();
+		BuilderResponse deleteResponse = deleteFuture.get();
+		log.info("Submmited "+createResponse.getSubmitedToQueue()+" entites to create queue.  There are "+createResponse.getPendingDependancies()+" entites pending dependancy creations. Submitted "+updateResponse.getSubmitedToQueue()+" updates to the queue. Submitted "+deleteResponse.getSubmitedToQueue()+" for delete.");
 	}
 
 	/**
