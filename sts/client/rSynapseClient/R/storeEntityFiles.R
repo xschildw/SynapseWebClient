@@ -55,63 +55,37 @@ setMethod(
 setMethod(
 		f = "storeFile",
 		signature = signature("Layer", "character"),
-		definition = function(entity, filePath){
+		definition = function(entity, filePath) {
 			
-			# Change into the cache directory, if filePath is a relative path, maybe 
-			# we'll find it here, if filePath is an absolute path, changing the working 
-			# directory will have no effect
-			oldDir <- getwd()
-			setwd(entity$cacheDir)
-						
 			if(!all(file.exists(filePath))) {
-				stop(paste("File", filePath, "does not exist, current working directory is", getwd()))
+				# See if the file is in our cache dir (e.g., it was a relative path to the file)
+				filePath <- file.path(entity$cacheDir, filePath)
+				if(!all(file.exists(filePath))) {
+					stop(paste("File", filePath, "does not exist, current working directory is", getwd()))
+				}
 			}
-			
-			## parse out the filename
-			filename <- gsub(sprintf("%s%s%s", "^.+",.Platform$file.sep, "+"), "",filePath)
-
-			## Compute the provenance checksum
-			checksum <- as.character(md5sum(filePath))
 			
 			if(is.null(propertyValue(entity, "id"))){
 				## Create the layer in Synapse
 				entity <- createEntity(entity)
+			} else {
+				## Update the layer in Synapse just in case any other fields were changed
+				## TODO is this needed?
+				entity <- updateEntity(entity)
 			} 
-
-			## Get credentials needed to upload to S3
-			s3Token <- list()
-			s3Token$md5 <- checksum
-			s3Token$path <- filename
-			s3Token <- synapsePost(propertyValue(entity, "s3Token"), s3Token)
 			
-			## Upload the data file to S3
 			tryCatch(
-					synapseUploadFile(url = s3Token$presignedUrl,
-							srcfile = filePath,
-							checksum = s3Token$md5,
-							contentType = s3Token$contentType
-					),
+					.performMultipartUpload(entity, filePath),
 					error = function(e){
 						warning(sprintf("failed to upload data file, please try again: %s", e))
-						setwd(oldDir)
 						return(entity)
 					}
 			)
 			
-			## Store the new location in Synapse
-			## Note, to future-proof this we would put in logic to merge locationData, 
-			## but we don't have any entities with data in two locations yet, so let's 
-			## save that for the java implementation of this
-			locationData <- list()
-			locationData$path <- s3Token$path
-			locationData$type <- "awss3"
-			propertyValue(entity, "locations") <- list(locationData)
-			propertyValue(entity, "md5") <- s3Token$md5
-			propertyValue(entity, "contentType") <- s3Token$contentType
-			entity <- updateEntity(entity)
-			
+			entity <- getEntity(entity)
+						
 			## move the data file from where it is to the local cache directory
-			parsedUrl <- .ParsedUrl(s3Token$presignedUrl)
+			parsedUrl <- .ParsedUrl(propertyValue(entity, 'locations')[[1]]['path'])
 			destdir <- file.path(synapseCacheDir(), gsub("^/", "", parsedUrl@pathPrefix))
 			destdir <- path.expand(destdir)
 			
@@ -124,13 +98,61 @@ setMethod(
 				## unpack into the local cache and update the location entity
 				entity@location <- CachedLocation(entity@location, .unpack(filepath))
 				
-			}else{
+			} else {
+				## parse out the filename
+				filename <- gsub(sprintf("%s%s%s", "^.+",.Platform$file.sep, "+"), "",filePath)
+				
 				entity@location@cacheDir <- destdir
 				## unpack into the local cache and update the location entity
 				entity@location <- CachedLocation(entity@location, .unpack(file.path(destdir, filename)))
 			}
-			
-			setwd(oldDir)
-			refreshEntity(entity)
+			entity
 		}
 )
+
+.performRUpload <- function(entity, filePath) {
+	## parse out the filename
+	filename <- gsub(sprintf("%s%s%s", "^.+",.Platform$file.sep, "+"), "",filePath)
+	
+	## Get credentials needed to upload to S3
+	s3Token <- list()
+	s3Token$md5 <- as.character(md5sum(filePath))
+	s3Token$path <- filename
+	s3Token <- synapsePost(propertyValue(entity, "s3Token"), s3Token)
+	
+	## Upload the data file to S3
+	tryCatch(
+			synapseUploadFile(url = s3Token$presignedUrl,
+					srcfile = filePath,
+					checksum = s3Token$md5,
+					contentType = s3Token$contentType
+			),
+			error = function(e){
+				warning(sprintf("failed to upload data file, please try again: %s", e))
+				setwd(oldDir)
+				return(entity)
+			}
+	)
+	
+	## Store the new location in Synapse
+	## Note, to future-proof this we would put in logic to merge locationData, 
+	## but we don't have any entities with data in two locations yet, so let's 
+	## save that for the java implementation of this
+	locationData <- list()
+	locationData$path <- s3Token$path
+	locationData$type <- "awss3"
+	propertyValue(entity, "locations") <- list(locationData)
+	propertyValue(entity, "md5") <- s3Token$md5
+	propertyValue(entity, "contentType") <- s3Token$contentType
+	entity <- updateEntity(entity)	
+}
+
+.performMultipartUpload <- function(entity, filePath) {
+	jfile <- .jnew("java/io/File", filePath)
+	jentity <- .jenv[["syn"]]$getEntityById(propertyValue(entity, 'id'));
+	jlocationable <- .jcall(.jenv[["syn"]], 
+			'Lorg/sagebionetworks/repo/model/Locationable;', 
+			'uploadLocationableToSynapse', 
+			.jcast(jentity, 'org/sagebionetworks/repo/model/Locationable'), 
+			jfile);
+}		
