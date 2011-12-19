@@ -1,6 +1,7 @@
 package org.sagebionetworks.repo.web.controller.metadata;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -31,6 +32,37 @@ public class LocationableMetadataProviderTest {
 	@Autowired
 	MetadataProviderFactory metadataProviderFactory;
 
+	public void testMultipleS3Locations() throws InvalidModelException,
+			NotFoundException, DatastoreException, UnauthorizedException {
+
+		LocationData location1 = new LocationData();
+		location1.setType(LocationTypeNames.awss3);
+		location1.setPath("/13/998/foo.zip");
+		LocationData location2 = new LocationData();
+		location2.setType(LocationTypeNames.awss3);
+		location2.setPath("/13/999/bar.zip");		
+		
+		List<LocationData> locations = new LinkedList<LocationData>();
+		locations.add(location1);
+		locations.add(location1);
+
+		Layer mock = new Layer();
+		mock.setId("13");
+		mock.setParentId("12");
+		mock.setMd5("85e8c666f57573345d7b9fbe8d704f05");
+		mock.setType(LayerTypeNames.G);
+		mock.setContentType(null);
+		mock.setLocations(locations);
+
+		try {
+			validateEntityHelper(mock);
+			fail("expected exception not thrown");
+		}
+		catch(InvalidModelException ex) {
+			assertEquals("Only one AWS S3 location is allowed per entity", ex.getCause().getMessage());
+		}
+	}
+	
 	@Test(expected = InvalidModelException.class)
 	public void testMd5InvalidLengthTooShort() throws InvalidModelException,
 			NotFoundException, DatastoreException, UnauthorizedException {

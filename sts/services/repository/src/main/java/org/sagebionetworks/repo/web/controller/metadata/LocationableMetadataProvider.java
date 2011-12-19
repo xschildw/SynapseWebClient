@@ -81,67 +81,75 @@ public class LocationableMetadataProvider implements
 
 		Locationable locationable = (Locationable) entity;
 		List<LocationData> locations = locationable.getLocations();
-		if (null != locations) {
-			for (LocationData location : locations) {
+		if (null == locations) {
+			return;
+		}
 
-				if (null == location.getType()) {
-					throw new InvalidModelException("type cannot be null");
+		int numAwsS3Locations = 0;
+		for (LocationData location : locations) {
+
+			if (null == location.getType()) {
+				throw new InvalidModelException("type cannot be null");
+			}
+			if (null == location.getPath()) {
+				throw new InvalidModelException("path cannot be null");
+			}
+			if (null == locationable.getMd5()) {
+				throw new InvalidModelException("md5 cannot be null");
+			}
+			if (!MD5_REGEX.matcher(locationable.getMd5()).matches()) {
+				throw new InvalidModelException(
+						"md5sum is malformed, it must be a 32 digit hexadecimal string");
+			}
+			if (null == locationable.getContentType()) {
+				// We expect that users typically will not provide a mime
+				// type, we look at the file extension here to pick one
+				// Note that this is a best effort, if the user has files
+				// with different file extensions (but the same md5) this
+				// will pick the content type for the last locationLata
+				String mimeType = FILE_EXTENSION2MIME_TYPE_MAP
+						.getContentTypeFor(location.getPath());
+				if (null == mimeType) {
+					mimeType = DEFAULT_MIME_TYPE;
 				}
-				if (null == location.getPath()) {
-					throw new InvalidModelException("path cannot be null");
-				}
-				if (null == locationable.getMd5()) {
-					throw new InvalidModelException("md5 cannot be null");
-				}
-				if (!MD5_REGEX.matcher(locationable.getMd5()).matches()) {
+				locationable.setContentType(mimeType);
+			}
+
+			//
+			// If the user passed in a presigned URL in the path, clean it
+			// up
+			//
+			if (location.getType().equals(LocationTypeNames.awss3)) {
+
+				numAwsS3Locations++;
+
+				location.setPath(locationHelper.getS3KeyFromS3Url(location
+						.getPath()));
+
+				/*
+				 * VERY IMPORTANT, ensure the S3 key starts with the id of this
+				 * entity. The reason why this is important is to enforce a
+				 * relationship between objects in our S3 bucket and entities in
+				 * the repository service for the purposes of authorization. If
+				 * there was no relationship, a user could toss the S3 key to
+				 * data to which he does not have access into an entity to which
+				 * he does have access, and then get a presigned url for that S3
+				 * key even though we meant to disallow his access to that data
+				 * for that user.
+				 */
+
+				String s3KeyPrefixPattern = "^/" + locationable.getId()
+						+ "/\\d+/.*$";
+				if (!location.getPath().matches(s3KeyPrefixPattern)) {
 					throw new InvalidModelException(
-							"md5sum is malformed, it must be a 32 digit hexadecimal string");
-				}
-				if (null == locationable.getContentType()) {
-					// We expect that users typically will not provide a mime
-					// type, we look at the file extension here to pick one
-					// Note that this is a best effort, if the user has files
-					// with different file extensions (but the same md5) this
-					// will pick the content type for the last locationLata
-					String mimeType = FILE_EXTENSION2MIME_TYPE_MAP
-							.getContentTypeFor(location.getPath());
-					if (null == mimeType) {
-						mimeType = DEFAULT_MIME_TYPE;
-					}
-					locationable.setContentType(mimeType);
-				}
-
-				//
-				// If the user passed in a presigned URL in the path, clean it
-				// up
-				//
-				if (location.getType().equals(LocationTypeNames.awss3)) {
-					location.setPath(locationHelper.getS3KeyFromS3Url(location
-							.getPath()));
-
-					/*
-					 * VERY IMPORTANT, ensure the S3 key starts with the id of
-					 * this entity. The reason why this is important is to
-					 * enforce a relationship between objects in our S3 bucket
-					 * and entities in the repository service for the purposes
-					 * of authorization. If there was no relationship, a user
-					 * could toss the S3 key to data to which he does not have
-					 * access into an entity to which he does have access, and
-					 * then get a presigned url for that S3 key even though we
-					 * meant to disallow his access to that data for that user.
-					 */
-
-					String s3KeyPrefixPattern = "^/" + locationable.getId()
-							+ "/\\d+/.*$";
-					if (!location.getPath().matches(s3KeyPrefixPattern)) {
-						throw new InvalidModelException(
-								"path is malformed, it must match pattern "
-										+ s3KeyPrefixPattern);
-					}
+							"path is malformed, it must match pattern "
+									+ s3KeyPrefixPattern);
 				}
 			}
 		}
-
+		if(1 < numAwsS3Locations) {
+			throw new InvalidModelException("Only one AWS S3 location is allowed per entity");
+		}
 	}
 
 	@Override
@@ -157,7 +165,8 @@ public class LocationableMetadataProvider implements
 
 		// HACK ALERT - we "migrating" location entities on the fly, see
 		// PLFM-840 for the real fix
-		boolean locationsWereMigrated = migrateLocationsAsNeeded(locationable, request, user);
+		boolean locationsWereMigrated = migrateLocationsAsNeeded(locationable,
+				request, user);
 
 		if (needsToAgreeToEula(user, locationable)) {
 			// We used to throw an exception, now we just change a field in
@@ -292,9 +301,11 @@ public class LocationableMetadataProvider implements
 		// Yes, this is outside of a transaction, we can move this inside a
 		// transaction is we are really worried about concurrent updates to old
 		// location entities
-		PaginatedParameters paging = new PaginatedParameters(0, Long.MAX_VALUE, null, true);
-		PaginatedResults<Location> results = entityController.getEntityChildrenOfTypePaginated(user
-				.getUser().getId(), locationable.getId(), Location.class, paging, request);
+		PaginatedParameters paging = new PaginatedParameters(0, Long.MAX_VALUE,
+				null, true);
+		PaginatedResults<Location> results = entityController
+				.getEntityChildrenOfTypePaginated(user.getUser().getId(),
+						locationable.getId(), Location.class, paging, request);
 
 		if (0 == results.getResults().size()) {
 			// No migration needed
