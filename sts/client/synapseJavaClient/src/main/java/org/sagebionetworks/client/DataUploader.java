@@ -11,6 +11,12 @@ import org.sagebionetworks.repo.model.S3Token;
  * @author deflaux
  */
 public interface DataUploader {
+	
+	/**
+	 * @param progressListener 
+	 */
+	public void setProgressListener(ProgressListener progressListener);
+	
 	/**
 	 * @param s3Token
 	 * @param dataFile

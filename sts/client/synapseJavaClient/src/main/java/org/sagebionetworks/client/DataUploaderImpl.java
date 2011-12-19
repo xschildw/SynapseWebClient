@@ -18,6 +18,12 @@ import org.sagebionetworks.repo.model.S3Token;
 public class DataUploaderImpl implements DataUploader {
 
 	private HttpClientProvider clientProvider;
+	
+	@Override
+	public void setProgressListener(ProgressListener progressListener) {
+		// TODO Auto-generated method stub
+		
+	}
 
 	/**
 	 * Default constructor

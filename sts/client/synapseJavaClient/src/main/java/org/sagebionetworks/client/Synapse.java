@@ -45,7 +45,6 @@ import org.sagebionetworks.schema.adapter.JSONEntity;
 import org.sagebionetworks.schema.adapter.JSONObjectAdapterException;
 import org.sagebionetworks.schema.adapter.org.json.EntityFactory;
 import org.sagebionetworks.securitytools.HMACUtils;
-import org.sagebionetworks.utils.HttpClientHelper;
 import org.sagebionetworks.utils.HttpClientHelperException;
 import org.sagebionetworks.utils.MD5ChecksumHelper;
 import org.joda.time.DateTime;
@@ -92,19 +91,23 @@ public class Synapse {
 	 * endpoints.
 	 */
 	public Synapse() {
-		// Use the default provider
-		this(new HttpClientProviderImpl());
-		this.dataUploader = new DataUploaderMultipartImpl();
+		// Use the default implementations
+		this(new HttpClientProviderImpl(), new DataUploaderMultipartImpl());
 	}
 
 	/**
-	 * Will use the provided client provider.
+	 * Will use the provided client provider and data uploader.
 	 * 
-	 * @param provider
+	 * @param clientProvider 
+	 * @param dataUploader 
 	 */
-	public Synapse(HttpClientProvider provider) {
-		if (provider == null)
-			throw new IllegalArgumentException("Provider cannot be null");
+	public Synapse(HttpClientProvider clientProvider, DataUploader dataUploader) {
+		if (clientProvider == null)
+			throw new IllegalArgumentException("HttpClientProvider cannot be null");
+
+		if (dataUploader == null)
+			throw new IllegalArgumentException("DataUploader cannot be null");
+
 		setRepositoryEndpoint(DEFAULT_REPO_ENDPOINT);
 		setAuthEndpoint(DEFAULT_AUTH_ENDPOINT);
 
@@ -115,14 +118,29 @@ public class Synapse {
 		defaultPOSTPUTHeaders.putAll(defaultGETDELETEHeaders);
 		defaultPOSTPUTHeaders.put("Content-Type", "application/json");
 
-		clientProvider = provider;
+		this.clientProvider = clientProvider;
 		clientProvider.setGlobalConnectionTimeout(DEFAULT_TIMEOUT_MSEC);
 		clientProvider.setGlobalSocketTimeout(DEFAULT_TIMEOUT_MSEC);
 
+		this.dataUploader = dataUploader;
+		
 		requestProfile = false;
 
 	}
 
+	/**
+	 * Use this method to override the default implementation of {@link HttpClientProvider}
+	 * @param clientProvider
+	 */
+	public void setHttpClientProvider(HttpClientProvider clientProvider) {
+		this.clientProvider = clientProvider;
+	}
+	
+	/**
+	 * Use this method to override the default implementation of {@link DataUploader}
+	 * 
+	 * @param dataUploader
+	 */
 	public void setDataUploader(DataUploader dataUploader) {
 		this.dataUploader = dataUploader;
 	}
@@ -835,8 +853,6 @@ public class Synapse {
 	private JSONObject signAndDispatchSynapseRequest(String endpoint, String uri,
 			String requestMethod, String requestContent,
 			Map<String, String> requestHeaders) throws SynapseException {
-		String apiKey = getApiKey();
-		String userName = getUserName();
 		if (apiKey!=null) {
 			String timeStamp = (new DateTime()).toString();
 			String uriRawPath = null; 
@@ -851,9 +867,8 @@ public class Synapse {
 		    modHeaders.put(AuthorizationConstants.SIGNATURE_TIMESTAMP, timeStamp);
 		    modHeaders.put(AuthorizationConstants.SIGNATURE, signature);
 		    return dispatchSynapseRequest(endpoint, uri, requestMethod, requestContent, modHeaders);
-		} else {
-		    return dispatchSynapseRequest(endpoint, uri, requestMethod, requestContent, requestHeaders);
-		}
+		} 
+		return dispatchSynapseRequest(endpoint, uri, requestMethod, requestContent, requestHeaders);
 	}
 
 	/**
