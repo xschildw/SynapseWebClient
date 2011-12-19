@@ -70,8 +70,10 @@ public class DataUploaderMultipartImpl implements DataUploader {
 				.getSessionToken());
 		TransferManager tx = new TransferManager(credentials);
 		Upload upload = tx.upload(request);
-		progressListener.setUpload(upload);
-
+		if(null != progressListener) {
+			progressListener.setUpload(upload);
+		}
+		
 		// Wait for the upload to complete before returning (making this
 		// synchronous, can change it later if we want asynchronous behavior)
 		try {

@@ -82,7 +82,7 @@ setMethod(
 					}
 			)
 			
-			entity <- getEntity(entity)
+			entity <- refreshEntity(entity)
 						
 			## move the data file from where it is to the local cache directory
 			parsedUrl <- .ParsedUrl(propertyValue(entity, 'locations')[[1]]['path'])
