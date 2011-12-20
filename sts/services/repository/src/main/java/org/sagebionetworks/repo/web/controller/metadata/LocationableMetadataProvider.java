@@ -165,8 +165,8 @@ public class LocationableMetadataProvider implements
 
 		// HACK ALERT - we "migrating" location entities on the fly, see
 		// PLFM-840 for the real fix
-		boolean locationsWereMigrated = migrateLocationsAsNeeded(locationable,
-				request, user);
+		boolean locationsWereMigrated = false;
+		//migrateLocationsAsNeeded(locationable, request, user);
 
 		if (needsToAgreeToEula(user, locationable)) {
 			// We used to throw an exception, now we just change a field in

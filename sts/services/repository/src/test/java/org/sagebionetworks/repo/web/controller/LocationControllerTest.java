@@ -164,6 +164,7 @@ public class LocationControllerTest {
 		assertNotNull(datasetLocations);
 		assertEquals(1, datasetLocations.getJSONArray("results").length());
 
+		/*
 		testHelper.setTestUser(helper.getUserId());
 		Dataset collapsedDataset = testHelper.getEntityById(Dataset.class, dataset.getString("id"), null);
 		assertNotNull(collapsedDataset);
@@ -179,6 +180,7 @@ public class LocationControllerTest {
 						+ StackConfiguration.getS3Bucket()
 						+ s3key
 						+ "\\?.*Expires=\\d+&x-amz-security-token=.+&AWSAccessKeyId=\\w+&Signature=[^/]+$"));
+						*/
 	}
 
 	/**
