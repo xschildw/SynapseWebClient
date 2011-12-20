@@ -1,11 +1,12 @@
 {
     "description":"JSON schema for DatasetTrackingData POJO",
+	"name": "DatasetTrackingData",
     "properties":{
         "acquisitionTrackingData":{
-            "$ref":"org.sagebionetworks.repo.model.AcquisitionTrackingData"
+            "$ref": "org.sagebionetworks.repo.model.AcquisitionTrackingData"
         },
         "curationTrackingData":{
-            "$ref":"org.sagebionetworks.repo.model.CurationTrackingData"
+            "$ref": "org.sagebionetworks.repo.model.CurationTrackingData"
         }
     }
 }

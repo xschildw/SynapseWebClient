@@ -13,6 +13,10 @@
                 "acquired"
             ]
         },
+		"owner": {
+			"type": "string",
+			"description": "Contact id of the person who owns the acquisition process."
+		},
         "dataAcquisitionReference": {
             "description": "Reference id of data acquisition",
             "type": "string"
@@ -28,13 +32,6 @@
         "comments": {
             "description": "Comments on acquisition process",
             "type": "string"
-        },
-        "history":{
-            "description": "Status history",
-            "type": "array",
-            "items": {
-                "$ref": "org.sagebionetworks.repo.model.StatusHistoryRecord"
-            }
         }
     }
 }

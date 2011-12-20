@@ -45,6 +45,10 @@
             "format":"date-time",
             
         },
+		"trackingData": {
+			"$ref": "org.sagebionetworks.repo.model.DatasetTrackingData"
+			}
+		}
         
     }
 }

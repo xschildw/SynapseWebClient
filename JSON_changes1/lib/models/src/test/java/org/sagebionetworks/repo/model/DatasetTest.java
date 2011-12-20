@@ -45,11 +45,6 @@ public class DatasetTest {
 		ds1.setHasGeneticData(Boolean.TRUE);
 		ds1.setHasExpressionData(Boolean.TRUE);
 
-//		CurationTrackingData cdt = new CurationTrackingData();
-//		cdt.setOwner("owner");
-//		cdt.setStatus(CurationStatusNames.loaded);
-//		ds1.setCurationStatus(cdt);
-
 		List<LocationData> ldl = new ArrayList<LocationData>();
 		LocationData ld = new LocationData();
 		ld.setContentType("txt");
@@ -59,19 +54,21 @@ public class DatasetTest {
 		ldl.add(ld);
 		ds1.setLocations(ldl);
 		
-//		AcquisitionTrackingData adt = new AcquisitionTrackingData();
-//		adt.setComments("comments");
-//		adt.setDataAcquisitionReference("reference");
-//		adt.setFollowupRequirements("followupRequirements");
-//		adt.setRequestor("requestor");
-//		adt.setStatus(AcquisitionStatusNames.denied);
-//		
-//		List<StatusHistoryRecord> lshr = new ArrayList<StatusHistoryRecord>();
-//		StatusHistoryRecord shr = new StatusHistoryRecord();
-//		shr.setStatusName("status");
-//		lshr.add(shr);
-//		adt.setHistory(lshr);
-//		ds1.setAcquisitionStatus(adt);
+		CurationTrackingData cdt = new CurationTrackingData();
+		cdt.setOwner("owner");
+		cdt.setStatus(CurationStatusNames.loaded);
+
+		AcquisitionTrackingData adt = new AcquisitionTrackingData();
+		adt.setOwner("owner");
+		adt.setComments("comments");
+		adt.setDataAcquisitionReference("reference");
+		adt.setFollowupRequirements("followupRequirements");
+		adt.setRequestor("requestor");
+		adt.setStatus(AcquisitionStatusNames.denied);
+
+		DatasetTrackingData ddt = new DatasetTrackingData();
+		ddt.setAcquisitionTrackingData(adt);
+		ddt.setCurationTrackingData(cdt);
 		
 		adapter1 = ds1.writeToJSONObject(adapter1);
 		String s = adapter1.toJSONString();

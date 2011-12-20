@@ -9,8 +9,7 @@
     "properties":{
         "status":{
             "type":"string",
-            "description":"the status of this Project",
-            
+            "description":"the status of this Project"
         },
         
     }

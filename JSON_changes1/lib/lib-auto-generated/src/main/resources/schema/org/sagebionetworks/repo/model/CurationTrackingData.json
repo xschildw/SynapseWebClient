@@ -11,16 +11,9 @@
                 "published",
             ]
         },
-        "curator": {
-            "description": "Contact id of person who curated the data",
+        "owner": {
+            "description": "Contact id of person who owns the curation process.",
             "type": "string"
-        },
-        "history":{
-            "description": "Status history",
-            "type": "array",
-            "items": {
-                "$ref": "org.sagebionetworks.repo.model.StatusHistoryRecord"
-            }
         }
     }
 }
