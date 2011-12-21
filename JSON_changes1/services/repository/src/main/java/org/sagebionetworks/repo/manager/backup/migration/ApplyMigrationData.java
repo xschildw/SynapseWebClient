@@ -53,68 +53,76 @@ public class ApplyMigrationData implements RevisionMigrationStep {
 			// First determine if the
 			if(toMigrate.getNamedAnnotations() != null && toMigrate.getNamedAnnotations().getPrimaryAnnotations() != null){
 				Annotations primaryAnnotations = toMigrate.getNamedAnnotations().getPrimaryAnnotations();
-				TYPE fieldType = rename.getFieldSchema().getType();
-				// First we must check the encoding
-				ENCODING encoding = rename.getFieldSchema().getContentEncoding();
-				if(encoding != null){
-					if(ENCODING.BINARY == encoding){
-						Map<String, Collection<byte[]>> annos = primaryAnnotations.getBlobAnnotations();
-						if(annos != null){
-							Collection<byte[]> valueToMigrate = annos.remove(rename.getOldFieldName());
-							if(valueToMigrate != null){
-								annos.put(rename.getNewFieldName(), valueToMigrate);
-							}
-						}
-					}else{
-						throw new IllegalArgumentException("Support has not been added to migrate field TYPE="+fieldType.name()+" for ENCODING: "+encoding+", toRename: "+rename.toString());						
+				this.renameFieldInAnnotations(rename, primaryAnnotations);
+			}
+			if(toMigrate.getNamedAnnotations() != null && toMigrate.getNamedAnnotations().getAdditionalAnnotations() != null) {
+				Annotations additionalAnnotations = toMigrate.getNamedAnnotations().getAdditionalAnnotations();
+				this.renameFieldInAnnotations(rename, additionalAnnotations);
+			}
+		}
+	}
+	
+	private void renameFieldInAnnotations(RenameFieldData rename, Annotations annotations) {
+		TYPE fieldType = rename.getFieldSchema().getType();
+		// First we must check the encoding
+		ENCODING encoding = rename.getFieldSchema().getContentEncoding();
+		if(encoding != null){
+			if(ENCODING.BINARY == encoding){
+				Map<String, Collection<byte[]>> annos = annotations.getBlobAnnotations();
+				if(annos != null){
+					Collection<byte[]> valueToMigrate = annos.remove(rename.getOldFieldName());
+					if(valueToMigrate != null){
+						annos.put(rename.getNewFieldName(), valueToMigrate);
 					}
-				}else if(TYPE.STRING == fieldType){
-					if(rename.getFieldSchema().getFormat() != null){
-						// This might be a date
-						if(FORMAT.DATE_TIME == rename.getFieldSchema().getFormat()){
-							// Migrate the Date annotations.
-							Map<String, Collection<Date>> annos = primaryAnnotations.getDateAnnotations();
-							if(annos != null){
-								Collection<Date> valueToMigrate = annos.remove(rename.getOldFieldName());
-								if(valueToMigrate != null){
-									annos.put(rename.getNewFieldName(), valueToMigrate);
-								}
-							}
-						}else{
-							throw new IllegalArgumentException("Support has not been added to migrate field TYPE="+fieldType.name()+" for FORMAT: "+rename.getFieldSchema().getFormat()+", toRename: "+rename.toString());
-						}
-					}else{
-						// Migrate the string annotations.
-						Map<String, Collection<String>> stringAnnos = primaryAnnotations.getStringAnnotations();
-						if(stringAnnos != null){
-							Collection<String> valueToMigrate = stringAnnos.remove(rename.getOldFieldName());
-							if(valueToMigrate != null){
-								stringAnnos.put(rename.getNewFieldName(), valueToMigrate);
-							}
-						}
-					}
-				}else if(TYPE.INTEGER == fieldType){
-					// Migrate the string annotations.
-					Map<String, Collection<Long>> longAnnos = primaryAnnotations.getLongAnnotations();
-					if(longAnnos != null){
-						Collection<Long> valueToMigrate = longAnnos.remove(rename.getOldFieldName());
-						if(valueToMigrate != null){
-							longAnnos.put(rename.getNewFieldName(), valueToMigrate);
-						}
-					}
-				}else if(TYPE.NUMBER == fieldType){
-					// Migrate the string annotations.
-					Map<String, Collection<Double>> annos = primaryAnnotations.getDoubleAnnotations();
+				}
+			}else{
+				throw new IllegalArgumentException("Support has not been added to migrate field TYPE="+fieldType.name()+" for ENCODING: "+encoding+", toRename: "+rename.toString());						
+			}
+		}else if(TYPE.STRING == fieldType){
+			if(rename.getFieldSchema().getFormat() != null){
+				// This might be a date
+				if(FORMAT.DATE_TIME == rename.getFieldSchema().getFormat()){
+					// Migrate the Date annotations.
+					Map<String, Collection<Date>> annos = annotations.getDateAnnotations();
 					if(annos != null){
-						Collection<Double> valueToMigrate = annos.remove(rename.getOldFieldName());
+						Collection<Date> valueToMigrate = annos.remove(rename.getOldFieldName());
 						if(valueToMigrate != null){
 							annos.put(rename.getNewFieldName(), valueToMigrate);
 						}
 					}
 				}else{
-					throw new IllegalArgumentException("Support has not been added to migrate field TYPE="+fieldType.name()+" for : "+rename.toString());
+					throw new IllegalArgumentException("Support has not been added to migrate field TYPE="+fieldType.name()+" for FORMAT: "+rename.getFieldSchema().getFormat()+", toRename: "+rename.toString());
+				}
+			}else{
+				// Migrate the string annotations.
+				Map<String, Collection<String>> stringAnnos = annotations.getStringAnnotations();
+				if(stringAnnos != null){
+					Collection<String> valueToMigrate = stringAnnos.remove(rename.getOldFieldName());
+					if(valueToMigrate != null){
+						stringAnnos.put(rename.getNewFieldName(), valueToMigrate);
+					}
 				}
 			}
+		}else if(TYPE.INTEGER == fieldType){
+			// Migrate the string annotations.
+			Map<String, Collection<Long>> longAnnos = annotations.getLongAnnotations();
+			if(longAnnos != null){
+				Collection<Long> valueToMigrate = longAnnos.remove(rename.getOldFieldName());
+				if(valueToMigrate != null){
+					longAnnos.put(rename.getNewFieldName(), valueToMigrate);
+				}
+			}
+		}else if(TYPE.NUMBER == fieldType){
+			// Migrate the string annotations.
+			Map<String, Collection<Double>> annos = annotations.getDoubleAnnotations();
+			if(annos != null){
+				Collection<Double> valueToMigrate = annos.remove(rename.getOldFieldName());
+				if(valueToMigrate != null){
+					annos.put(rename.getNewFieldName(), valueToMigrate);
+				}
+			}
+		}else{
+			throw new IllegalArgumentException("Support has not been added to migrate field TYPE="+fieldType.name()+" for : "+rename.toString());
 		}
 	}
 }
