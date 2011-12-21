@@ -61,12 +61,13 @@ import org.springframework.web.servlet.DispatcherServlet;
  * 
  * @author deflaux
  */
+@Deprecated
 public class Helpers {
 
 	private static final Logger log = Logger.getLogger(Helpers.class.getName());
 	private static final int JSON_INDENT = 2;
 
-	private HttpServlet servlet;
+	private static HttpServlet servlet;
 	private String servletPrefix;
 	private String userId;
 	private UserInfo userInfo;
@@ -114,18 +115,19 @@ public class Helpers {
 		// Create a Spring MVC DispatcherServlet so that we can test our URL
 		// mapping, request format, response format, and response status
 		// code.
-		MockServletConfig servletConfig = new MockServletConfig(
-		"repository");
-		servletConfig.addInitParameter("contextConfigLocation",
-		"classpath:test-context.xml");
-		servlet = new DispatcherServlet();
-		try {
-			servlet.init(servletConfig);
-		} catch (Exception e) {
-			e.printStackTrace();
-			throw e;
+		if(null == servlet) {
+			MockServletConfig servletConfig = new MockServletConfig(
+			"repository");
+			servletConfig.addInitParameter("contextConfigLocation",
+			"classpath:test-context.xml");
+			servlet = new DispatcherServlet();
+			try {
+				servlet.init(servletConfig);
+			} catch (Exception e) {
+				e.printStackTrace();
+				throw e;
+			}
 		}
-
 		useAdminUser();
 		testState = new LinkedList<TestStateItem>();
 
@@ -145,11 +147,6 @@ public class Helpers {
 				log.info(e.toString());
 			}
 		}
-		// If we do not destroy the servlet we get connection leaks.
-		if(servlet != null){
-			servlet.destroy();
-		}
-
 	}
 
 	/**
