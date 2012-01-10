@@ -1,13 +1,13 @@
 {
-    "description":"Metadata about migrating entities",
+    "description": "Metadata about migrating entities",
     "properties":{
         "toRename":{
-            "type":"array",
-            "description":"The full path of the entity schema.",
-            "uniqueItems":false,
-            "items":{
-                "type":"object",
-    			"$ref":"org.sagebionetworks.repo.model.registry.RenameData",
+            "type": "array",
+            "description": "The full path of the entity schema.",
+            "uniqueItems": false,
+            "items": {
+                "type": "object",
+    			"$ref": "org.sagebionetworks.repo.model.registry.RenameData",
             }
         }
     }

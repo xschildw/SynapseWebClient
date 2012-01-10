@@ -33,7 +33,7 @@ public class DatasetTest {
 		ds1.setModifiedOn(d);
 		ds1.setName("name");
 		ds1.setUri("uri");
-		ds1.setVersion("1.0.0");
+//		ds1.setVersion("1.0.0");
 		ds1.setVersionComment("versionComment");
 		ds1.setVersionLabel("versionLabel");
 		ds1.setVersionNumber(1L);
@@ -69,6 +69,8 @@ public class DatasetTest {
 		DatasetTrackingData ddt = new DatasetTrackingData();
 		ddt.setAcquisitionTrackingData(adt);
 		ddt.setCurationTrackingData(cdt);
+		
+		ds1.setTrackingData(ddt);
 		
 		adapter1 = ds1.writeToJSONObject(adapter1);
 		String s = adapter1.toJSONString();

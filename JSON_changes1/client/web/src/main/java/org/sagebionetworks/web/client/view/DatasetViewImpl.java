@@ -194,7 +194,7 @@ public class DatasetViewImpl extends Composite implements DatasetView {
 								  String downloadAvailability,
 								  String releaseNotesUrl, 
 								  String status, 
-								  String version,
+//								  String version,
 								  int nSamples, 
 								  int nDownloads, 
 								  String citation, 

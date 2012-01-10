@@ -290,9 +290,9 @@ public class LayerPresenterTest {
 		// Public Page view (no user)
 		resetMocks();		
 		layerPresenter.loadPermissionLevel(layerModel1);
-		verify(mockView).setLayerDetails(anyString(), anyString(), anyString(),
-				anyString(), anyString(), anyString(), anyString(),
-				any(Date.class), anyString(), anyInt(), anyInt(), anyString(),
+		verify(mockView).setLayerDetails(anyString(), anyString()/*, anyString(),
+				anyString(), anyString()*/, anyString(), anyString(),
+				/*any(Date.class),*/ anyString(), anyInt(), anyInt(), anyString(),
 				anyString(), anyString(), eq(false), eq(false), anyString());
 		
 		
@@ -303,9 +303,9 @@ public class LayerPresenterTest {
 		AsyncMockStubber.callFailureWith(error).when(mockNodeService).hasAccess(eq(NodeType.LAYER), eq(layerId), eq(AclAccessType.UPDATE), any(AsyncCallback.class));		
 		layerPresenter.loadPermissionLevel(layerModel1);
 		verify(mockView).showErrorMessage(anyString());
-		verify(mockView).setLayerDetails(anyString(), anyString(), anyString(),
-				anyString(), anyString(), anyString(), anyString(),
-				any(Date.class), anyString(), anyInt(), anyInt(), anyString(),
+		verify(mockView).setLayerDetails(anyString(), anyString()/*, anyString(),
+				anyString(), anyString()*/, anyString(), anyString(),
+				/*any(Date.class),*/ anyString(), anyInt(), anyInt(), anyString(),
 				anyString(), anyString(), eq(false), eq(false), anyString());		
 				
 				
@@ -316,9 +316,9 @@ public class LayerPresenterTest {
 		AsyncMockStubber.callSuccessWith(false).when(mockNodeService).hasAccess(eq(NodeType.LAYER), eq(layerId), eq(AclAccessType.CHANGE_PERMISSIONS), any(AsyncCallback.class));
 		when(mockAuthenticationController.getLoggedInUser()).thenReturn(user1);
 		layerPresenter.loadPermissionLevel(layerModel1);
-		verify(mockView).setLayerDetails(anyString(), anyString(), anyString(),
-				anyString(), anyString(), anyString(), anyString(),
-				any(Date.class), anyString(), anyInt(), anyInt(), anyString(),
+		verify(mockView).setLayerDetails(anyString(), anyString()/*, anyString(),
+				anyString(), anyString()*/, anyString(), anyString(),
+				/*any(Date.class),*/ anyString(), anyInt(), anyInt(), anyString(),
 				anyString(), anyString(), eq(false), eq(false), anyString());		
 				
 		// Yes UPDATE, No CHANGE_PERMISSIONS
@@ -327,9 +327,9 @@ public class LayerPresenterTest {
 		AsyncMockStubber.callSuccessWith(false).when(mockNodeService).hasAccess(eq(NodeType.LAYER), eq(layerId), eq(AclAccessType.CHANGE_PERMISSIONS), any(AsyncCallback.class));
 		when(mockAuthenticationController.getLoggedInUser()).thenReturn(user1);
 		layerPresenter.loadPermissionLevel(layerModel1);
-		verify(mockView).setLayerDetails(anyString(), anyString(), anyString(),
-				anyString(), anyString(), anyString(), anyString(),
-				any(Date.class), anyString(), anyInt(), anyInt(), anyString(),
+		verify(mockView).setLayerDetails(anyString(), anyString()/*, anyString(),
+				anyString(), anyString()*/, anyString(), anyString(),
+				/*any(Date.class),*/ anyString(), anyInt(), anyInt(), anyString(),
 				anyString(), anyString(), eq(false), eq(true), anyString());		
 				
 		// Yes UPDATE, Yes CHANGE_PERMISSIONS
@@ -338,9 +338,9 @@ public class LayerPresenterTest {
 		AsyncMockStubber.callSuccessWith(true).when(mockNodeService).hasAccess(eq(NodeType.LAYER), eq(layerId), eq(AclAccessType.CHANGE_PERMISSIONS), any(AsyncCallback.class));
 		when(mockAuthenticationController.getLoggedInUser()).thenReturn(user1);
 		layerPresenter.loadPermissionLevel(layerModel1);
-		verify(mockView).setLayerDetails(anyString(), anyString(), anyString(),
-				anyString(), anyString(), anyString(), anyString(),
-				any(Date.class), anyString(), anyInt(), anyInt(), anyString(),
+		verify(mockView).setLayerDetails(anyString(), anyString()/*, anyString(),
+				anyString(), anyString()*/, anyString(), anyString(),
+				/*any(Date.class),*/ anyString(), anyInt(), anyInt(), anyString(),
 				anyString(), anyString(), eq(true), eq(true), anyString());		
 				
 

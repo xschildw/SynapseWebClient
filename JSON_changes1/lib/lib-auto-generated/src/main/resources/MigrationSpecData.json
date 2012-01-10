@@ -1,0 +1,109 @@
+{
+	"migrationMetadata": [
+		{
+			"entityType": "project",
+			"fields": [
+				{
+					"source": {"name": "version", "type": "string", "bucket": "primary"},
+					"destination": {"name": "", "type": "", "bucket": "deleted"}
+				}
+			]
+		},
+		{
+			"entityType": "dataset",
+			"fields": [
+				{
+					"source": {"name": "version", "type": "string", "bucket": "primary"},
+					"destination": {"name": "", "type": "", "bucket": "deleted"}
+				}
+			]
+		},
+		{
+			"entityType": "layer",
+			"fields": [
+				{
+					"source": {"name": "version", "type": "string", "bucket": "primary"},
+					"destination": {"name": "", "type": "", "bucket": "deleted"}
+				},
+				{
+					"source": {"name": "QcBy", "type": "string", "bucket": "primary"},
+					"destination": {"name": "", "type": "", "bucket": "deleted"}
+				},
+				{
+					"source": {"name": "QcDate", "type": "string", "bucket": "primary"},
+					"destination": {"name": "", "type": "", "bucket": "deleted"}
+				},
+				{
+					"source": {"name": "processingFacility", "type": "string", "bucket": "primary"},
+					"destination": {"name": "platformVendor", "type": "string", "bucket": "primary"}
+				},
+				{
+					"source": {"name": "num_samples", "type": "long", "bucket": "primary"},
+					"destination": {"name": "numSamples", "type": "long", "bucket": "primary"}
+				}
+			]
+		},
+		{
+			"entityType": "eula",
+			"fields": [
+				{
+					"source": {"name": "version", "type": "string", "bucket": "primary"},
+					"destination": {"name": "", "type": "", "bucket": "deleted"}
+				},
+				{
+					"source": {"name": "agreementBlob", "type": "string", "bucket": "primary"},
+					"destination": {"name": "agreement", "type": "string", "bucket": "primary"}
+				}
+			]
+		},
+		{
+			"entityType": "analysis",
+			"fields": [
+				{
+					"source": {"name": "version", "type": "string", "bucket": "primary"},
+					"destination": {"name": "", "type": "", "bucket": "deleted"}
+				}
+			]
+		},
+		{
+			"entityType": "agreement",
+			"fields": [
+				{
+					"source": {"name": "version", "type": "string", "bucket": "primary"},
+					"destination": {"name": "", "type": "", "bucket": "deleted"}
+				}
+			]
+		},
+		{
+			"entityType": "code",
+			"fields": [
+				{
+					"source": {"name": "version", "type": "string", "bucket": "primary"},
+					"destination": {"name": "", "type": "", "bucket": "deleted"}
+				}
+			]
+		},
+		{
+			"entityType": "step",
+			"fields": [
+				{
+					"source": {"name": "version", "type": "string", "bucket": "primary"},
+					"destination": {"name": "", "type": "", "bucket": "deleted"}
+				}
+			]
+		},
+		{
+			"entityType": "preview",
+			"fields": [
+				{
+					"source": {"name": "version", "type": "string", "bucket": "primary"},
+					"destination": {"name": "", "type": "", "bucket": "deleted"}
+				},
+								{
+					"source": {"name": "previewBlob", "type": "string", "bucket": "primary"},
+					"destination": {"name": "previewString", "type": "string", "bucket": "primary"}
+				}
+			]
+		}
+	]
+}

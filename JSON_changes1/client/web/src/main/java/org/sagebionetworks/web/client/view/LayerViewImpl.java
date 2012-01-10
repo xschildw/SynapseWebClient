@@ -181,12 +181,12 @@ public class LayerViewImpl extends Composite implements LayerView {
 	@Override
 	public void setLayerDetails(String id, 
 								String layerName, 
-								String processingFacility, 
-								String qcByDisplay,
-								String qcByUrl, 
+//								String processingFacility, 
+//								String qcByDisplay,
+//								String qcByUrl, 
 								String qcAnalysisDisplay, 
 								String qcAnalysisUrl,
-								Date qcDate, 
+//								Date qcDate, 
 								String overviewText, 
 								int nDataRowsShown,
 								int totalDataRows, 
@@ -199,9 +199,9 @@ public class LayerViewImpl extends Composite implements LayerView {
 		
 		// make sure displayed values are clean
 		if(layerName == null) layerName = "";
-		if(processingFacility == null) processingFacility = "";
-		if(qcByDisplay == null) qcByDisplay = "";
-		if(qcByUrl == null) qcByUrl = "";
+//		if(processingFacility == null) processingFacility = "";
+//		if(qcByDisplay == null) qcByDisplay = "";
+//		if(qcByUrl == null) qcByUrl = "";
 		if(qcAnalysisDisplay == null) qcAnalysisDisplay = "";
 		if(qcAnalysisUrl == null) qcAnalysisUrl = "";
 		if(overviewText == null) overviewText  = "";

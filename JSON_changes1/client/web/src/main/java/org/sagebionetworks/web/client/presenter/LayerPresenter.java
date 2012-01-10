@@ -350,10 +350,10 @@ public class LayerPresenter extends AbstractActivity implements LayerView.Presen
 		if(model != null) {
 			view.setLayerDetails(model.getId(), 
 								 model.getName(), 
-							 	 model.getProcessingFacility(), 
-								 model.getQcBy(), "#ComingSoon:0",
+//							 	 model.getProcessingFacility(), 
+//								 model.getQcBy(), "#ComingSoon:0",
 								 "qc_script.R", "#ComingSoon:0",
-								 model.getQcDate(),
+//								 model.getQcDate(),
 								 model.getDescription(),
 								 5,
 								 Integer.MAX_VALUE, // TODO : get total number of rows in layer

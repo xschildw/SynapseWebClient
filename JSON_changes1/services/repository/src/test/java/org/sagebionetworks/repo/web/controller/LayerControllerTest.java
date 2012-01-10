@@ -475,9 +475,9 @@ public class LayerControllerTest {
 		assertFalse("null".equals(results.getString("createdOn")));
 
 		// Check that optional properties that receive default values
-		assertTrue(results.has("version"));
-		String value = results.getString("version");
-		assertFalse("null".equals(value));
+//		assertTrue(results.has("version"));
+//		String value = results.getString("version");
+//		assertFalse("null".equals(value));
 
 		// Check that other properties are present, even if their value is null
 		String locations = results.getString("uri")+UrlHelpers.LOCATION;

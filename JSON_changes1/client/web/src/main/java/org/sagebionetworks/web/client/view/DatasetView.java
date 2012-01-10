@@ -68,7 +68,7 @@ public interface DatasetView extends IsWidget, SynapseView {
 			Date postedDate, Date curationDate, Date lastModifiedDate,
 			String creator, String[] contributors, int nFollowers,
 			String viewFollowersUrl, String downloadAvailability,
-			String releaseNotesUrl, String status, String version,
+			String releaseNotesUrl, String status/*, String version*/,
 			int nSamples, int nDownloads, String citation, Integer pubmedId,
 			boolean isAdministrator, boolean canEdit);
 

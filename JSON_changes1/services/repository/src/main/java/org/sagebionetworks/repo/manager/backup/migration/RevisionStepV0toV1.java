@@ -4,12 +4,14 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.List;
 
 import org.sagebionetworks.repo.manager.NodeTranslationUtils;
 import org.sagebionetworks.repo.model.Annotations;
 import org.sagebionetworks.repo.model.NamedAnnotations;
 import org.sagebionetworks.repo.model.NodeRevisionBackup;
 import org.sagebionetworks.repo.model.EntityType;
+import org.sagebionetworks.repo.model.registry.MigrationSpecData;
 
 /**
  * The only job for this step is to take NodeRevisionBackup from v0 to v1.
@@ -17,6 +19,23 @@ import org.sagebionetworks.repo.model.EntityType;
  *
  */
 public class RevisionStepV0toV1 implements RevisionMigrationStep {
+	
+	// Use the migration spec to get a list of primary fields that are getting deleted
+	// and therefore are not in the schema anymore. This should prevent having these
+	// fields migrated to additional instead of primary.
+	private MigrationSpecData migrationSpecData;
+
+	public void setMigrationSpecData(MigrationSpecData m) {
+		this.migrationSpecData = m;
+	}
+	
+	public MigrationSpecData getMigrationSpecData() {
+		return this.migrationSpecData;
+	}
+
+	public RevisionStepV0toV1(MigrationSpecData msd) {
+		this.migrationSpecData = msd;
+	}
 
 	@Override
 	public NodeRevisionBackup migrateOneStep(NodeRevisionBackup toMigrate, EntityType type) {
@@ -29,6 +48,9 @@ public class RevisionStepV0toV1 implements RevisionMigrationStep {
 		NamedAnnotations namespaceAnnotations = new NamedAnnotations();
 		Annotations primaryAnnotations = namespaceAnnotations.getPrimaryAnnotations();
 		Annotations additionalAnnotations = namespaceAnnotations.getAdditionalAnnotations();
+		
+		List<String> primaryFieldsToDelete = this.migrationSpecData.getPrimaryFieldsToDelete(type);
+		
 		// Split the single set of annotations into a set for each name-spaces
 		Annotations oldStyleAnnos = toMigrate.getAnnotations();
 		if(oldStyleAnnos != null){
@@ -40,8 +62,9 @@ public class RevisionStepV0toV1 implements RevisionMigrationStep {
 					// Add it to the primary.
 					primaryAnnotations.addAnnotation(key, values);
 				}else{
-					// Add it to additional.
-					additionalAnnotations.addAnnotation(key, values);
+					// Add it to additional if not in in list of primary to delete.
+					if (! primaryFieldsToDelete.contains(key))
+						additionalAnnotations.addAnnotation(key, values);
 				}
 			}
 		}

@@ -154,7 +154,7 @@ public class NodeTranslationUtilsTest {
 		ds.setLayers("someLayerUrl");
 		ds.setReleaseDate(new Date(System.currentTimeMillis()));
 		ds.setStatus("someStatus");
-		ds.setVersion("someVersion");
+//		ds.setVersion("someVersion");
 		ds.setUri("someUri");
 		ds.setContentType("text/xml");
 		ds.setMd5("8b12c8b413504cf19889efca5605a6c9");
@@ -216,16 +216,16 @@ public class NodeTranslationUtilsTest {
 		layer.setNumSamples(new Long(12));
 		layer.setPlatform("somePlate");
 		layer.setPreviews("somePreview");
-		layer.setProcessingFacility("processing");
+//		layer.setProcessingFacility("processing");
 		layer.setPublicationDate(new Date(System.currentTimeMillis()));
-		layer.setQcBy("joe");
-		layer.setQcDate(new Date(123123));
+//		layer.setQcBy("joe");
+//		layer.setQcDate(new Date(123123));
 		layer.setReleaseNotes("resleaseNote");
 		layer.setStatus("someStatus");
-		layer.setTissueType("type");
+//		layer.setTissueType("type");
 		layer.setType(LayerTypeNames.C);
 		layer.setUri("someUri");
-		layer.setVersion("someVersion");
+//		layer.setVersion("someVersion");
 		
 		// Create a clone using node translation
 		Layer clone = cloneUsingNodeTranslation(layer);

@@ -298,7 +298,7 @@ public class DatasetPresenter extends AbstractActivity implements DatasetView.Pr
 					 postingRestriction,
 					 "#ComingSoon:0", // TODO : release notes url. change this to be real
 					 model.getStatus(),
-					 model.getVersion(),
+//					 model.getVersion(),
 					 nSamples,
 					 nDownloads,
 					 citation,

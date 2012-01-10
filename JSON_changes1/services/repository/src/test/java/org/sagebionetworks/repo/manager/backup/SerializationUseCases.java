@@ -228,7 +228,7 @@ public class SerializationUseCases {
 		ds.setStatus("cool");
 //		ds.setLocations("location/456");
 		ds.setUri("dataset/456");
-		ds.setVersion("1.0.0");
+//		ds.setVersion("1.0.0");
 		return ds;
 	}
 
