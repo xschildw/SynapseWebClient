@@ -2,7 +2,9 @@ package org.sagebionetworks.gepipeline;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Level;
@@ -10,9 +12,15 @@ import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.sagebionetworks.client.Synapse;
-import org.sagebionetworks.client.exceptions.SynapseException;
+import org.sagebionetworks.repo.model.Dataset;
+import org.sagebionetworks.repo.model.Layer;
+import org.sagebionetworks.repo.model.LayerTypeNames;
+import org.sagebionetworks.repo.model.Location;
+import org.sagebionetworks.repo.model.LocationData;
+import org.sagebionetworks.schema.adapter.org.json.EntityFactory;
 import org.sagebionetworks.utils.DefaultHttpClientSingleton;
 import org.sagebionetworks.utils.HttpClientHelper;
 
@@ -32,36 +40,24 @@ public class GEPWorkflowInitiator {
 	public static final String MAX_DATASET_SIZE_PARAMETER_KEY = "--maxDatasetSize";
 	public static final String TARGET_PROJECT_ID_PROPERTY_NAME = "parentId";
 	public static final String TARGET_DATASET_NAME_PROPERTY_NAME = "name";
-//	private static final String TARGET_LAYER_NAME_PROPERTY_NAME = "layerName";
-	private static final String NOTIFICATION_SUBJECT = "GEP Initiator Notification ";
+	private static final String NOTIFICATION_SUBJECT = "MetaGenomics Initiator Notification ";
 	private static final String NUMBER_OF_SAMPLES_PROPERTY_NAME = "Number_of_Samples";
-//	private static final String LAST_UPDATE_PROPERTY_NAME = "lastUpdate";
 	private static final String SOURCE_LAYER_ID_PROPERTY_NAME = "sourceLayerId";
-	
+	private static final String SOURCE_LAYER_LOCATION_PROPERTY_NAME = "layerLocation";
+	private static final int MAX_LISTED_LOCATIONS = 200;
 
 	/**
 	 * Crawl all top level datasets and identify the ones in which we are
 	 * interested
 	 */
-	void initiateWorkflowTasks() throws Exception {
+	public static void initiateWorkflowTasks() {
 		
 		String projectId = ConfigHelper.getGEPipelineTargetProjectId();
 		
-		// Instead of 'crawling' GEO...
-		// call R function which returns IDs of data sets to process
-//		List<String> scriptParams = new ArrayList<String>(Arrays.asList(
-//				new String[]{PROJECT_ID_PARAMETER_KEY, projectId
-//						})
-//		);
-//		String script = ConfigHelper.getGEPipelineCrawlerScript();
-//		if (script==null || script.length()==0) throw new RuntimeException("Missing crawler script parameter.");
-//		ScriptResult results = ScriptProcessor.doProcess(script, scriptParams);
-//		// the script returns a map whose keys are GSEIDs to run and values are the input data for each activity instance
-//		Map<String,String> idToActivityInputMap = new HashMap<String,String>(results.getStringMapResult(ScriptResult.OUTPUT_JSON_KEY));
-
-		// ... we 'crawl' another project
 		Synapse synapse = connectToSynapse();
-		Collection<Map<String,Object>> layerTasks = crawlSourceProject(synapse);
+		String sourceProjectId = ConfigHelper.getGEPipelineSourceProjectId();
+		String targetProjectId = ConfigHelper.getGEPipelineTargetProjectId();
+		Collection<Map<String,Object>> layerTasks = crawlSourceProject(synapse, sourceProjectId, targetProjectId);
 		
 		
 		String maxInstances = ConfigHelper.getGEPipelineMaxWorkflowInstances();
@@ -69,37 +65,38 @@ public class GEPWorkflowInitiator {
 		int i = 0;
 		System.out.println("Got "+layerTasks.size()+" datasets to run and will run "+
 				(max==-1?"all":""+max)+" of them.");
+		List<String> locations = new ArrayList<String>();
 		for (Map<String,Object>parameterMap: layerTasks) {
-			if (max>0 && i++>=max) break; // for debugging, just launch a few...
-			// the following must contain 'lastUpdate', 'url'
-			// may also contain 'description', 'number_of_samples', 'status', 'createdBy', and/or other annotations
-			JSONObject jsonParameters = new JSONObject(parameterMap);
-			jsonParameters.put(TARGET_PROJECT_ID_PROPERTY_NAME, projectId);
-			String parameterString =jsonParameters.toString();
-			String activityRequirement = GEPWorkflow.ACTIVITY_REQUIREMENT_LARGE;
-			if (jsonParameters.has(NUMBER_OF_SAMPLES_PROPERTY_NAME)) {
-				int numSamples = (int)jsonParameters.getLong(NUMBER_OF_SAMPLES_PROPERTY_NAME);
-				activityRequirement = getActivityRequirementFromSampleCount(numSamples); 
+			if (max>0 && i++>=max) break; // for debugging, allows us to launch just a few...
+			locations.add((String)parameterMap.remove(SOURCE_LAYER_LOCATION_PROPERTY_NAME));
+			try {
+				JSONObject jsonParameters = new JSONObject(parameterMap);
+				jsonParameters.put(TARGET_PROJECT_ID_PROPERTY_NAME, projectId);
+				String parameterString =jsonParameters.toString();
+				String activityRequirement = GEPWorkflow.ACTIVITY_REQUIREMENT_LARGE;
+				if (jsonParameters.has(NUMBER_OF_SAMPLES_PROPERTY_NAME)) {
+					int numSamples = (int)jsonParameters.getLong(NUMBER_OF_SAMPLES_PROPERTY_NAME);
+					activityRequirement = getActivityRequirementFromSampleCount(numSamples); 
+				}
+				GEPWorkflow.doWorkflow(parameterString, activityRequirement);
+			} catch (JSONException e) {
+				throw new RuntimeException(e);
 			}
-			GEPWorkflow.doWorkflow(parameterString, activityRequirement);
 		}
 		
-		String crawlerOutput = "Initiated "+layerTasks.size()+" MetaGenomics workflows."; //"Output from Crawler:\nStdout:\n"+results.getStdout()+"Stderr:\n"+results.getStderr();
+		StringBuilder crawlerOutput = new StringBuilder("Initiated "+locations.size()+" MetaGenomics workflows."); //"Output from Crawler:\nStdout:\n"+results.getStdout()+"Stderr:\n"+results.getStderr();
+		if (locations.size()>MAX_LISTED_LOCATIONS) crawlerOutput.append("\nHere are the first "+MAX_LISTED_LOCATIONS+":");
+		int listed = 0;
+		for (String loc: locations) {
+			if (++listed>MAX_LISTED_LOCATIONS) break;
+			crawlerOutput.append("\n"+loc);
+		}
 		Notification.doSnsNotifyFollowers(GEPWorkflow.NOTIFICATION_SNS_TOPIC, 
 				NOTIFICATION_SUBJECT + new LocalDate().toString(),
-				crawlerOutput);		
+				crawlerOutput.toString());		
 	}
 	
-//	private Map<String, String> getLastUpdate(Synapse synapse, int datasetId) {
-//		try {
-//			JSONObject proj = synapse.getEntity("/dataset/"+datasetId);
-//			
-//		} catch (SynapseException e) {
-//			throw new RuntimeException(e);
-//		}
-//	}
-//	
-	private Synapse connectToSynapse() {
+	private static Synapse connectToSynapse() {
 		Synapse synapse = new Synapse();
 		HttpClientHelper.setGlobalConnectionTimeout(DefaultHttpClientSingleton.getInstance(), 30000);
 		HttpClientHelper.setGlobalSocketTimeout(DefaultHttpClientSingleton.getInstance(), 30000);
@@ -114,12 +111,28 @@ public class GEPWorkflowInitiator {
 		return synapse;
 	}
 	
+	// determine whether an update is needed to the QCed data for the given source layer
+	// first check the MD5 checksums. If that doesn't answer the question then check the 'modifiedOn' timestamp:
+	//
+	// if the src lyr has an md5 checksum and there is a checksum for the QCed data
+	//	    then return FALSE if they match, TRUE otherwise
+	// if there is a 'lastUpdate' for the QCed data and it matches the 'modifiedOn' date
+	// for the src lyr, then return FALSE
+	// otherwise return TRUE
+	private static boolean updateNeeded(String md5Sum, DateTime modDate, String targetMd5sum, DateTime targetLastDate) {
+		if (md5Sum!=null && targetMd5sum!=null) {
+			return !md5Sum.equals(targetMd5sum);
+		}
+		if (targetLastDate!=null) {
+			return !targetLastDate.equals(modDate);
+		}
+		return true;
+	}
+	
 	// crawl the Synapse project given by sourceProjectId
 	// return the layers to process, including the following attributes
 	// 'lastUpdate', 'url', 'description', 'number_of_samples', 'status', 'createdBy'
-	Collection<Map<String,Object>> crawlSourceProject(Synapse synapse) {
-		String sourceProjectId = ConfigHelper.getGEPipelineSourceProjectId();
-		String targetProjectId = ConfigHelper.getGEPipelineTargetProjectId();
+	public static Collection<Map<String,Object>> crawlSourceProject(Synapse synapse, String sourceProjectId, String targetProjectId) {
 		Collection<Map<String,Object>> layerTasks = new ArrayList<Map<String,Object>>();
 
 		int offset=1;
@@ -129,97 +142,94 @@ public class GEPWorkflowInitiator {
 		do {
 			try {
 				// get a batch of datasets
-				JSONObject o = synapse.query("select * from dataset where parentId=="+sourceProjectId+" LIMIT "+batchSize+" OFFSET "+offset);
-				total = (int)o.getLong("totalNumberOfResults");
+				JSONObject ids = synapse.query("select id from dataset where parentId=="+sourceProjectId+" LIMIT "+batchSize+" OFFSET "+offset);
+				total = (int)ids.getLong("totalNumberOfResults");
 				System.out.println("Datasets: "+offset+"->"+Math.min(total, offset+batchSize-1)+" of "+total);
-				JSONArray a = o.getJSONArray("results");
-				for (int i=0; i<a.length(); i++) {
-					JSONObject ds = (JSONObject)a.get(i);
-					String id = ds.getString("dataset.id");
-					String sourceDatasetName = ds.getString("dataset.name");
-					
-					// !!! temporary FOR DEBUGGING !!!
-					//if (!"Uterine Corpus Endometrioid Carcinoma TCGA".equals(sourceDatasetName)) continue;
+				JSONArray a = ids.getJSONArray("results");
+				for (int i=0; i<ids.length(); i++) {
+					Dataset ds = (Dataset) synapse.getEntityById(((JSONObject)a.get(i)).getString("dataset.id"));
+					String id = ds.getId();
+					String sourceDatasetName = ds.getName();
 					
 					System.out.println("Dataset: "+sourceDatasetName);
-					String description = ds.getString("dataset.description");
-//					System.out.println("Dataset: "+ds);
-					String status = ds.getString("dataset.status");
-					String createdBy = ds.getString("dataset.createdBy");
+					String description = ds.getDescription();
+					String status = ds.getStatus();
+					String createdBy = ds.getCreatedBy();
 					// get the genomic and genetic layers
-					JSONObject layers = synapse.query("select * from layer where parentId=="+id);
-					JSONArray layersArray = layers.getJSONArray("results");
-					JSONObject targetDataset = null;
-					for (int j=0; j<layersArray.length(); j++) {
-						JSONObject layer = (JSONObject)layersArray.get(j);
+					JSONObject layerIds = synapse.query("select id from layer where parentId=="+id);
+					JSONArray layersIdsArray = layerIds.getJSONArray("results");
+					Dataset targetDataset = null;
+					JSONObject targetDatasetJSON = null;
+					for (int j=0; j<layersIdsArray.length(); j++) {
+						Layer layer = (Layer) synapse.getEntityById(((JSONObject)layersIdsArray.get(j)).getString("layer.id"));
 						
-						String layerId = layer.getString("layer.id");
-						String layerName = layer.getString("layer.name");
+						String layerId = layer.getId();
 						
-						// !!!! TEMPORARY, for debugging !!!!
-						//if (!"unc.edu_COAD.AgilentG4502A_07_3.Level_1.2.0.0".equals(layerName)) continue;
-
-						String type = layer.getString("layer.type");
+						LayerTypeNames type = layer.getType();
 						// only 'crawl' Expression and Genotyping layers (not Clincial or Media layers)
-						if (!(type.equalsIgnoreCase("E") || type.equalsIgnoreCase("G"))) continue;
+						if (!(type.equals(LayerTypeNames.E) || type.equals(LayerTypeNames.G))) continue;
 						
-						// get the URL for the layer:
-						JSONObject locationQueryResult = synapse.query("select * from location where parentId=="+layerId);
-						JSONArray locations = locationQueryResult.getJSONArray("results");
-						if (locations.length()==0) continue;
+						List<LocationData> locations = layer.getLocations();
+						if (locations.size()==0) continue;
 						
 						layerCount++;
 						
-						System.out.println("\tLayer (id="+layerId+"): "+layer.getString("layer.name"));
 
 						Map<String,Object> layerAttributes = new HashMap<String,Object>();
-						layerAttributes.put(SOURCE_LAYER_ID_PROPERTY_NAME, layer.getString("layer.id"));
+						layerAttributes.put(SOURCE_LAYER_ID_PROPERTY_NAME, layerId);
 						String targetDatasetName = sourceDatasetName;
 						layerAttributes.put(TARGET_DATASET_NAME_PROPERTY_NAME, targetDatasetName);
-						String modDateString = layer.getString("layer.modifiedOn");
-						DateTime modDate = new DateTime(Long.parseLong(modDateString));
+						DateTime modDateTime = new DateTime(layer.getModifiedOn());
 						
-						// now check the last update date:  first find the target dataset...
-						if (targetDataset==null || !targetDatasetName.equals(targetDataset.getString("dataset.name"))) {
+						LocationData locationData = locations.get(0);
+						// get location mdsum
+						String md5Sum = layer.getMd5();
+						// get the URL for the layer:
+						String layerLocation = locationData.getPath();
+						layerAttributes.put(SOURCE_LAYER_LOCATION_PROPERTY_NAME, layerLocation);
+						
+						// find the target dataset...
+						if (targetDataset==null || !targetDatasetName.equals(targetDataset.getName())) {
+							// TODO:  In long run, migrate away from 'select *'.  For now we need to do this
+							// in order to get the annotations
 							JSONObject dsQueryResult = synapse.query("select * from dataset where parentId=="+targetProjectId+" AND name==\""+targetDatasetName+"\"");
 							JSONArray datasets = dsQueryResult.getJSONArray("results");
 							if (datasets.length()>0) {
-								targetDataset = datasets.getJSONObject(0);
-								String tdsId = targetDataset.getString("dataset.id");
-								JSONObject annots = synapse.getEntity("/dataset/"+tdsId+"/annotations");
-//								System.out.println("\t\tTarget dataset annotations:\n\t\t"+annots);								
+								targetDatasetJSON = datasets.getJSONObject(0);
+								targetDataset = (Dataset)EntityFactory.createEntityFromJSONObject(targetDatasetJSON, Dataset.class);
+								String tdsId = targetDataset.getId();
 							}
 						}
-						// ... then extract the last update date from the annotations
+						// ... then extract the last update date and md5sum from the annotations
 						if (targetDataset==null) {
 							System.out.println("\t\tUnable to find target dataset: "+targetDatasetName);
 						} else {
-//							System.out.println("\t\tTarget dataset:\n\t\t"+targetDataset);
 							// the following mirrors 'lastUpdateAnnotName' in synapseWorkflow.R
+							DateTime targetLastDate = null;
 							String lastUpdateAnnotName = "dataset."+layerId+"_lastUpdate";
-							if (targetDataset.has(lastUpdateAnnotName)) {
-								JSONArray targetLastUpdateArray = targetDataset.getJSONArray(lastUpdateAnnotName);
-								if (targetLastUpdateArray.length()>1) {
-									System.out.println("\t\t!!!** "+targetLastUpdateArray.length()+" values for "+lastUpdateAnnotName+"**!!!");
+							if (targetDatasetJSON.has(lastUpdateAnnotName)) {
+								JSONArray targetLastUpdateArray = targetDatasetJSON.getJSONArray(lastUpdateAnnotName);
+								if (targetLastUpdateArray.length()>0) {
+									String targetLastUpdate = targetLastUpdateArray.getString(0);
+									targetLastDate = new DateTime(targetLastUpdate);
 								}
-								String targetLastUpdate = targetLastUpdateArray.getString(0);
-								// now if the recorded last update is the same as the date stamp on the source
-								// layer, skip it
-								DateTime targetLastDate = new DateTime(targetLastUpdate);
-								if (targetLastDate.equals(modDate)) {
-									System.out.println("\t\tLayer update date is unchanged: "+targetLastDate);
-									continue;
-								} else {
-									System.out.println("\t\tLayer update date, old: "+targetLastDate+" new: "+modDate);
-								}
-							} else {
-								System.out.println("\t\tSource layer has update-date: "+modDate+", Target dataset does not have annotation: "+lastUpdateAnnotName);
 							}
+							String targetMd5sum = null;
+							String md5sumAnnotName = "dataset."+layerId+"_md5sum";
+							if (targetDatasetJSON.has(md5sumAnnotName)) {
+								JSONArray targetMd5sumArray = targetDatasetJSON.getJSONArray(md5sumAnnotName);
+								if (targetMd5sumArray.length()>0) {
+									targetMd5sum = targetMd5sumArray.getString(0);
+								}
+							}
+							if (!updateNeeded(md5Sum, modDateTime, targetMd5sum, targetLastDate)) continue;
 						}
 						
+						// we only reach this point if we can't show that the task has already been done
+						// for the source layer
 
-						if (layer.has("dataset.number_of_samples")) {
-							layerAttributes.put(NUMBER_OF_SAMPLES_PROPERTY_NAME, layer.getLong("dataset.number_of_samples"));
+						if (layer.getNumSamples()!=null) {
+							layerAttributes.put(NUMBER_OF_SAMPLES_PROPERTY_NAME, layer.getNumSamples());
 						}
 						layerAttributes.put("description", description);
 						if (status!=null) layerAttributes.put("status", status);
@@ -284,10 +294,14 @@ public class GEPWorkflowInitiator {
 		GEPWorkflowInitiator initiator = new GEPWorkflowInitiator();
 
 		if (true) {
-			initiator.initiateWorkflowTasks();
+//			initiator.kickoffPeriodicWorkflow();
+			GEPWorkflowInitiator.initiateWorkflowTasks();
 		} else {
+			// this allows us to see what jobs will be started, without actually scheduling them.
 			Synapse synapse = initiator.connectToSynapse();
-			Collection<Map<String,Object>> layerTasks = initiator.crawlSourceProject(synapse);
+			String sourceProjectId = ConfigHelper.getGEPipelineSourceProjectId();
+			String targetProjectId = ConfigHelper.getGEPipelineTargetProjectId();
+			Collection<Map<String,Object>> layerTasks = initiator.crawlSourceProject(synapse, sourceProjectId, targetProjectId);
 		}
 
 		

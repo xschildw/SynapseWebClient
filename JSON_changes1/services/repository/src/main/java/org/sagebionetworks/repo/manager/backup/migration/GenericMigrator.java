@@ -51,10 +51,10 @@ public class GenericMigrator implements RevisionMigrationStep {
 				}
 				// Where to send field
 				if (fmsd.getDestBucket().equals("primary")) {
-					MigrationHelper.migrateToPrimary(annots, primaryAnnotations, fmsd);
+					MigrationHelper.migrateBucket(annots, primaryAnnotations, fmsd);
 				} else
 					if (fmsd.getDestBucket().equals("additional")){
-						MigrationHelper.migrateToAdditionals(annots, additionalAnnotations, fmsd);
+						MigrationHelper.migrateBucket(annots, additionalAnnotations, fmsd);
 					} else {
 						MigrationHelper.deleteFromAnnotations(annots, fmsd);
 					}

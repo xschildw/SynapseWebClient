@@ -11,6 +11,15 @@ import org.sagebionetworks.schema.FORMAT;
 import org.sagebionetworks.schema.TYPE;
 
 public class MigrationHelper {
+	public static void migrateBucket(Annotations srcAnnots, Annotations dstAnnots, FieldMigrationSpecData fmsd) {
+		if (null != srcAnnots.getValue(fmsd.getSrcFieldName())) {
+			Object srcData = srcAnnots.deleteAnnotation(fmsd.getSrcFieldName());
+			dstAnnots.addAnnotation(fmsd.getDestFieldName(), srcData);
+		}
+		
+		return;
+	}
+	
 	public static void migrateToPrimary(Annotations srcAnnots, Annotations dstAnnots, FieldMigrationSpecData fmsd) {
 		TYPE fieldType = fmsd.getDestSchema().getType();
 		// First we must check the encoding
@@ -75,7 +84,59 @@ public class MigrationHelper {
 					dst.put(fmsd.getDestFieldName(), valueToMigrate);
 				}
 			}
-		}else{
+		}else if(TYPE.ARRAY == fieldType) {
+			// Hack!!! Use the DestType fied to determine where to send the data
+			if (fmsd.getDestType().equals("blob")) {
+				Map<String, Collection<byte[]>> src = srcAnnots.getBlobAnnotations();
+				if	(src != null){
+					Collection<byte[]> valueToMigrate = src.remove(fmsd.getSrcFieldName());
+					if(valueToMigrate != null){
+						Map<String, Collection<byte[]>> dst = dstAnnots.getBlobAnnotations();
+						dst.put(fmsd.getDestFieldName(), valueToMigrate);
+					}
+				}
+			}
+			if (fmsd.getDestType().equals("date")) {
+				Map<String, Collection<Date>> src = srcAnnots.getDateAnnotations();
+				if(src != null){
+					Collection<Date> valueToMigrate = src.remove(fmsd.getSrcFieldName());
+					if(valueToMigrate != null){
+						Map<String, Collection<Date>> dst = dstAnnots.getDateAnnotations();
+						dst.put(fmsd.getDestFieldName(), valueToMigrate);
+					}
+				}
+			}
+			if (fmsd.getDestType().equals("double")) {
+				Map<String, Collection<Double>> src = srcAnnots.getDoubleAnnotations();
+				if(src != null){
+					Collection<Double> valueToMigrate = src.remove(fmsd.getSrcFieldName());
+					if(valueToMigrate != null){
+						Map<String, Collection<Double>> dst = dstAnnots.getDoubleAnnotations();
+						dst.put(fmsd.getDestFieldName(), valueToMigrate);
+					}
+				}
+			}
+			if (fmsd.getDestType().equals("long")) {
+				Map<String, Collection<Long>> src = srcAnnots.getLongAnnotations();
+				if(src != null){
+					Collection<Long> valueToMigrate = src.remove(fmsd.getSrcFieldName());
+					if(valueToMigrate != null){
+						Map<String, Collection<Long>> dst = dstAnnots.getLongAnnotations();
+						dst.put(fmsd.getDestFieldName(), valueToMigrate);
+					}
+				}
+			}
+			if (fmsd.getDestType().equals("string")) {
+				Map<String, Collection<String>> src = srcAnnots.getStringAnnotations();
+				if(src != null){
+					Collection<String> valueToMigrate = src.remove(fmsd.getSrcFieldName());
+					if(valueToMigrate != null){
+						Map<String, Collection<String>> dst = dstAnnots.getStringAnnotations();
+						dst.put(fmsd.getDestFieldName(), valueToMigrate);
+					}
+				}
+			}
+		} else {
 			throw new IllegalArgumentException("Support has not been added to migrate field TYPE="+fieldType.name()+" for : "+fmsd.toString());
 		}
 		return;

@@ -9,6 +9,11 @@ doMetaGeoQc <-
 	library(metaGEO)
 	geoData <- downloadEntity(sourceLayerId)
 	sourceLayerName <- propertyValue(geoData, "name")
+	
+	locations<-synapseQuery(sprintf('select * from location where parentId=="%s"', sourceLayerId))
+	if (is.null(locations) || dim(locations)[1]<1) stop(paste("No location for layer", sourceLayerName, "(", sourceLayerId, ")"))
+	md5sum = locations[1,"location.md5sum"]
+	
 	tryCatch({
 		result <- runWorkflow(geoData$cacheDir)
 	
@@ -19,9 +24,20 @@ doMetaGeoQc <-
 		}
 		
 		# 'destDataset' object may be 'stale', so refresh it
-		destDataset <- getEntity(propertyValue(destDataset, "id"))
-		annotValue(destDataset, lastUpdateAnnotName(sourceLayerId)) <- as.character(timestamp)
-		destDataset <<- updateEntity(destDataset)
+		maxretries<-10
+		for (i in 1:maxretries) { # may get an error during update, so try several times
+			destDataset <- getEntity(propertyValue(destDataset, "id"))
+			annotValue(destDataset, lastUpdateAnnotName(sourceLayerId)) <- as.character(timestamp)
+			annotValue(destDataset, md5sumAnnotName(sourceLayerId)) <- md5sum
+			ans <- try(updateEntity(destDataset))
+			if (class(ans)=="try-error") {
+				if (i==maxretries) stop(paste("Failed to update entity:", ans[[1]], propertyValue(destDataset, "id")))
+				Sys.sleep(runif(1,1,4)) # sleep for 1-4 seconds before trying again
+			} else {
+				destDataset <<- ans
+				break
+			}
+		}
 		},
 		finally = {
 			if(deleteDataFiles){
@@ -41,7 +57,7 @@ doMetaGeoQc <-
 		function(geoDataset, sourceLayerName, cdfname, data, deleteDataFiles)
 {
 	
-	destLayerName <- sprintf("QCd Expression Data %s %s", sourceLayerName, cdfname)
+	destLayerName <- sprintf("QCd Data %s %s", sourceLayerName, cdfname)
 	
 	result <- synapseQuery(sprintf('select * from layer where layer.name == "%s" and layer.parentId == "%s"', destLayerName, propertyValue(geoDataset, "id")))
 	if(!is.null(result)){

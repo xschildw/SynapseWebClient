@@ -246,6 +246,31 @@ public class Annotations implements Base {
 		return null;
 	}
 	
+	public Object getValue(String key) {
+		// Look in each set
+		if((this.stringAnnotations != null) && (this.stringAnnotations.containsKey(key))){
+			Collection<String> result = this.stringAnnotations.get(key);
+			return result;
+		}
+		if((this.dateAnnotations != null) && (this.dateAnnotations.containsKey(key))){
+			Collection<Date> result = this.dateAnnotations.get(key);
+			return result;
+		}
+		if((this.longAnnotations != null) && (this.longAnnotations.containsKey(key))){
+			Collection<Long> result = this.longAnnotations.get(key);
+			return result;
+		}
+		if((this.doubleAnnotations != null) && (this.doubleAnnotations.containsKey(key))){
+			Collection<Double> result = this.doubleAnnotations.get(key);
+			return result;
+		}
+		if((this.blobAnnotations != null) && (this.blobAnnotations.containsKey(key))){
+			Collection<byte[]> result = this.blobAnnotations.get(key);
+			return result;
+		}
+		// did not find it.
+		return null;
+	}
 	
 	public void replaceAnnotation(String key, Object value) {
 		if(key == null) throw new IllegalArgumentException("Key cannot be null");
@@ -315,6 +340,32 @@ public class Annotations implements Base {
 			throw new IllegalArgumentException("Unknown annotatoin type: "+value.getClass().getName());
 		}
 		
+	}
+	
+	public Object deleteAnnotation(String key) {
+		// Look in each set
+		if((this.stringAnnotations != null) && (this.stringAnnotations.containsKey(key))){
+			Collection<String> result = this.stringAnnotations.remove(key);
+			return result;
+		}
+		if((this.dateAnnotations != null) && (this.dateAnnotations.containsKey(key))){
+			Collection<Date> result = this.dateAnnotations.remove(key);
+			return result;
+		}
+		if((this.longAnnotations != null) && (this.longAnnotations.containsKey(key))){
+			Collection<Long> result = this.longAnnotations.remove(key);
+			return result;
+		}
+		if((this.doubleAnnotations != null) && (this.doubleAnnotations.containsKey(key))){
+			Collection<Double> result = this.doubleAnnotations.remove(key);
+			return result;
+		}
+		if((this.blobAnnotations != null) && (this.blobAnnotations.containsKey(key))){
+			Collection<byte[]> result = this.blobAnnotations.remove(key);
+			return result;
+		}
+		// did not find it.
+		return null;
 	}
 	
 	public void replaceAnnotation(String key, String value){
