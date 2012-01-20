@@ -5,6 +5,7 @@ import java.util.List;
 import org.json.JSONException;
 import org.sagebionetworks.client.Synapse;
 import org.sagebionetworks.client.exceptions.SynapseException;
+import org.sagebionetworks.repo.model.EntityType;
 import org.sagebionetworks.tool.migration.Progress.BasicProgress;
 
 /**
@@ -39,6 +40,18 @@ public interface QueryRunner {
 	public List<EntityData> getAllEntityData(Synapse client, BasicProgress progress) throws SynapseException, JSONException, InterruptedException;
 	
 	/**
+	 * Get all entity data for entities of a given type.
+	 * @param client
+	 * @param type
+	 * @param progress
+	 * @return
+	 * @throws SynapseException
+	 * @throws JSONException
+	 * @throws InterruptedException
+	 */
+	public List<EntityData> getAllEntityDataOfType(Synapse client, EntityType type, BasicProgress progress) throws SynapseException, JSONException, InterruptedException;
+	
+	/**
 	 * Get all child entities of a given parent.
 	 * @param client
 	 * @param parentId
@@ -58,5 +71,7 @@ public interface QueryRunner {
 	 * @throws JSONException 
 	 */
 	public long getTotalEntityCount(Synapse client) throws SynapseException, JSONException;
+	
+	
 
 }
