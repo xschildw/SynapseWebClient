@@ -166,6 +166,17 @@ public class NodeTranslationUtilsTest {
 		ldata.setType(LocationTypeNames.sage);
 		locations.add(ldata);
 		
+		List<String> diseases = new ArrayList<String>();
+		diseases.add("disease1");
+		diseases.add("disease2");
+		ds.setDisease(diseases);
+		
+		List<String> sampleTypes = new ArrayList<String>();
+		sampleTypes.add("normalTissue");
+		sampleTypes.add("tumorTissue");
+		ds.setSampleType(sampleTypes);
+		
+		
 		// Create a clone using node translation
 		Dataset clone = cloneUsingNodeTranslation(ds);
 		

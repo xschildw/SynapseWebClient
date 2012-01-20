@@ -37,6 +37,10 @@
 					"destination": {"name": "dataSource", "type": "string", "bucket": "additional"}
 				},
 				{
+					"source": {"name": "Disease", "type": "string", "bucket": "additional"},
+					"destination": {"name": "disease", "type": "string", "bucket": "primary"}
+				},
+				{
 					"source": {"name": "Institution", "type": "string", "bucket": "additional"},
 					"destination": {"name": "institution", "type": "string", "bucket": "additional"}
 				},

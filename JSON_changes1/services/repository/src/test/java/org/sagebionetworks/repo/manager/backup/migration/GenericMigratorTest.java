@@ -263,8 +263,52 @@ public class GenericMigratorTest {
 		genericMigrator.migrateOneStep(toMigrate, type);
 		assertNull(additionalAnnotations.getValue(oldKey));
 		assertNotNull(primaryAnnotations.getValue(newKey));
-//		assertEquals(3, (List<Object>)primaryAnnotations.getValue(newKey).size());
-//		assertEquals(valuesToMigrate.iterator().next(), primaryAnnotations.get(newKey).iterator().next());
+		assertEquals(3, primaryStringAnnos.get(newKey).size());
+		assertEquals(valuesToMigrate.iterator().next(), primaryStringAnnos.get(newKey).iterator().next());
+		return;
+	}
+	
+	@Test
+	public void testMigrateDatasetAdditionalToPrimarySingleLong() {
+		toMigrate.setNamedAnnotations(new NamedAnnotations());
+		EntityType type = EntityType.dataset;
+		MigrationSpec ms = new MigrationSpec();
+		List<EntityTypeMigrationSpec> listEms = new ArrayList<EntityTypeMigrationSpec>();
+		EntityTypeMigrationSpec ems = new EntityTypeMigrationSpec();
+		ems.setEntityType(type.name());
+		List<FieldMigrationSpec> listFms = new ArrayList<FieldMigrationSpec>();
+		FieldMigrationSpec fms = new FieldMigrationSpec();
+		FieldDescription source = new FieldDescription();
+		FieldDescription dest = new FieldDescription();
+		source.setName("Number_of_Samples");
+		source.setType("long");
+		source.setBucket("additional");
+		dest.setName("numberOfSamples");
+		dest.setType("long");
+		dest.setBucket("primary");
+		fms.setSource(source);
+		fms.setDestination(dest);
+		listFms.add(fms);
+		listEms.add(ems);
+		ems.setFields(listFms);
+		ms.setMigrationMetadata(listEms);
+		MigrationSpecData msd = new MigrationSpecData();
+		msd.setData(ms);
+		genericMigrator.setMigrationSpecData(msd);
+		String oldKey = "Number_of_Samples";
+		String newKey = "numberOfSamples";
+		List<Long> valuesToMigrate = new ArrayList<Long>();
+		valuesToMigrate.add(100L);
+		Annotations additionalAnnotations = toMigrate.getNamedAnnotations().getAdditionalAnnotations();
+		Annotations primaryAnnotations = toMigrate.getNamedAnnotations().getPrimaryAnnotations();
+		Map<String, Collection<Long>> primaryLongAnnos = primaryAnnotations.getLongAnnotations();
+		additionalAnnotations.addAnnotation(oldKey, valuesToMigrate);
+		assertNotNull(additionalAnnotations.getValue(oldKey));
+		genericMigrator.migrateOneStep(toMigrate, type);
+		assertNull(additionalAnnotations.getValue(oldKey));
+		assertNotNull(primaryAnnotations.getValue(newKey));
+		assertEquals(1, primaryLongAnnos.get(newKey).size());
+		assertEquals(valuesToMigrate.iterator().next(), primaryLongAnnos.get(newKey).iterator().next());
 		return;
 	}
 }
