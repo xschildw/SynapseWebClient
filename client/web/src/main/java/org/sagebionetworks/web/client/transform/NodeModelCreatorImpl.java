@@ -3,6 +3,7 @@ package org.sagebionetworks.web.client.transform;
 import org.sagebionetworks.gwt.client.schema.adapter.JSONObjectGwt;
 import org.sagebionetworks.repo.model.Agreement;
 import org.sagebionetworks.repo.model.Analysis;
+import org.sagebionetworks.repo.model.Code;
 import org.sagebionetworks.repo.model.Dataset;
 import org.sagebionetworks.repo.model.Entity;
 import org.sagebionetworks.repo.model.EntityPath;
@@ -22,6 +23,7 @@ import org.sagebionetworks.web.shared.EntityWrapper;
 import org.sagebionetworks.web.shared.LayerPreview;
 import org.sagebionetworks.web.shared.PagedResults;
 import org.sagebionetworks.web.shared.exceptions.RestServiceException;
+import org.sagebionetworks.web.shared.exceptions.UnknownErrorException;
 
 import com.google.gwt.json.client.JSONObject;
 import com.google.gwt.json.client.JSONParser;
@@ -74,6 +76,10 @@ public class NodeModelCreatorImpl implements NodeModelCreator {
 						entity = new Analysis(obj);
 					} else if("/step".equals(entityType.getUrlPrefix())) {
 						entity = new Step(obj);
+					} else if("/code".equals(entityType.getUrlPrefix())) {
+						entity = new Code(obj);
+					} else {
+						throw new UnknownErrorException("Unknown entity type");
 					} 
 				}			
 			} catch (JSONObjectAdapterException e) {

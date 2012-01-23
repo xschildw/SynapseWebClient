@@ -59,6 +59,8 @@ public class DisplayConstants {
 	public static final String EDIT_ANALYSIS_TEXT = "Edit the analysis' details by altering the fields below and then clicking the Save button. To cancel, click the Close button.";;
 	public static final String CREATE_STEP_TEXT = "Please fill out the initial descriptive fields for the step you would like to create.";
 	public static final String EDIT_STEP_TEXT = "Edit the step's details by altering the fields below and then clicking the Save button. To cancel, click the Close button.";;
+	public static final String CREATE_CODE_TEXT = "Please fill out the initial descriptive fields for the step you would like to create.";
+	public static final String EDIT_CODE_TEXT = "Edit the step's details by altering the fields below and then clicking the Save button. To cancel, click the Close button.";;
 	public static final String EDIT_ANNOTATIONS_TEXT = "Edit Annotations for this object. You can add new annotations by using the form fields at the bottom.";
 	
 	public static final String LOGOUT_TEXT = "You have been logged out of Synapse.";
@@ -167,6 +169,7 @@ public class DisplayConstants {
 	public static final String ERROR_ENTITY_DELETE_FAILURE = "Deletion failed. Please try again.";
 	public static final String PROMPT_SURE_DELETE = "Are you sure you want to delete this";
 	public static final String LABEL_NO_PREVIEW_DATA = "A Preview has not been created.";
+	public static final String LABEL_CONTAINS_NO_CHILDREN = "This object contains no children.";
 	
 }
 
