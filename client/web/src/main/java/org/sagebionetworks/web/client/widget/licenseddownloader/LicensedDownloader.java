@@ -291,6 +291,10 @@ public class LicensedDownloader implements LicensedDownloaderView.Presenter, Syn
 					} else {
 						onFailure(null);
 					}
+				} catch (ForbiddenException ex) {
+					// if a parent forbids it's viewing, disable download and don't bother alerting user
+					onFailure(null);					
+					return;								
 				} catch (RestServiceException ex) {					
 					DisplayUtils.handleServiceException(ex, globalApplicationState.getPlaceChanger(), authenticationController.getLoggedInUser());					
 					onFailure(null);					
