@@ -1,6 +1,7 @@
 package org.sagebionetworks;
 
 
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
 
 import java.io.BufferedWriter;
@@ -27,6 +28,7 @@ import org.sagebionetworks.repo.model.LocationData;
 import org.sagebionetworks.repo.model.Project;
 import org.sagebionetworks.schema.adapter.JSONObjectAdapter;
 import org.sagebionetworks.schema.adapter.org.json.JSONObjectAdapterImpl;
+import org.sagebionetworks.web.client.EntityTypeProvider;
 import org.sagebionetworks.web.client.GlobalApplicationState;
 import org.sagebionetworks.web.client.PlaceChanger;
 import org.sagebionetworks.web.client.SynapseClientAsync;
@@ -37,10 +39,13 @@ import org.sagebionetworks.web.client.transform.NodeModelCreator;
 import org.sagebionetworks.web.client.widget.licenseddownloader.LicenceServiceAsync;
 import org.sagebionetworks.web.client.widget.licenseddownloader.LicensedDownloader;
 import org.sagebionetworks.web.client.widget.licenseddownloader.LicensedDownloaderView;
+import org.sagebionetworks.web.server.servlet.SynapseClientImpl;
 import org.sagebionetworks.web.shared.EntityWrapper;
 import org.sagebionetworks.web.shared.users.UserData;
+import org.sagebionetworks.web.test.helper.AsyncMockStubber;
 
 import com.gdevelop.gwt.syncrpc.SyncProxy;
+import com.google.gwt.user.client.rpc.AsyncCallback;
 
 /**
  * This integration test works at the web portal presenter layer
@@ -148,11 +153,14 @@ public class IT575WebClient {
 		datasetWrapper.setEntityJson(datasetObj.toJSONString());
 		when(mockNodeModelCreator.createEntity(datasetWrapper)).thenReturn(dataset);
 		
+		// create entity type provider
+		EntityTypeProvider entityTypeProvider = new EntityTypeProvider(synapseClient, new JSONObjectAdapterImpl());		
+		
 		// create, run and verify
 		LicensedDownloader downloader = new LicensedDownloader(mockView,
 				nodeService, licenseService, mockNodeModelCreator,
 				mockAuthenticationController, mockGlobalApplicationState,
-				synapseClient, jsonObjectAdapterProvider);
+				synapseClient, jsonObjectAdapterProvider, entityTypeProvider);
 		reset(mockView);				
 		downloader.configureHeadless(layer, false);		
 		
