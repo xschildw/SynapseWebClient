@@ -1,8 +1,10 @@
 package org.sagebionetworks;
 
 
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -24,7 +26,6 @@ import org.sagebionetworks.repo.model.Dataset;
 import org.sagebionetworks.repo.model.Eula;
 import org.sagebionetworks.repo.model.Layer;
 import org.sagebionetworks.repo.model.LayerTypeNames;
-import org.sagebionetworks.repo.model.LocationData;
 import org.sagebionetworks.repo.model.Project;
 import org.sagebionetworks.schema.adapter.JSONObjectAdapter;
 import org.sagebionetworks.schema.adapter.org.json.JSONObjectAdapterImpl;
@@ -39,13 +40,10 @@ import org.sagebionetworks.web.client.transform.NodeModelCreator;
 import org.sagebionetworks.web.client.widget.licenseddownloader.LicenceServiceAsync;
 import org.sagebionetworks.web.client.widget.licenseddownloader.LicensedDownloader;
 import org.sagebionetworks.web.client.widget.licenseddownloader.LicensedDownloaderView;
-import org.sagebionetworks.web.server.servlet.SynapseClientImpl;
 import org.sagebionetworks.web.shared.EntityWrapper;
 import org.sagebionetworks.web.shared.users.UserData;
-import org.sagebionetworks.web.test.helper.AsyncMockStubber;
 
 import com.gdevelop.gwt.syncrpc.SyncProxy;
-import com.google.gwt.user.client.rpc.AsyncCallback;
 
 /**
  * This integration test works at the web portal presenter layer
@@ -99,6 +97,10 @@ public class IT575WebClient {
 		layer.setParentId(dataset.getId());
 		layer.setType(LayerTypeNames.G);			
 		layer = synapse.createEntity(layer);		
+
+		project.setUri("blahblah/project/id");
+		dataset.setUri("blahblah/dataset/id");
+		layer.setUri("blahblah/layer/id");
 		
 	} 
 
@@ -112,8 +114,10 @@ public class IT575WebClient {
 
 
 	/**
+	 * This test should be refactored with Bruce's new code for workflows
 	 * @throws Exception
 	 */
+	@Ignore
 	@SuppressWarnings("unused")
 	@Test
 	public void testLicensedDownloader() throws Exception {		
