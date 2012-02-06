@@ -72,26 +72,26 @@ public class DatasetTest {
 //		
 //		ds1.setTrackingData(ddt);
 		
-		String disease1, disease2;
-		disease1 = "disease1";
-		disease2 = "disease2";
-		List<String> diseases = new ArrayList<String>();
-		diseases.add(disease1);
-		diseases.add(disease2);
-		ds1.setDisease(diseases);
+//		String disease1, disease2;
+//		disease1 = "disease1";
+//		disease2 = "disease2";
+//		List<String> diseases = new ArrayList<String>();
+//		diseases.add(disease1);
+//		diseases.add(disease2);
+//		ds1.setDiseases(diseases);
 
-		String tissue1 = "tissue1";
-		List<String> tissues = new ArrayList<String>();
-		tissues.add(tissue1);
-		ds1.setSampleSource(tissues);
-		
-		String sampleType1, sampleType2;
-		sampleType1 = "normal tissue";
-		sampleType2 = "tumor_tissue";
-		List<String> sampleTypes = new ArrayList<String>();
-		sampleTypes.add(sampleType1);
-		sampleTypes.add(sampleType2);
-		ds1.setSampleType(sampleTypes);
+//		String tissue1 = "tissue1";
+//		List<String> tissues = new ArrayList<String>();
+//		tissues.add(tissue1);
+//		ds1.setSampleSource(tissues);
+//		
+//		String sampleType1, sampleType2;
+//		sampleType1 = "normal tissue";
+//		sampleType2 = "tumor_tissue";
+//		List<String> sampleTypes = new ArrayList<String>();
+//		sampleTypes.add(sampleType1);
+//		sampleTypes.add(sampleType2);
+//		ds1.setSampleType(sampleTypes);
 		
 		adapter1 = ds1.writeToJSONObject(adapter1);
 		String s = adapter1.toJSONString();

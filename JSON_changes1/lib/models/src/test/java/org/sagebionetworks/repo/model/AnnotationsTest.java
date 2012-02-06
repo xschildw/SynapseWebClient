@@ -9,6 +9,7 @@ import java.util.Date;
 import java.util.Map;
 
 import org.junit.Test;
+import org.junit.Ignore;
 
 /**
  * Test basic opperations of annaotations.
@@ -140,6 +141,18 @@ public class AnnotationsTest {
 		return;
 	}
 	
+	@Test
+	@Ignore
+	public void testGetStringSingle() {
+		Annotations anno = new Annotations();
+		anno.addAnnotation("key1", "value1");
+		anno.addAnnotation("key1", "value2");
+		anno.addAnnotation("key2", "value3");
+		String result = (String)anno.getSingleValue("key1");
+		assertNotNull(result);
+		assertEquals("value1", result);
+		return;
+	}
 	@Test
 	public void testGetStringArray() {
 		Annotations anno = new Annotations();

@@ -40,36 +40,10 @@
 			"type":"string",
 			"format":"date-time"
 		},
-		"disease": {
-			"type": "array",
-			"items": {
-				"type": "string"
-			},
-			"description": "Diseases that are considered in this dataset."
-		},
 		"species": {
 			"type": "string",
 			"description": "Species of the samples of this dataset."
-		},
-		"sampleType": {
-			"type": "array",
-			"items": {
-				"type": "string"
-			},
-			"description": "Type of sample (tumor vs. normal tissue"
-		},
-		"sampleSource": {
-			"type": "array",
-			"items": {
-				"type": "string"
-			},
-			"description": "Source (tissue name) of sample tissue"
-		},
-		"numberOfSamples": {
-			"type": "integer",
-			"description": "Approximate number of samples"
-		}
-	}
+		}	}
         
 }
 }
