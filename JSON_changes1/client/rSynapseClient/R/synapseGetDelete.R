@@ -41,18 +41,20 @@
 		header <- switch(authMode(),
 						auth = .stuffHeaderAuth(header),
 						hmac = .stuffHeaderHmac(header, uri),
-						stop("Unknown auth mode: %s. Could not build header", authMod())
+						stop("Unknown auth mode: %s. Could not build header", authMode())
 		)		
 	}
 	
 	## Submit request and check response code
 	d = debugGatherer()
+
+	if(.getCache("debug")) {
+		message("----------------------------------")
+		message("REQUEST: ", requestMethod, " ", uri)
+	}
 	
 	##curlSetOpt(opts,curl=curlHandle)
 	if(is.null(entity)){
-        if(.getCache("debug")) {
-		    message("request: ", requestMethod, " ", uri)
-	    }
 		response <- getURL(uri, 
 				customrequest = requestMethod, 
 				httpheader = header, 
@@ -61,11 +63,16 @@
 				.opts=opts
 		)
 	}else{
+	        ## convert integers to characters
+        	for(ii in 1:length(entity)){
+                	if(all(checkInteger(entity[[ii]])))
+                	        entity[[ii]] <- as.character(as.integer(entity[[ii]]))
+        	}	
+
 		httpBody <- toJSON(entity)
-       	if(.getCache("debug")) {
-            message("request: ", requestMethod, " ", uri)
-		    message("requestBody: ", httpBody)
-	    }
+		if(.getCache("debug")) {
+			message("REQUEST_BODY: ", httpBody)
+		}
 		response <- getURL(uri, 
 				postfields = httpBody, 
 				customrequest = requestMethod, 
@@ -76,10 +83,8 @@
 		)
 	}
 	
-	
 	if(.getCache("debug")) {
-		message(d$value())
-		message("responseBody: ", response)
+		message("RESPONSE_BODY: ", response)
 	}
 	
 	.checkCurlResponse(curlHandle, response)

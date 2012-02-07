@@ -16,7 +16,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.map.JsonMappingException;
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.sagebionetworks.repo.manager.TestUserDAO;
@@ -38,6 +37,10 @@ import org.sagebionetworks.repo.model.Versionable;
 import org.sagebionetworks.repo.model.daemon.BackupRestoreStatus;
 import org.sagebionetworks.repo.model.daemon.BackupSubmission;
 import org.sagebionetworks.repo.model.daemon.RestoreSubmission;
+import org.sagebionetworks.repo.model.ontology.ConceptRequest;
+import org.sagebionetworks.repo.model.ontology.ConceptSummaryResponse;
+import org.sagebionetworks.repo.model.ontology.SummaryRequest;
+import org.sagebionetworks.repo.model.search.SearchResults;
 import org.sagebionetworks.repo.model.status.StackStatus;
 import org.sagebionetworks.repo.web.GenericEntityController;
 import org.sagebionetworks.repo.web.NotFoundException;
@@ -265,6 +268,10 @@ public class ServletTestHelper {
 			throws ServletException, IOException {
 		return ServletTestHelper.updateEntityAcl(dispatchServlet, entity.getClass(), entity.getId(),
 				entityACL, username);
+	}
+	
+	public SearchResults getSearchResults(Map<String, String> params) throws Exception {
+		return ServletTestHelper.getSearchResults(dispatchServlet, username, params);
 	}
 
 	/**
@@ -905,7 +912,7 @@ public class ServletTestHelper {
 	}
 
 	/**
-	 * Delete a specfic versoin of an entity
+	 * Delete a specfic version of an entity
 	 * 
 	 * @param <T>
 	 * @param requestUrl
@@ -1289,7 +1296,7 @@ public class ServletTestHelper {
 		MockHttpServletResponse response = new MockHttpServletResponse();
 		request.setMethod("GET");
 		request.addHeader("Accept", "application/json");
-		request.setRequestURI(UrlHelpers.DAEMOM + "/" + id);
+		request.setRequestURI(UrlHelpers.DAEMON + "/" + id);
 		request.setParameter(AuthorizationConstants.USER_ID_PARAM, userId);
 		dispatchServlet.service(request, response);
 		log.debug("Results: " + response.getContentAsString());
@@ -1399,7 +1406,7 @@ public class ServletTestHelper {
 		MockHttpServletResponse response = new MockHttpServletResponse();
 		request.setMethod("DELETE");
 		request.addHeader("Accept", "application/json");
-		request.setRequestURI(UrlHelpers.DAEMOM + "/" + id);
+		request.setRequestURI(UrlHelpers.DAEMON + "/" + id);
 		request.setParameter(AuthorizationConstants.USER_ID_PARAM, userId);
 		dispatchServlet.service(request, response);
 		log.debug("Results: " + response.getContentAsString());
@@ -1423,6 +1430,40 @@ public class ServletTestHelper {
 		}
 		return (EntityHeader) objectMapper.readValue(
 				response.getContentAsString(), EntityHeader.class);
+	}
+
+	public static List<Map> getEntityReferences(HttpServlet dispatchServlet,
+			String id, String userId) throws ServletException, IOException {
+		MockHttpServletRequest request = new MockHttpServletRequest();
+		MockHttpServletResponse response = new MockHttpServletResponse();
+		request.setMethod("GET");
+		request.addHeader("Accept", "application/json");
+		request.setRequestURI(UrlHelpers.ENTITY + "/" + id + UrlHelpers.REFERENCED_BY);
+		request.setParameter(AuthorizationConstants.USER_ID_PARAM, userId);
+		dispatchServlet.service(request, response);
+		log.debug("Results: " + response.getContentAsString());
+		if (response.getStatus() != HttpStatus.OK.value()) {
+			throw new ServletTestHelperException(response);
+		}
+		return (List<Map>) objectMapper.readValue(
+				response.getContentAsString(), List.class);
+	}
+
+	public static List<Map> getEntityReferences(HttpServlet dispatchServlet,
+			String id, int versionNumber, String userId) throws ServletException, IOException {
+		MockHttpServletRequest request = new MockHttpServletRequest();
+		MockHttpServletResponse response = new MockHttpServletResponse();
+		request.setMethod("GET");
+		request.addHeader("Accept", "application/json");
+		request.setRequestURI(UrlHelpers.ENTITY + "/" + id + UrlHelpers.VERSION + "/" + versionNumber + UrlHelpers.REFERENCED_BY);
+		request.setParameter(AuthorizationConstants.USER_ID_PARAM, userId);
+		dispatchServlet.service(request, response);
+		log.debug("Results: " + response.getContentAsString());
+		if (response.getStatus() != HttpStatus.OK.value()) {
+			throw new ServletTestHelperException(response);
+		}
+		return (List<Map>) objectMapper.readValue(
+				response.getContentAsString(), List.class);
 	}
 
 	/**
@@ -1456,4 +1497,59 @@ public class ServletTestHelper {
 				response.getContentAsString(), EntityHeader.class);
 	}
 
+	/**
+	 * Get search results
+	 */
+	public static SearchResults getSearchResults(HttpServlet dispatchServlet,
+			String userId, Map<String, String> extraParams) throws ServletException,
+			IOException, JSONException {
+		if (dispatchServlet == null)
+			throw new IllegalArgumentException("Servlet cannot be null");
+		MockHttpServletRequest request = new MockHttpServletRequest();
+		MockHttpServletResponse response = new MockHttpServletResponse();
+		request.setMethod("GET");
+		request.addHeader("Accept", "application/json");
+		request.setRequestURI("/search");
+		request.setParameter(AuthorizationConstants.USER_ID_PARAM, userId);
+		if (null != extraParams) {
+			for (Map.Entry<String, String> param : extraParams.entrySet()) {
+				request.setParameter(param.getKey(), param.getValue());
+			}
+		}
+		dispatchServlet.service(request, response);
+		log.info("Results: " + response.getContentAsString());
+		if (response.getStatus() != HttpStatus.OK.value()) {
+			throw new ServletTestHelperException(response);
+		}
+		return objectMapper.readValue(response.getContentAsString(),
+				SearchResults.class);	}
+	
+	/**
+	 * 
+	 * @param dispatchServlet
+	 * @param param
+	 * @return
+	 * @throws ServletException
+	 * @throws IOException
+	 */
+	public static ConceptSummaryResponse getConceptsForParent(SummaryRequest params)
+			throws ServletException, IOException {
+		MockHttpServletRequest request = new MockHttpServletRequest();
+		MockHttpServletResponse response = new MockHttpServletResponse();
+		request.setMethod("GET");
+		request.addHeader("Accept", "application/json");
+		request.setRequestURI(UrlHelpers.CONCEPT_SUMMARY);
+		request.addHeader("Content-Type", "application/json; charset=UTF-8");
+		StringWriter out = new StringWriter();
+		objectMapper.writeValue(out, params);
+		String body = out.toString();
+		request.setContent(body.getBytes("UTF-8"));
+		dispatchServlet.service(request, response);
+		log.debug("Results: " + response.getContentAsString());
+		if (response.getStatus() != HttpStatus.OK.value()) {
+			throw new ServletTestHelperException(response);
+		}
+		return (ConceptSummaryResponse) objectMapper.readValue(response.getContentAsString(), ConceptSummaryResponse.class);
+	}
+	
 }

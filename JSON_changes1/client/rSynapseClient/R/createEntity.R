@@ -14,36 +14,6 @@
 	synapsePost(uri=uri, entity=entity, anonymous = FALSE)
 }
 
-createDataset <- 
-		function(entity)
-{
-	.createEntity(kind="dataset", entity=entity)
-}
-
-createLayer <- 
-		function(entity)
-{
-	.createEntity(kind="layer", entity=entity)
-}
-
-createLocation <- 
-		function(entity)
-{
-	.createEntity(kind="location", entity=entity)
-}
-
-createPreview <- 
-		function(entity)
-{
-	.createEntity(kind="preview", entity=entity)
-}
-
-createProject <- 
-		function(entity)
-{
-	.createEntity(kind="project", entity=entity)
-}
-
 setMethod(
 		f = createEntity,
 		signature = signature("list"),
@@ -91,36 +61,10 @@ setMethod(
 ## so we must refresh the entity before returning it. For locations, this refevts the url and md5sum
 ## to the values for the new Location, which were returned by the createEntity call.
 ######
-setMethod(
-		f = "createEntity",
-		signature = "Location",
-		definition = function(entity){
-			## create the entity
-			if(length(as.list(annotations(entity))) > 0L)
-				warning("Annotations can not be automatically be persisted for Location entities and so are being discarded")
-			createEntity(entity = .extractEntityFromSlots(entity), className = class(entity))
-		}
-)
 
 setMethod(
 		f = "createEntity",
-		signature = "CachedLocation",
-		definition = function(entity){
-			oldClass <- class(entity)
-			class(entity) <- "Location"
-			createdEntity <- createEntity(entity)
-			class(createdEntity) <- oldClass
-			class(entity) <- oldClass
-			createdEntity@cacheDir <- entity@cacheDir
-			createdEntity@files <- entity@files
-			createdEntity
-		}
-)
-
-
-setMethod(
-		f = "createEntity",
-		signature = "Layer",
+		signature = "LocationOwner",
 		definition = function(entity){
 			oldClass <- class(entity)
 			class(entity) <- "SynapseEntity"
@@ -128,7 +72,6 @@ setMethod(
 			class(createdEntity) <- oldClass
 			class(entity) <- oldClass
 			createdEntity@location <- entity@location
-			createdEntity@objects <- entity@objects
 			createdEntity@synapseWebUrl <- .buildSynapseUrl(propertyValue(createdEntity, "id"))
 			createdEntity
 		}

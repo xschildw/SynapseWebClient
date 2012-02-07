@@ -56,8 +56,6 @@ public class UrlHelpers {
 	public static final String OBJECT_TYPE		= "/{objectType}";
 	public static final String OBJECT_TYPE_ID	= OBJECT_TYPE+ID;
 	
-
-	
 	public static final String TYPE = "/type";
 	/**
 	 * The URL prefix for all object's Access Control List (ACL).
@@ -92,6 +90,8 @@ public class UrlHelpers {
 	
 	public static final String VERSION = "/version";
 	
+	public static final String REFERENCED_BY	= "/referencedby";
+
 	/**
 	 * All of the base URLs for Synapse objects
 	 */
@@ -260,13 +260,17 @@ public class UrlHelpers {
 	/**
 	 * These are the new more RESTful backup/restore URLS.
 	 */
-	public static final String DAEMOM 						= ADMIN+"/daemon";
+	public static final String DAEMON 						= ADMIN+"/daemon";
 	public static final String BACKUP						= "/backup";
 	public static final String RESTORE						= "/restore";
+	public static final String SEARCH_DOCUMENT 				= "/searchDocument";
 	public static final String DAEMON_ID					= "/{daemonId}";
-	public static final String ENTITY_BACKUP_DAMEON			= DAEMOM+BACKUP;
-	public static final String ENTITY_RESTORE_DAMEON		= DAEMOM+RESTORE;
-	public static final String ENTITY_DAEMON_ID				= DAEMOM+DAEMON_ID;
+	public static final String ENTITY_BACKUP_DAMEON			= DAEMON+BACKUP;
+	public static final String ENTITY_RESTORE_DAMEON		= DAEMON+RESTORE;
+	public static final String ENTITY_SEARCH_DOCUMENT_DAMEON = DAEMON+SEARCH_DOCUMENT;
+	public static final String ENTITY_DAEMON_ID				= DAEMON+DAEMON_ID;
+	
+	public static final String CONCEPT_SUMMARY	= "/conceptSummary";
 	
 	/**
 	 * The stack status of synapse 

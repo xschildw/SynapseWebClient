@@ -28,7 +28,15 @@
 	indx <- indx[names(entity)[indx] != "dateAnnotations"]
 	for(ii in indx)
 		entity[ii] <- as.character(entity[ii])
-	
+
+
+	## convert integers to characters
+	for(ii in 1:length(entity)){
+		if(all(checkInteger(entity[[ii]])))
+			entity[[ii]] <- as.character(as.integer(entity[[ii]]))
+	}
+
+
 	httpBody <- toJSON(entity)
 	
 	## uris formed by the service already have their servlet prefix
@@ -56,7 +64,7 @@
 		header <- switch(authMode(),
 				auth = .stuffHeaderAuth(header),
 				hmac = .stuffHeaderHmac(header, uri),
-				stop("Unknown auth mode: %s. Could not build header", authMod())
+				stop("Unknown auth mode: %s. Could not build header", authMode())
 		)		
 	}
 	if("PUT" == requestMethod) {
@@ -72,8 +80,9 @@
 	##curlSetOpt(opts,curl=curlHandle)
 	
 	if(.getCache("debug")) {
-		message("request: ", requestMethod, " ", uri)
-		message("requestBody: ", httpBody)
+		message("----------------------------------")
+		message("REQUEST: ", requestMethod, " ", uri)
+		message("REQUEST_BODY: ", httpBody)
 	}
 	response <- getURL(uri, 
 			postfields = httpBody, 
@@ -84,8 +93,7 @@
 			.opts=opts
 	)
 	if(.getCache("debug")) {
-		message(d$value())
-		message("responseBody: ", response)
+		message("RESPONSE_BODY:: ", response)
 	}
 	
 	.checkCurlResponse(curlHandle, response)

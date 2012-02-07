@@ -6,7 +6,7 @@
 
 setMethod(
 		f = "downloadEntity",
-		signature = "Layer",
+		signature = "LocationOwner",
 		definition = function(entity){
 			## check whether user has signed agreement
 			if(!hasSignedEula(entity)){
@@ -32,9 +32,20 @@ setMethod(
 
 setMethod(
 		f = "downloadEntity",
+		signature = "GithubCode",
+		definition = function(entity){
+			loc <- .cacheEntity(entity)
+			class(loc) <- "ReadOnlyCachedLocation"
+			entity@location <- loc
+			entity
+		}
+)
+
+setMethod(
+		f = "downloadEntity",
 		signature = "SynapseEntity",
 		definition = function(entity){
-			stop("Currently only Layer entities can contain data.")
+			getEntity(entity)
 		}
 )
 setMethod(
@@ -61,19 +72,17 @@ setMethod(
 
 setMethod(
 		f = ".cacheEntity",
-		signature = "Layer",
+		signature = "LocationOwner",
 		definition = function(entity) {
 			
 			## Get the download locations for this entity
 			locations <- propertyValue(entity, "locations")
 			if (is.null(locations)) {
-				if(is.null(propertyValue(entity, "id")))
-					stop("The entity does not have a 'locations' property or an 'id' property so could not be cached")
 				entity <- getEntity(propertyValue(entity, "id"))
 				locations <- propertyValue(entity, "locations")
-				if (is.null(locations)) {
-					stop("The entity does not have any locations so could not be downloaded")
-				}
+				if (is.null(locations)) 
+					return(new("CachedLocation"))
+				
 			}
 
 			## Note that we just use the first location, to future-proof this we would use the location preferred
@@ -82,6 +91,11 @@ setMethod(
 			
 			## Locations are no longer entities in synapse, but they still exist here in the R client
 			location <- Location(list(path=locations[[1]]['path'], type=locations[[1]]['type']))
-			return(CachedLocation(location, .unpack(filename = destfile)))
+			
+			location <- CachedLocation(location, .unpack(filename = destfile))
+		
+			## preserved the objects environment of the original
+                        location@objects <- entity@location@objects
+			location
 		}
 )

@@ -52,7 +52,6 @@ setClass(
 		)
 )
 
-
 setClass(
 		Class = "Dataset",
 		contains = "SynapseEntity",
@@ -63,9 +62,8 @@ setClass(
 
 setClass(
 		Class = "Location",
-		contains = "SynapseEntity",
-		prototype = prototype(
-				synapseEntityKind = "location"
+		representation = representation(
+			properties = "list"
 		)
 )
 
@@ -73,6 +71,17 @@ setClass(
 		Class = "CachedLocation",
 		contains = "Location",
 		representation = representation(
+				objects = "environment",
+				cacheDir = "character",
+				files = "character"
+		)
+)
+
+setClass(
+        	Class = "ReadOnlyCachedLocation",
+        	contains = "Location",
+		representation = representation(
+				objects = "environment",
 				cacheDir = "character",
 				files = "character"
 		)
@@ -82,11 +91,19 @@ setClass(
 ### Layer Class definitions
 #####
 setClass(
-		Class = "Layer",
+		Class = "LocationOwner",
 		contains = "SynapseEntity",
 		representation = representation(
-				location = "CachedLocation",
-				objects = "environment"
+			location = "Location",	
+			"VIRTUAL"
+		),
+)
+
+setClass(
+		Class = "Layer",
+		contains = "LocationOwner",
+		representation = representation(
+			location = "CachedLocation"
 		),
 		prototype = prototype(
 				synapseEntityKind = "layer"
@@ -150,14 +167,24 @@ setClass(
 
 setClass(
 		Class = "Code",
-		contains = "Layer",
+		contains = "LocationOwner",
 		representation = representation(
-				location = "CachedLocation",
-				objects = "environment"
+			location = "CachedLocation"
 		),
 		prototype = prototype(
 				synapseEntityKind = "code"
 		)
+)
+
+setClass(
+	Class = "GithubCode",
+	contains = "LocationOwner",
+	representation = representation(
+		location = "ReadOnlyCachedLocation"
+	),
+	prototype = prototype(
+		synapseEntityKind = "code"
+	)
 )
 
 setClass(

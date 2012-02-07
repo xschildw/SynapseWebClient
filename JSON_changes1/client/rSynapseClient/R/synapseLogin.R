@@ -205,7 +205,9 @@ hmacSecretKey <-
 		return(key)
 	}
 	.setCache("base64secretKey", secretKey)
-	.jenv[["syn"]]$setApiKey(secretKey)
+	if(.getCache("useJavaClient")){
+		.jenv[["syn"]]$setApiKey(secretKey)
+	}
 	authMode(kAuthMode)
 }
 
@@ -235,6 +237,9 @@ userName <-
 	if(missing(name))
 		return(.getCache("username"))
 	.setCache("username", name)
+	if(.getCache("useJavaClient")){
+		.jenv[["syn"]]$setUserName(name)
+	}
 }
 
 authMode <- 

@@ -11,26 +11,35 @@
 	}
 	attr(myZip, "origFcn") <- utils:::zip
 	## detach packages so their functions can be overridden
+	oldCache <- synapseClient:::.cache
+	unloadNamespace('synapseClient')
 	suppressWarnings(detach('package:utils', force=TRUE))
 	utils:::assignInNamespace("zip", myZip, "utils")
 	#reload detached packages
 	library(utils, quietly=TRUE)
+	assignInNamespace(".cache", oldCache, "synapseClient")
+	attachNamespace("synapseClient")
 	
 	## create project and add to cache
 	project <- list()
 	project$name <- paste('R noZip Integration Test Project', gsub(':', '_', date()))
-	createdProject <- synapseClient:::createProject(entity=project)
+	project <- Project(project)
+	createdProject <- createEntity(entity=project)
 	synapseClient:::.setCache("rIntegrationTestProject", createdProject)
 }
 
 .tearDown <- function(){
 	## put back method
+	oldCache <- synapseClient:::.cache
+	unloadNamespace('synapseClient')
 	suppressWarnings(detach('package:utils', force = TRUE))
 	utils:::assignInNamespace("zip", attr(utils:::zip, "origFcn"), "utils")
 	library(utils, quietly = TRUE)
+	assignInNamespace(".cache", oldCache, "synapseClient")
+	attachNamespace("synapseClient")
 	
 	## delete project 
-	synapseClient:::deleteProject(entity=synapseClient:::.getCache("rIntegrationTestProject"))
+	deleteEntity(entity=synapseClient:::.getCache("rIntegrationTestProject"))
 	synapseClient:::.deleteCache("rIntegrationTestProject")
 }
 
@@ -39,7 +48,7 @@ integrationTestNoZipFile <-
 {
 	dataset <- Dataset(entity = list(
 					name = 'R Integration Test Dataset',
-					parentId = synapseClient:::.getCache("rIntegrationTestProject")$id
+					parentId = propertyValue(synapseClient:::.getCache("rIntegrationTestProject"),"id")
 			)
 	)
 	
@@ -73,7 +82,7 @@ integrationTestNoZipMultipleFiles <-
 {
 	dataset <- Dataset(entity = list(
 					name = 'R Integration Test Dataset',
-					parentId = synapseClient:::.getCache("rIntegrationTestProject")$id
+					parentId = propertyValue(synapseClient:::.getCache("rIntegrationTestProject"), "id")
 			)
 	)
 	
@@ -107,7 +116,7 @@ integrationTestNoZipBinary <-
 {
 	dataset <- Dataset(entity = list(
 					name = 'R Integration Test Dataset',
-					parentId = synapseClient:::.getCache("rIntegrationTestProject")$id
+					parentId = propertyValue(synapseClient:::.getCache("rIntegrationTestProject"),"id")
 			)
 	)
 	
@@ -131,7 +140,7 @@ integrationTestNoZipBinary <-
 	layer <- storeEntity(layer)
 	
 	loadedLayer <- loadEntity(layer)
-	checkEquals(data, loadedLayer$objects$data)
+	checkEquals(loadedLayer$files, "data.rbin")
 }
 
 
@@ -140,7 +149,7 @@ integrationTestNoZipMultipleBinary <-
 {
 	dataset <- Dataset(entity = list(
 					name = 'R Integration Test Dataset',
-					parentId = synapseClient:::.getCache("rIntegrationTestProject")$id
+					parentId = propertyValue(synapseClient:::.getCache("rIntegrationTestProject"),"id")
 			)
 	)
 	

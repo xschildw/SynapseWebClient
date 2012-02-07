@@ -12,6 +12,7 @@ import org.apache.commons.logging.LogFactory;
 import org.sagebionetworks.StackConfiguration;
 import org.sagebionetworks.repo.manager.backup.NodeBackupDriver;
 import org.sagebionetworks.repo.manager.backup.Progress;
+import org.sagebionetworks.repo.manager.backup.SearchDocumentDriver;
 import org.sagebionetworks.repo.model.BackupRestoreStatusDAO;
 import org.sagebionetworks.repo.model.DatastoreException;
 import org.sagebionetworks.repo.model.UnauthorizedException;
@@ -34,13 +35,16 @@ public class BackupDaemon implements Runnable{
 	
 	private static final String PREFIX_BACKUP = "Backup-";
 	private static final String PREFIX_TEMP = "temp-";
+	private static final String PREFIX_SEARCH = "search-";
 	static private Log log = LogFactory.getLog(BackupDaemon.class);
 	public static long NANO_SECONDS_PER_MILISECOND = 1000000;
 	private static final String S3_DOMAIN = "s3.amazonaws.com";
 	private static final String HTTPS = "https://";
-	
+	private static final String S3KEY_SEARCH_PREFIX = "Search/";
+
 	private BackupRestoreStatusDAO backupRestoreStatusDao;
 	private NodeBackupDriver backupDriver;
+	private SearchDocumentDriver searchDocumentDriver;
 	private AmazonS3Client awsClient;
 	private String awsBucket;
 	private DaemonType type;
@@ -68,7 +72,7 @@ public class BackupDaemon implements Runnable{
 	 * @param dao
 	 * @param driver
 	 */
-	BackupDaemon(BackupRestoreStatusDAO dao, NodeBackupDriver driver, AmazonS3Client client, String bucket, ExecutorService threadPool, ExecutorService threadPool2){
+	BackupDaemon(BackupRestoreStatusDAO dao, NodeBackupDriver driver, SearchDocumentDriver searchDocumentDriver, AmazonS3Client client, String bucket, ExecutorService threadPool, ExecutorService threadPool2){
 		if(dao == null) throw new IllegalArgumentException("BackupRestoreStatusDAO cannot be null");
 		if(driver == null) throw new IllegalArgumentException("NodeBackupDriver cannot be null");
 		if(client == null) throw new IllegalArgumentException("AmazonS3Client cannot be null");
@@ -76,6 +80,7 @@ public class BackupDaemon implements Runnable{
 		if(threadPool == null) throw new IllegalArgumentException("Thread pool cannot be null");
 		this.backupRestoreStatusDao = dao;
 		this.backupDriver = driver;
+		this.searchDocumentDriver = searchDocumentDriver;
 		this.awsClient = client;
 		this.awsBucket = bucket;
 		this.watcherPool = threadPool;
@@ -87,8 +92,8 @@ public class BackupDaemon implements Runnable{
 	 * @param dao
 	 * @param driver
 	 */
-	BackupDaemon(BackupRestoreStatusDAO dao, NodeBackupDriver driver, AmazonS3Client client, String bucket, ExecutorService threadPool, ExecutorService threadPool2, Set<String> entitiesToBackup){
-		this(dao, driver, client, bucket, threadPool, threadPool2);
+	BackupDaemon(BackupRestoreStatusDAO dao, NodeBackupDriver driver, SearchDocumentDriver searchDocumentDriver, AmazonS3Client client, String bucket, ExecutorService threadPool, ExecutorService threadPool2, Set<String> entitiesToBackup){
+		this(dao, driver, searchDocumentDriver, client, bucket, threadPool, threadPool2);
 		this.entitiesToBackup = entitiesToBackup;
 	}
 	
@@ -114,7 +119,11 @@ public class BackupDaemon implements Runnable{
 			if(entitiesToBackup == null){
 				// This is a full backup file.
 				prefix = PREFIX_BACKUP;
-			}else{
+			}
+			else if(DaemonType.SEARCH_DOCUMENT == type) {
+				prefix = PREFIX_SEARCH;
+			}
+			else {
 				// Incremental backup files are temporary.
 				prefix = PREFIX_TEMP;
 			}
@@ -170,11 +179,18 @@ public class BackupDaemon implements Runnable{
 				status.setProgresssMessage("Starting to upload temp file: "+tempBackup.getAbsolutePath()+" to S3...");
 				updateStatus();
 				// Now upload the file to S3
-				String backupUrl = uploadFileToS3(tempBackup);
+				String backupUrl = uploadFileToS3(tempBackup, null);
 				status.setBackupUrl(backupUrl);
 			}
-			
-			if(DaemonType.RESTORE == type){
+			else if(DaemonType.SEARCH_DOCUMENT == type){
+				// Once the driver is done upload the file to S3.
+				status.setProgresssMessage("Starting to upload temp file: "+tempBackup.getAbsolutePath()+" to S3...");
+				updateStatus();
+				// Now upload the file to S3
+				String backupUrl = uploadFileToS3(tempBackup, S3KEY_SEARCH_PREFIX);
+				status.setBackupUrl(backupUrl);
+			}
+			else if(DaemonType.RESTORE == type){
 				// If this backup file is a temp file then delete it from S3 now that we have consumed it.
 				// We also want to cleanup backup files from builds.
 				if(backupFileName.startsWith(PREFIX_TEMP) || "dev".equals(stack) || "bamboo".equals(stack)){
@@ -218,9 +234,12 @@ public class BackupDaemon implements Runnable{
 					if(DaemonType.BACKUP == type){
 						// This is a backup
 						backupDriver.writeBackup(tempBackup, progress, entitiesToBackup);							
-					}else if(DaemonType.RESTORE == type){
+					}else if(DaemonType.RESTORE == type) {
 						// This is a restore
 						backupDriver.restoreFromBackup(tempBackup, progress);		
+					}else if(DaemonType.SEARCH_DOCUMENT == type) {
+						// This is a restore
+						searchDocumentDriver.writeSearchDocument(tempBackup, progress, entitiesToBackup);		
 					}else{
 						throw new IllegalArgumentException("Unknown type: "+type);
 					}
@@ -248,6 +267,7 @@ public class BackupDaemon implements Runnable{
 	private void setFailed(Throwable e) {
 		// Log the failure.
 		log.error(e);
+		e.printStackTrace();
 		// Set the status to failed
 		status.setProgresssMessage("");
 		status.setStatus(DaemonStatus.FAILED);
@@ -302,6 +322,20 @@ public class BackupDaemon implements Runnable{
 		return start(userName);
 	}
 
+	/**
+	 * Start this daemon for a search document..
+	 * @param user
+	 * @return
+	 * @throws DatastoreException 
+	 * @throws UnauthorizedException
+	 * @throws DatastoreException
+	 */
+	public BackupRestoreStatus startSearchDocument(String userName) throws DatastoreException {
+		if(userName == null) throw new IllegalArgumentException("Username cannot be null");
+		this.type = DaemonType.SEARCH_DOCUMENT;
+		return start(userName);
+	}
+
 	private BackupRestoreStatus start(String userName) throws DatastoreException {
 		// Now create the backup status
 		status = new BackupRestoreStatus();
@@ -333,11 +367,12 @@ public class BackupDaemon implements Runnable{
 	 * @param toUpload
 	 * @param id
 	 */
-	private String uploadFileToS3(File toUpload){
-		log.info("Atempting to upload: "+getS3URL(awsBucket, toUpload.getName()));
-		PutObjectResult results = this.awsClient.putObject(awsBucket, toUpload.getName(), toUpload);
+	private String uploadFileToS3(File toUpload, String s3KeyPrefix) {
+		String s3Key = s3KeyPrefix + toUpload.getName();
+		log.info("Atempting to upload: "+getS3URL(awsBucket, s3Key));
+		PutObjectResult results = this.awsClient.putObject(awsBucket, s3Key, toUpload);
 		log.info(results);
-		this.backupFileName = toUpload.getName();
+		this.backupFileName = s3Key;
 		return getS3URL(this.awsBucket, this.backupFileName);
 	}
 

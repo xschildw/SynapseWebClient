@@ -1,18 +1,6 @@
 package org.sagebionetworks.repo.model.jdo;
 
-import static org.sagebionetworks.repo.model.query.jdo.SqlConstants.ANNOTATION_ATTRIBUTE_COLUMN;
-import static org.sagebionetworks.repo.model.query.jdo.SqlConstants.ANNOTATION_OWNER_ID_COLUMN;
-import static org.sagebionetworks.repo.model.query.jdo.SqlConstants.COL_NODE_ETAG;
-import static org.sagebionetworks.repo.model.query.jdo.SqlConstants.COL_NODE_ID;
-import static org.sagebionetworks.repo.model.query.jdo.SqlConstants.COL_NODE_NAME;
-import static org.sagebionetworks.repo.model.query.jdo.SqlConstants.COL_NODE_PARENT_ID;
-import static org.sagebionetworks.repo.model.query.jdo.SqlConstants.COL_NODE_TYPE;
-import static org.sagebionetworks.repo.model.query.jdo.SqlConstants.COL_REVISION_NUMBER;
-import static org.sagebionetworks.repo.model.query.jdo.SqlConstants.COL_REVISION_OWNER_NODE;
-import static org.sagebionetworks.repo.model.query.jdo.SqlConstants.CONSTRAINT_UNIQUE_CHILD_NAME;
-import static org.sagebionetworks.repo.model.query.jdo.SqlConstants.TABLE_NODE;
-import static org.sagebionetworks.repo.model.query.jdo.SqlConstants.TABLE_REVISION;
-import static org.sagebionetworks.repo.model.query.jdo.SqlConstants.TABLE_STRING_ANNOTATIONS;
+import static org.sagebionetworks.repo.model.query.jdo.SqlConstants.*;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -65,6 +53,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class NodeDAOImpl implements NodeDAO, NodeBackupDAO, InitializingBean {
 	
+	private static final String GET_CURRENT_REV_NUMBER_SQL = "SELECT "+COL_CURRENT_REV+" FROM "+TABLE_NODE+" WHERE "+COL_NODE_ID+" = ?";
 	private static final String UPDATE_ETAG_SQL = "UPDATE "+TABLE_NODE+" SET "+COL_NODE_ETAG+" = ? WHERE "+COL_NODE_ID+" = ?";
 	private static final String SQL_COUNT_NODES = "SELECT COUNT("+COL_NODE_ID+") FROM "+TABLE_NODE;
 	private static final String SQL_SELECT_PARENT_TYPE_NAME = "SELECT "+COL_NODE_PARENT_ID+", "+COL_NODE_TYPE+", "+COL_NODE_NAME+" FROM "+TABLE_NODE+" WHERE "+COL_NODE_ID+" = ?";
@@ -74,7 +63,7 @@ public class NodeDAOImpl implements NodeDAO, NodeBackupDAO, InitializingBean {
 		
 	// This is better suited for simple JDBC query.
 	@Autowired
-	private SimpleJdbcTemplate simpleJdbcTempalte;
+	private SimpleJdbcTemplate simpleJdbcTemplate;
 	
 	@Autowired
 	private IdGenerator idGenerator;
@@ -128,9 +117,6 @@ public class NodeDAOImpl implements NodeDAO, NodeBackupDAO, InitializingBean {
 		}
 		DBONode node = new DBONode();
 		node.setCurrentRevNumber(rev.getRevisionNumber());
-		if(!forceEtag){
-			validateReferences(rev.getRevisionNumber(), dto.getReferences());			
-		}
 		JDONodeUtils.updateFromDto(dto, node, rev);
 		// If an id was not provided then create one
 		if(node.getId() == null){
@@ -185,31 +171,6 @@ public class NodeDAOImpl implements NodeDAO, NodeBackupDAO, InitializingBean {
 			dboReferenceDao.replaceReferences(node.getId(), dto.getReferences());
 		}
 		return node.getId().toString();
-	}
-	
-	/**
-	 * When a current version is not provided we use the current.
-	 * @param revisionNumber
-	 * @param references
-	 * @throws DatastoreException 
-	 * @throws NotFoundException 
-	 */
-	private void validateReferences(Long revisionNumber, Map<String, Set<Reference>> references) throws DatastoreException, NotFoundException {
-		if(references != null){
-			// Find any revision that is missing its rev number;
-			Iterator<Set<Reference>> it = references.values().iterator();
-			while(it.hasNext()){
-				Set<Reference> set = it.next();
-				for(Reference ref: set){
-					if(ref.getTargetVersionNumber() == null){
-						ref.setTargetVersionNumber(revisionNumber);
-					}
-					if(!doesNodeExist(KeyFactory.stringToKey(ref.getTargetId()))){
-						throw new NotFoundException("The referenced entity does not exist: "+ref.getTargetId());
-					}
-				}
-			}			
-		}		
 	}
 
 	@Transactional(readOnly = false, propagation = Propagation.REQUIRED)
@@ -451,7 +412,7 @@ public class NodeDAOImpl implements NodeDAO, NodeBackupDAO, InitializingBean {
 	@Transactional(readOnly = true)
 	@Override
 	public String peekCurrentEtag(String id) throws NotFoundException, DatastoreException {
-		long currentTag = simpleJdbcTempalte.queryForLong(SQL_ETAG_WITHOUT_LOCK, KeyFactory.stringToKey(id));
+		long currentTag = simpleJdbcTemplate.queryForLong(SQL_ETAG_WITHOUT_LOCK, KeyFactory.stringToKey(id));
 		return KeyFactory.keyToString(currentTag);
 	}
 
@@ -470,7 +431,7 @@ public class NodeDAOImpl implements NodeDAO, NodeBackupDAO, InitializingBean {
 		params.addValue("bindId", longId);
 		// Check the eTags
 		long passedTag = KeyFactory.stringToKey(eTag);
-		long currentTag = simpleJdbcTempalte.queryForLong(SQL_ETAG_FOR_UPDATE, longId);
+		long currentTag = simpleJdbcTemplate.queryForLong(SQL_ETAG_FOR_UPDATE, longId);
 		if(passedTag != currentTag){
 			throw new ConflictingUpdateException("Node: "+id+" was updated since you last fetched it, retrieve it again and reapply the update");
 		}
@@ -479,7 +440,7 @@ public class NodeDAOImpl implements NodeDAO, NodeBackupDAO, InitializingBean {
 		DBONode node = getNodeById(longId);
 		node.seteTag(currentTag);
 		// Update the etag
-		int updated = simpleJdbcTempalte.update(UPDATE_ETAG_SQL, currentTag, longId);
+		int updated = simpleJdbcTemplate.update(UPDATE_ETAG_SQL, currentTag, longId);
 		if(updated != 1) throw new ConflictingUpdateException("Failed to lock Node: "+longId);
 		// Return the new tag
 		return KeyFactory.keyToString(currentTag);
@@ -508,9 +469,6 @@ public class NodeDAOImpl implements NodeDAO, NodeBackupDAO, InitializingBean {
 		DBONode jdoToUpdate = getNodeById(nodeId);
 		DBORevision revToUpdate = getCurrentRevision(jdoToUpdate);
 		// Update is as simple as copying the values from the passed node.
-		if(!forceUseEtag){
-			validateReferences(jdoToUpdate.getCurrentRevNumber(), updatedNode.getReferences());				
-		}
 		JDONodeUtils.updateFromDto(updatedNode, jdoToUpdate, revToUpdate);	
 
 		// Should we force the update of the etag?
@@ -569,20 +527,12 @@ public class NodeDAOImpl implements NodeDAO, NodeBackupDAO, InitializingBean {
 	@Override
 	public List<Long> getVersionNumbers(String id) throws NotFoundException {
 		List<Long> list = new ArrayList<Long>();
-		List<Map<String, Object>> restuls = simpleJdbcTempalte.queryForList(SQL_GET_ALL_VERSION_NUMBERS, id);
+		List<Map<String, Object>> restuls = simpleJdbcTemplate.queryForList(SQL_GET_ALL_VERSION_NUMBERS, id);
 		for(Map<String, Object> row: restuls){
 			Long revId = (Long) row.get(COL_REVISION_NUMBER);
 			list.add(revId);
 		}
 		return list;
-	}
-	
-	/**
-	 * Does the current database support 'select for update'
-	 * @return
-	 */
-	private boolean isSelectForUpdateSupported(){
-		return true;
 	}
 
 	@Transactional(readOnly = false, propagation = Propagation.REQUIRED)
@@ -629,7 +579,7 @@ public class NodeDAOImpl implements NodeDAO, NodeBackupDAO, InitializingBean {
 		Map<String, Object> parameters = new HashMap<String, Object>();
 		parameters.put(BIND_ID_KEY, nodeId);
 		try{
-			long count = simpleJdbcTempalte.queryForLong(SQL_COUNT_NODE_ID, parameters);
+			long count = simpleJdbcTemplate.queryForLong(SQL_COUNT_NODE_ID, parameters);
 			return count > 0;
 		}catch(Exception e){
 			// Can occur when the schema does not exist.
@@ -641,7 +591,7 @@ public class NodeDAOImpl implements NodeDAO, NodeBackupDAO, InitializingBean {
 	@Override
 	public boolean doesNodeRevisionExist(String nodeId, Long revNumber) {
 		try{
-			long count = simpleJdbcTempalte.queryForLong(SQL_COUNT_REVISON_ID, nodeId, revNumber);
+			long count = simpleJdbcTemplate.queryForLong(SQL_COUNT_REVISON_ID, nodeId, revNumber);
 			return count > 0;
 		}catch(Exception e){
 			// Can occur when the schema does not exist.
@@ -683,7 +633,7 @@ public class NodeDAOImpl implements NodeDAO, NodeBackupDAO, InitializingBean {
 	private ParentTypeName getParentTypeName(Long nodeId) throws NotFoundException{
 		if(nodeId == null) throw new IllegalArgumentException("NodeId cannot be null");
 		try{
-			Map<String, Object> row = simpleJdbcTempalte.queryForMap(SQL_SELECT_PARENT_TYPE_NAME, nodeId);
+			Map<String, Object> row = simpleJdbcTemplate.queryForMap(SQL_SELECT_PARENT_TYPE_NAME, nodeId);
 			ParentTypeName results = new ParentTypeName();
 			results.setName((String) row.get(COL_NODE_NAME));
 			results.setParentId((Long) row.get(COL_NODE_PARENT_ID));
@@ -761,7 +711,7 @@ public class NodeDAOImpl implements NodeDAO, NodeBackupDAO, InitializingBean {
 		// Since this query is used to boostrap the system we want to return null if the
 		// the schema has not been created yet.
 		try{
-			List<Map<String, Object>> list = simpleJdbcTempalte.queryForList(sql, params);
+			List<Map<String, Object>> list = simpleJdbcTemplate.queryForList(sql, params);
 			if(list == null || list.size() < 1) return null;
 			if(list.size() > 1) throw new IllegalStateException("Found more than one node with a path: "+path);
 			Map<String, Object> row = list.get(0);
@@ -853,7 +803,7 @@ public class NodeDAOImpl implements NodeDAO, NodeBackupDAO, InitializingBean {
 	@Override
 	public List<String> getChildrenIdsAsList(String id) throws DatastoreException {
 		List<String> list = new ArrayList<String>();
-		List<Map<String, Object>> restuls = simpleJdbcTempalte.queryForList(SQL_GET_ALL_CHILDREN_IDS, id);
+		List<Map<String, Object>> restuls = simpleJdbcTemplate.queryForList(SQL_GET_ALL_CHILDREN_IDS, id);
 		for(Map<String, Object> row: restuls){
 			Long childId = (Long) row.get(COL_NODE_ID);
 			list.add(KeyFactory.keyToString(childId));
@@ -873,7 +823,7 @@ public class NodeDAOImpl implements NodeDAO, NodeBackupDAO, InitializingBean {
 	@Transactional(readOnly = true)
 	@Override
 	public long getTotalNodeCount() {
-		return simpleJdbcTempalte.queryForLong(SQL_COUNT_NODES, new HashMap<String, String>());
+		return simpleJdbcTemplate.queryForLong(SQL_COUNT_NODES, new HashMap<String, String>());
 	}
 	
 	/**
@@ -918,7 +868,7 @@ public class NodeDAOImpl implements NodeDAO, NodeBackupDAO, InitializingBean {
 	@Override
 	public boolean isStringAnnotationQueryable(String nodeId, String annotationKey) {
 		// Count how many annotations this node has with this 
-		long count= simpleJdbcTempalte.queryForLong(SQL_COUNT_STRING_ANNOTATIONS_FOR_NODE, nodeId, annotationKey);
+		long count= simpleJdbcTemplate.queryForLong(SQL_COUNT_STRING_ANNOTATIONS_FOR_NODE, nodeId, annotationKey);
 		return count > 0;
 	}
 
@@ -952,6 +902,19 @@ public class NodeDAOImpl implements NodeDAO, NodeBackupDAO, InitializingBean {
 		node.setParentId(newParentNode.getId());
 		dboBasicDao.update(node);
 		return true;
+	}
+	
+	/**
+	 * Get the current revision number of a node.
+	 */
+	@Transactional(readOnly = true)
+	public Long getCurrentRevisionNumber(String nodeId) throws NotFoundException{
+		if(nodeId == null) throw new IllegalArgumentException("Node Id cannot be null");
+		try{
+			return this.simpleJdbcTemplate.queryForLong(GET_CURRENT_REV_NUMBER_SQL, nodeId);
+		}catch(EmptyResultDataAccessException e){
+			throw new NotFoundException("The resource you are attempting to access cannot be found");
+		}
 	}
 
 

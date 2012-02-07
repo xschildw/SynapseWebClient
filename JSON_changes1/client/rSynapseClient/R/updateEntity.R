@@ -113,7 +113,7 @@ setMethod(
 
 setMethod(
 		f = "updateEntity",
-		signature = "Layer",
+		signature = "LocationOwner",
 		definition = function(entity){
 			oldClass <- class(entity)
 			class(entity) <- "SynapseEntity"
@@ -121,7 +121,6 @@ setMethod(
 			class(updatedEntity) <- oldClass
 			class(entity) <- oldClass
 			updatedEntity@location <- entity@location
-			updatedEntity@objects <- entity@objects
 			updatedEntity
 		}
 )

@@ -5,7 +5,7 @@ import java.util.concurrent.Callable;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.sagebionetworks.client.Synapse;
+import org.sagebionetworks.client.SynapseAdministration;
 import org.sagebionetworks.client.exceptions.SynapseException;
 import org.sagebionetworks.repo.model.DaemonStatusUtil;
 import org.sagebionetworks.repo.model.daemon.BackupRestoreStatus;
@@ -33,14 +33,14 @@ public class CreateUpdateWorker implements Callable<WorkerResult> {
 	
 	static private Log log = LogFactory.getLog(CreateUpdateWorker.class);
 	
-	private static long WOKER_TIMEOUT = Configuration.getWorkerTimeoutMs();
-
+	Configuration configuration = null;
 	ClientFactory clientFactory = null;
 	Set<String> entites = null;
 	BasicProgress progress = null;
 
-	public CreateUpdateWorker(ClientFactory clientFactory, Set<String> entites, BasicProgress progress) {
+	public CreateUpdateWorker(Configuration configuration, ClientFactory clientFactory, Set<String> entites, BasicProgress progress) {
 		super();
+		this.configuration = configuration;
 		this.clientFactory = clientFactory;
 		this.entites = entites;
 		this.progress = progress;
@@ -56,14 +56,14 @@ public class CreateUpdateWorker implements Callable<WorkerResult> {
 	 * @throws JSONObjectAdapterException
 	 * @throws InterruptedException
 	 */
-	public BackupRestoreStatus waitForDaemon(String daemonId, Synapse client)
+	public BackupRestoreStatus waitForDaemon(String daemonId, SynapseAdministration client)
 			throws SynapseException, JSONObjectAdapterException,
 			InterruptedException {
 		// Wait for the daemon to finish.
 		long start = System.currentTimeMillis();
 		while (true) {
 			long now = System.currentTimeMillis();
-			if(now-start > WOKER_TIMEOUT){
+			if(now-start > configuration.getWorkerTimeoutMs()){
 				throw new InterruptedException("Timed out waiting for the daemon to complete");
 			}
 			BackupRestoreStatus status = client.getDaemonStatus(daemonId);
@@ -140,7 +140,7 @@ public class CreateUpdateWorker implements Callable<WorkerResult> {
 	public WorkerResult call() throws Exception {
 		try {
 			// First get a connection to the source
-			Synapse client = clientFactory.createNewSourceClient();
+			SynapseAdministration client = clientFactory.createNewSourceClient(configuration);
 			BackupSubmission sumbission = new BackupSubmission();
 			sumbission.setEntityIdsToBackup(this.entites);
 			// Start a backup.
@@ -148,7 +148,7 @@ public class CreateUpdateWorker implements Callable<WorkerResult> {
 			// Wait for the backup to complete
 			status = waitForDaemon(status.getId(), client);
 			// Now restore this to the destination
-			client = clientFactory.createNewDestinationClient();
+			client = clientFactory.createNewDestinationClient(configuration);
 			String backupFileName = getFileNameFromUrl(status.getBackupUrl());
 			RestoreSubmission restoreSub = new RestoreSubmission();
 			restoreSub.setFileName(backupFileName);
@@ -157,11 +157,11 @@ public class CreateUpdateWorker implements Callable<WorkerResult> {
 			status = waitForDaemon(status.getId(), client);
 			// Success
 			// set the progress to done.
-			progress.setCurrent(progress.getTotal());
+			progress.setDone();
 			return new WorkerResult(this.entites.size(), WorkerResult.JobStatus.SUCCEDED);
 		} catch (Exception e) {
 			// set the progress to done.
-			progress.setCurrent(progress.getTotal());
+			progress.setDone();
 			// Log any errors
 			log.error("CreateUpdateWorker Failed to run job: "+ entites.toString(), e);
 			return new WorkerResult(0, WorkerResult.JobStatus.FAILED);

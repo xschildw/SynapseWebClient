@@ -8,17 +8,23 @@ setMethod(
 		f = "storeEntityFiles",
 		signature = "SynapseEntity",
 		definition = function(entity){
-			stop("Only Layer entities can contain stored files")
+			stop("Only Layer and Code entities can contain stored files")
 		}
 )
 
 setMethod(
 		f = "storeEntityFiles",
-		signature = "Layer",
+		signature = "LocationOwner",
 		definition = function(entity){
-			if(length(entity$files) == 0)
-				stop("Entity has no files to store")
-			
+			if(length(entity$files) == 0){
+				if(is.null(propertyValue(entity, "id"))){
+					entity <- createEntity(entity)
+				}else{
+					entity <- updateEntity(entity)
+				}
+				return(entity)
+			}
+	
 			if(!all(mk <- file.exists(file.path(entity@location@cacheDir, entity@location@files))))
 				stop("Not all files listed by the entity exist.")
 				
@@ -41,7 +47,7 @@ setMethod(
 			
 			## if zip failes, load uncompressed
 			if(zipRetVal != 0L){
-				msg <- sprintf("Unable to zip layerData Files. Error code: %i.",zipRetVal)
+				msg <- sprintf("Unable to zip Entity Files. Error code: %i.",zipRetVal)
 				if(length(entity@location@files) > 1)
 					stop(msg, " Make sure that zip is installed on your computer. Without zip, only one file can be uploaded at a time")
 				warning("Zip was not installed on your computer. Uploading layer data uncompressed. Directory structure will not be preserved.")
@@ -54,7 +60,7 @@ setMethod(
 
 setMethod(
 		f = "storeFile",
-		signature = signature("Layer", "character"),
+		signature = signature("LocationOwner", "character"),
 		definition = function(entity, filePath) {
 			
 			if(!all(file.exists(filePath))) {
@@ -66,16 +72,20 @@ setMethod(
 			}
 			
 			if(is.null(propertyValue(entity, "id"))){
-				## Create the layer in Synapse
+				## Create the LocationOwner in Synapse
 				entity <- createEntity(entity)
 			} else {
-				## Update the layer in Synapse just in case any other fields were changed
+				## Update the LocationOwner in Synapse just in case any other fields were changed
 				## TODO is this needed?
 				entity <- updateEntity(entity)
 			} 
 			
 			tryCatch(
-					.performMultipartUpload(entity, filePath),
+					if(.getCache('useJavaClient')){
+						.performMultipartUpload(entity, filePath)
+					}else{
+						.performRUpload(entity, filePath)
+					},
 					error = function(e){
 						warning(sprintf("failed to upload data file, please try again: %s", e))
 						return(entity)
@@ -96,7 +106,7 @@ setMethod(
 			if(!file.copy(filePath, destdir, overwrite = TRUE)){
 				warning("Failed to copy file to local cache")
 				## unpack into the local cache and update the location entity
-				entity@location <- CachedLocation(entity@location, .unpack(filepath))
+				location <- CachedLocation(entity@location, .unpack(filepath))
 				
 			} else {
 				## parse out the filename
@@ -104,8 +114,12 @@ setMethod(
 				
 				entity@location@cacheDir <- destdir
 				## unpack into the local cache and update the location entity
-				entity@location <- CachedLocation(entity@location, .unpack(file.path(destdir, filename)))
+				location <- CachedLocation(entity@location, .unpack(file.path(destdir, filename)))
 			}
+
+			## copy the original environment to make entity pass by reference
+			location@objects <- entity@location@objects
+			entity@location <- location
 			entity
 		}
 )

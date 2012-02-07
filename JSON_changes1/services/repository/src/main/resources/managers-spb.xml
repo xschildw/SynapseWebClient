@@ -12,6 +12,7 @@
 	<!-- Trun on Spring's auotproxy using AspectJ's @Aspect annotations. -->
 	<aop:aspectj-autoproxy />
 	
+	<import resource="classpath:concept-dao-beans.spb.xml"/>
 	<import resource="classpath:dao-beans.spb.xml"/>
 	<import resource="controllerProfiler-spb.xml"/>
 	
@@ -28,6 +29,8 @@
 	
 	<!-- The Location helper-->
 	<bean id="locationHelper" class="org.sagebionetworks.repo.util.LocationHelpersImpl" />
+	
+	<bean id="referenceUtil" class="org.sagebionetworks.repo.util.ReferenceUtilImpl" />
 	
 	<bean id="authorizationManager" class="org.sagebionetworks.repo.manager.AuthorizationManagerImpl" />
 	
@@ -46,9 +49,16 @@
 	
 	<bean id="nodeSerializer" class="org.sagebionetworks.repo.manager.backup.NodeSerializerImpl" scope="singleton"/>
 	
-	<bean id="backupDriver" class="org.sagebionetworks.repo.manager.backup.NodeBackupDriverImpl" scope="singleton"/>
+ 	<bean id="searchDocumentDriver" class="org.sagebionetworks.repo.manager.backup.SearchDocumentDriverImpl" scope="singleton"/>
+
+    <bean id="backupDriver"
+    class="org.sagebionetworks.repo.manager.backup.NodeBackupDriverImpl" scope="singleton"/>
 	
 	<bean id="stackStatusManager" class="org.sagebionetworks.repo.manager.StackStatusManagerImpl" scope="singleton"/>
+	
+	<bean id="conceptCache" class="org.sagebionetworks.repo.manager.ontology.ConceptCacheLocalImpl" scope="singleton"/>
+	
+	<bean id="conceptManager" class="org.sagebionetworks.repo.manager.ontology.ConceptManagerImpl" scope="singleton"/>
 
 	<!-- The thread pool used by the backup/restore daemons -->
 	<bean id="backupDaemonThreadPool" class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">

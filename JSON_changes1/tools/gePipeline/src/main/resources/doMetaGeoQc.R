@@ -10,12 +10,15 @@ doMetaGeoQc <-
 	geoData <- downloadEntity(sourceLayerId)
 	sourceLayerName <- propertyValue(geoData, "name")
 	
-	locations<-synapseQuery(sprintf('select * from location where parentId=="%s"', sourceLayerId))
-	if (is.null(locations) || dim(locations)[1]<1) stop(paste("No location for layer", sourceLayerName, "(", sourceLayerId, ")"))
-	md5sum = locations[1,"location.md5sum"]
+	# old way (before layer-location refactor):
+	#locations<-synapseQuery(sprintf('select * from location where parentId=="%s"', sourceLayerId))
+	#if (is.null(locations) || dim(locations)[1]<1) stop(paste("No location for layer", sourceLayerName, "(", sourceLayerId, ")"))
+	#md5sum = locations[1,"location.md5sum"]
+	# new way (after layer-location refactor):
+	md5sum <- propertyValue(geoData, "md5")
 	
 	tryCatch({
-		result <- runWorkflow(geoData$cacheDir)
+		result <- runWorkflow(geoData$cacheDir, workflow='snm')
 	
 		exprLayers <- NULL
 		metadataLayers <- NULL
@@ -80,7 +83,7 @@ doMetaGeoQc <-
 	layer <- addObject(layer, data)
 	layer <- storeEntity(layer)
 	if(deleteDataFiles)
-		unlink(gsub(sprintf("%s/.+$", propertyValue(layer@location, "id")), propertyValue(layer@location,"id"), layer$cacheDir), recursive=T)	
+		unlink(gsub(sprintf("%s/.+$", propertyValue(layer, "id")), propertyValue(layer,"id"), layer$cacheDir), recursive=T)	
 	list(layerId = propertyValue(layer, "id"))	
 }
 
@@ -112,7 +115,7 @@ doMetaGeoQc <-
 	layer <- addObject(layer, data)
 	layer <- storeEntity(layer)
 	if(deleteDataFiles)
-		unlink(gsub(sprintf("%s/.+$", propertyValue(layer@location, "id")), propertyValue(layer@location,"id"), layer$cacheDir), recursive=T)	
+		unlink(gsub(sprintf("%s/.+$", propertyValue(layer, "id")), propertyValue(layer,"id"), layer$cacheDir), recursive=T)	
 
 	list(layerId = propertyValue(layer, "id"))	
 }

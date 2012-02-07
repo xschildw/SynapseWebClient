@@ -57,16 +57,6 @@ integrationTestCreateS4Entities <- function(){
 	checkEquals(propertyValue(createdLayer,"name"), propertyValue(layer, "name"))
 	checkEquals(propertyValue(createdLayer,"parentId"), propertyValue(dataset, "id"))
 	
-	## Create Location
-	location <- new(Class = "Location")
-	propertyValue(location, "parentId") <- propertyValue(createdLayer,"id")
-	propertyValue(location, "type") <- "awss3"
-	propertyValue(location, "path") <- "fakeFile.txt"
-	propertyValue(location, "md5sum") <- "80ca8c7c1c83310e471b8c4b19a86cc9"
-	createdLocation <- createEntity(location)
-	checkEquals(propertyValue(createdLocation,"md5sum"), propertyValue(location, "md5sum"))
-	checkEquals(propertyValue(createdLocation,"parentId"), propertyValue(createdLayer, "id"))
-	checkEquals(propertyValue(createdLocation,"type"), propertyValue(location, "type"))
 	
 }
 
@@ -91,6 +81,42 @@ integrationTestCreateEntityWithAnnotations <-
 	checkEquals(propertyValue(createdDataset,"parentId"), propertyValue(createdProject, "id"))
 	checkEquals(annotValue(createdDataset,"annotKey"), annotValue(dataset, "annotKey"))
 	
+}
+
+integrationTestCreateEntityWithNAAnnotations <- 
+		function()
+{
+	## Create Project
+	project <- new(Class="Project")
+	propertyValue(project,"name") <- synapseClient:::.getCache("testProjectName")
+	annotValue(project, "annotationKey") <- "projectAnnotationValue"
+	createdProject <- createEntity(project)
+	synapseClient:::.setCache("testProject", createdProject)
+	checkEquals(annotValue(createdProject, "annotationKey"), annotValue(project, "annotationKey"))
+	
+	## Create Dataset
+	dataset <- new(Class="Dataset")
+	propertyValue(dataset, "name") <- "testDatasetName"
+	propertyValue(dataset,"parentId") <- propertyValue(createdProject, "id")
+	
+	annots <- list()
+	annots$rawdataavailable <- TRUE 
+	annots$number_of_samples <- 33 
+	annots$contact <- NA 
+	annots$platform <- "HG-U133_Plus_2"
+	annotationValues(dataset) <- annots
+	
+	createdDataset <- createEntity(dataset)
+	
+	checkEquals(propertyValue(createdDataset,"name"), propertyValue(dataset, "name"))
+	checkEquals(propertyValue(createdDataset,"parentId"), propertyValue(createdProject, "id"))
+	checkEquals(annotValue(createdDataset,"platform"), "HG-U133_Plus_2")
+	# TODO this should be a number, not a string
+	checkEquals(annotValue(createdDataset,"number_of_samples"), "33")
+	# TODO this should be a boolean, not a string
+	checkEquals(annotValue(createdDataset,"rawdataavailable"), "TRUE")
+	# TODO this should probably be NA instead of NULL
+	checkTrue(is.null(annotValue(createdDataset,"contact")[[1]]))
 }
 
 integrationTestUpdateS4Entity <-
@@ -141,24 +167,6 @@ integrationTestUpdateS4Entity <-
 	updatedProject <- updateEntity(createdProject)
 	checkEquals(propertyValue(createdProject, "description"), propertyValue(updatedProject, "description"))
 	
-	## Create Location
-	location <- new(Class = "Location")
-	propertyValue(location, "parentId") <- propertyValue(createdLayer,"id")
-	propertyValue(location, "type") <- "awss3"
-	propertyValue(location, "path") <- "fakeFile.txt"
-	propertyValue(location, "md5sum") <- "80ca8c7c1c83310e471b8c4b19a86cc9"
-	createdLocation <- createEntity(location)
-	checkEquals(propertyValue(createdLocation,"md5sum"), propertyValue(location, "md5sum"))
-	checkEquals(propertyValue(createdLocation,"parentId"), propertyValue(createdLayer, "id"))
-	checkEquals(propertyValue(createdLocation,"type"), propertyValue(location, "type"))
-	
-	## update the location
-	propertyValue(createdLocation, "md5sum") <- "f0d66fb8fd48901050b32d060c4de3c9"
-	annotValue(createdLocation, "anAnnotation") <- "anAnnotationValue"
-	updatedLocation <- updateEntity(createdLocation)
-	checkEquals(propertyValue(createdLocation, "md5sum"), propertyValue(updatedLocation, "md5sum"))
-	checkTrue(is.null(annotValue(updatedLocation, "anAnnotation")))
-	checkEquals(propertyValue(createdLocation, "id"), propertyValue(updatedLocation, "id"))
 }
 
 integrationTestDeleteEntity <- 
@@ -173,8 +181,24 @@ integrationTestDeleteEntity <-
 	propertyValue(dataset, "name") <- "testDatasetName"
 	propertyValue(dataset,"parentId") <- propertyValue(createdProject, "id")
 	createdDataset <- createEntity(dataset)
+	createdLayer <- Layer(list(name="aLayer", type="C", parentId=propertyValue(createdDataset, "id")))
+	layer <- addObject(createdLayer, "foo", "bar")
+	createdLayer <- storeEntity(createdLayer)
+
+	cacheDir <- createdLayer$cacheDir
+	checkTrue(file.exists(cacheDir))
+	deleteEntity(createdLayer)
+	checkTrue(!file.exists(cacheDir))
+
+
+	deletedProject <- deleteEntity(createdProject)
+	checkEquals(propertyValue(deletedProject, "id"), NULL)
 	
-	deleteEntity(createdProject)
+	checkTrue(!any(grepl('createdProject', ls())))
+	createdProject <- synapseClient:::.getCache("testProject")
+	checkEquals(propertyValue(createdProject, "name"), propertyValue(deletedProject, "name"))
+	checkEquals(propertyValue(deletedProject,"id"), NULL)
+
 	checkException(refreshEntity(createdDataset))
 	checkException(refreshEntity(createdProject))
 	synapseClient:::.deleteCache("testProject")

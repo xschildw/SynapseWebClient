@@ -9,15 +9,13 @@ import org.codehaus.jackson.schema.JsonSchema;
 import org.sagebionetworks.repo.model.ACLInheritanceException;
 import org.sagebionetworks.repo.model.AccessControlList;
 import org.sagebionetworks.repo.model.Annotations;
-import org.sagebionetworks.repo.model.Entity;
 import org.sagebionetworks.repo.model.ConflictingUpdateException;
 import org.sagebionetworks.repo.model.DatastoreException;
+import org.sagebionetworks.repo.model.Entity;
 import org.sagebionetworks.repo.model.EntityHeader;
 import org.sagebionetworks.repo.model.InvalidModelException;
-import org.sagebionetworks.repo.model.Entity;
 import org.sagebionetworks.repo.model.PaginatedResults;
 import org.sagebionetworks.repo.model.QueryResults;
-import org.sagebionetworks.repo.model.S3Token;
 import org.sagebionetworks.repo.model.UnauthorizedException;
 import org.sagebionetworks.repo.model.UserInfo;
 import org.sagebionetworks.repo.model.query.BasicQuery;
@@ -466,4 +464,24 @@ public interface GenericEntityController {
 	 */
 	public EntityHeader getEntityHeader(String userId, String entityId) throws NotFoundException, DatastoreException, UnauthorizedException;
 
+	/**
+	 * Get the entities which refer to the given entity
+	 * @param userId
+	 * @param entityId
+	 * @return the headers of the entities which have references to 'entityId'
+	 * 
+	 */
+	public List<EntityHeader> getEntityReferences(String userId, String entityId)
+			throws NotFoundException, DatastoreException;	
+	
+	/**
+	 * Get the entities which refer to the given version of the given entity
+	 * @param userId
+	 * @param entityId
+	 * @param versionNumber
+	 * @return the headers of the entities which have references to 'entityId'
+	 * 
+	 */
+	public List<EntityHeader> getEntityReferences(String userId, String entityId, int versionNumber)
+			throws NotFoundException, DatastoreException;
 }

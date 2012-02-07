@@ -13,8 +13,17 @@ setGeneric(
 
 setMethod(
 		f = "getObject",
-		signature = signature("Layer", "character"),
+		signature = signature("LocationOwner", "character"),
 		definition = function(entity, which){
-			get(which, envir = entity@objects)
+			getObject(entity@location, which)
 		}
 )
+
+setMethod(
+                f = "getObject",
+                signature = signature("Location", "character"),
+                definition = function(entity, which){
+                        get(which, envir = entity@objects)
+                }
+)
+
