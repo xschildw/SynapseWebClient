@@ -35,6 +35,8 @@ import org.sagebionetworks.repo.model.DatastoreException;
 import org.sagebionetworks.repo.model.EntityHeader;
 import org.sagebionetworks.repo.model.EntityType;
 import org.sagebionetworks.repo.model.Project;
+import org.sagebionetworks.repo.model.Layer;
+import org.sagebionetworks.repo.model.LayerTypeNames;
 import org.sagebionetworks.repo.model.Reference;
 import org.sagebionetworks.repo.model.ResourceAccess;
 import org.sagebionetworks.repo.model.Step;
@@ -351,75 +353,87 @@ public class DefaultControllerAutowiredTest {
 
 	}
 
-	//@Test
-	//public void testGetEntityReferences() throws ServletException, IOException{
-	//	// Create a project
-	//	Project project = new Project();
-	//	project.setName("testCreateProject");
-	//	project.setVersionLabel("1");
-	//	Project clone = ServletTestHelper.createEntity(dispatchServlet, project, userName);
-	//	assertEquals(1, clone.getVersionLabel());
-	//	assertNotNull(clone);
-	//	toDelete.add(clone.getId());
-	//
-	//	String userId = userName;
-	//	String accessType = AuthorizationConstants.ACCESS_TYPE.READ.name();
-	//
-	//	// get references to object
-	//	List<Map> ehs = ServletTestHelper.getEntityReferences(dispatchServlet, clone.getId(), userId);
-	//	assertEquals(0, ehs.size());
-	//
-	//	// add step
-	//	Step step = null;
-	//	Step stepClone = null;
-	//	{
-	//		step = new Step();
-	//		Reference ref = new Reference();
-	//		ref.setTargetId(clone.getId());
-	//		Set<Reference> refs = new HashSet<Reference>();
-	//		refs.add(ref);
-	//		step.setInput(refs);
-	//		stepClone = ServletTestHelper.createEntity(dispatchServlet, step, userName);
-	//		toDelete.add(stepClone.getId());
-	//		Set<Reference> refs2 = stepClone.getInput();
-	//		assertEquals(1, refs2.size());
-	//		Reference ref2 = refs2.iterator().next();
-	//		// NOTE:  Since we don't specify the version of the target, it is automatically set to the current version!
-	//		assertEquals(clone.getVersionLabel(), ""+ref2.getTargetVersionLabel());
-	//	}
-	//
-	//	// get references
-	//	ehs = ServletTestHelper.getEntityReferences(dispatchServlet, clone.getId(), userId);
-	//	assertEquals(1, ehs.size());
-	//	assertEquals(stepClone.getId(), ehs.iterator().next().get("id"));
-	//
-	//	// try referencing a specific, nonexistent version
-	//	int v = Integer.parseInt(clone.getVersionNumber());
-	//	{
-	//		step = new Step();
-	//		Reference ref = new Reference();
-	//		ref.setTargetId(clone.getId());
-	//		ref.setTargetVersionNumber((long)(v+1));
-	//		Set<Reference> refs = new HashSet<Reference>();
-	//		refs.add(ref);
-	//		step.setInput(refs);
-	//		stepClone = ServletTestHelper.createEntity(dispatchServlet, step, userName);
-	//		toDelete.add(stepClone.getId());
-	//	}
-	//
-	//	// both Steps refer to some version of the Project
-	//	ehs = ServletTestHelper.getEntityReferences(dispatchServlet, clone.getId(), userId);
-	//	assertEquals(ehs.toString(), 2, ehs.size());
-	//
-	//	// only one step refers to version 1 of the Project
-	//	ehs = ServletTestHelper.getEntityReferences(dispatchServlet, clone.getId(), v, userId);
-	//	assertEquals(ehs.toString(), 1, ehs.size());
-	//
-	//	// No Step refers to version 100 of the Project
-	//	ehs = ServletTestHelper.getEntityReferences(dispatchServlet, clone.getId(), v+99, userId);
-	//	assertEquals(0, ehs.size());
-	//
-	//
-	//}
+	@Test
+	public void testGetEntityReferences() throws ServletException, IOException{
+		// Create project
+		Project project = new Project();
+		project.setName("testProject");
+		Project projectClone = ServletTestHelper.createEntity(dispatchServlet, project, userName);
+		toDelete.add(projectClone.getId());
+		Dataset dataset = new Dataset();
+		dataset.setName("testDataset");
+		dataset.setParentId(projectClone.getId());
+		Dataset datasetClone = ServletTestHelper.createEntity(dispatchServlet, dataset, userName);
+		toDelete.add(datasetClone.getId());
+		// Create a layer
+		Layer layer = new Layer();
+		layer.setName("testLayer");
+		layer.setVersionNumber((Long)1L);
+		layer.setParentId(datasetClone.getId());
+		layer.setType(LayerTypeNames.E);
+		Layer clone = ServletTestHelper.createEntity(dispatchServlet, layer, userName);
+		assertEquals((Long)1L, clone.getVersionNumber());
+		assertNotNull(clone);
+		toDelete.add(clone.getId());
+
+		String userId = userName;
+		String accessType = AuthorizationConstants.ACCESS_TYPE.READ.name();
+
+		// get references to object
+		List<Map> ehs = ServletTestHelper.getEntityReferences(dispatchServlet, clone.getId(), userId);
+		assertEquals(0, ehs.size());
+
+		// add step
+		Step step = null;
+		Step stepClone = null;
+		{
+			step = new Step();
+			Reference ref = new Reference();
+			ref.setTargetId(clone.getId());
+			Set<Reference> refs = new HashSet<Reference>();
+			refs.add(ref);
+			step.setInput(refs);
+			stepClone = ServletTestHelper.createEntity(dispatchServlet, step, userName);
+			toDelete.add(stepClone.getId());
+			Set<Reference> refs2 = stepClone.getInput();
+			assertEquals(1, refs2.size());
+			Reference ref2 = refs2.iterator().next();
+			// NOTE:  Since we don't specify the version of the target, it is automatically set to the current version!
+			assertEquals(clone.getVersionNumber(), ref2.getTargetVersionNumber());
+		}
+
+		// get references
+		ehs = ServletTestHelper.getEntityReferences(dispatchServlet, clone.getId(), userId);
+		assertEquals(1, ehs.size());
+		assertEquals(stepClone.getId(), ehs.iterator().next().get("id"));
+
+		// try referencing a specific, nonexistent version
+		Long v = clone.getVersionNumber();
+		{
+			step = new Step();
+			Reference ref = new Reference();
+			ref.setTargetId(clone.getId());
+			ref.setTargetVersionNumber(v+1);
+			Set<Reference> refs = new HashSet<Reference>();
+			refs.add(ref);
+			step.setInput(refs);
+			stepClone = ServletTestHelper.createEntity(dispatchServlet, step, userName);
+			toDelete.add(stepClone.getId());
+		}
+
+		// both Steps refer to some version of the Project
+		ehs = ServletTestHelper.getEntityReferences(dispatchServlet, clone.getId(), userId);
+		assertEquals(ehs.toString(), 2, ehs.size());
+
+		// only one step refers to version 1 of the Project
+		ehs = ServletTestHelper.getEntityReferences(dispatchServlet, clone.getId(), v, userId);
+		assertEquals(ehs.toString(), 1, ehs.size());
+
+		// No Step refers to version 100 of the Project
+		ehs = ServletTestHelper.getEntityReferences(dispatchServlet, clone.getId(), v+99, userId);
+		assertEquals(0, ehs.size());
+
+
+	}
 
 }
