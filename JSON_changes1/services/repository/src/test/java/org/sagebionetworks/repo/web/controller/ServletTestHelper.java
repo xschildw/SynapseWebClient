@@ -1450,7 +1450,7 @@ public class ServletTestHelper {
 	}
 
 	public static List<Map> getEntityReferences(HttpServlet dispatchServlet,
-			String id, int versionNumber, String userId) throws ServletException, IOException {
+			String id, Long versionNumber, String userId) throws ServletException, IOException {
 		MockHttpServletRequest request = new MockHttpServletRequest();
 		MockHttpServletResponse response = new MockHttpServletResponse();
 		request.setMethod("GET");
