@@ -938,6 +938,12 @@ public class Synapse {
 			if (requestHeaders.containsKey(REQUEST_PROFILE_DATA))
 				requestHeaders.remove(REQUEST_PROFILE_DATA);
 		}
+		
+		// remove session tken if it is null
+		if(requestHeaders.containsKey(SESSION_TOKEN_HEADER) && requestHeaders.get(SESSION_TOKEN_HEADER) == null) {
+			requestHeaders.remove(SESSION_TOKEN_HEADER);
+		}
+		
 		JSONObject results = null;
 		URL requestUrl = null;
 
@@ -967,7 +973,11 @@ public class Synapse {
 			}
 
 			if (null != responseBody) {
-				results = new JSONObject(responseBody);
+				try {
+					results = new JSONObject(responseBody);
+				} catch (JSONException jsone) {
+					throw new SynapseServiceException("responseBody: <<"+responseBody+">>", jsone);
+				}
 				if (log.isDebugEnabled()) {
 					if(authEndpoint.equals(endpoint)) {
 						log.debug(requestMethod + " " + requestUrl + " : (not logging auth request details)");

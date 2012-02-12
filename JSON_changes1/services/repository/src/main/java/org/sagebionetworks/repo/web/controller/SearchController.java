@@ -82,7 +82,7 @@ public class SearchController extends BaseController {
 			@RequestParam(value = AuthorizationConstants.USER_ID_PARAM, required = true) String userId,
 			@RequestParam(value = "q", required = false) String searchQuery,
 			HttpServletRequest request) throws ClientProtocolException,
-			IOException, HttpClientHelperException, JSONException,
+			IOException, HttpClientHelperException,
 			DatastoreException, NotFoundException {
 
 		log.debug("Got raw query " + searchQuery);
@@ -93,13 +93,19 @@ public class SearchController extends BaseController {
 		}
 
 		// Merge boolean queries as needed and escape them
-		String cleanedSearchQuery = SearchHelper.cleanUpBooleanSearchQueries(searchQuery);
+		String cleanedSearchQuery = SearchHelper.cleanUpSearchQueries(searchQuery);
 
 		String url = CLOUD_SEARCH_ENDPOINT + "?" + cleanedSearchQuery;
-		log.debug("About to request " + url);
 
+		log.debug("About to request from CloudSearch: " + url);
 		String response = HttpClientHelper.getContent(httpClient, url);
-		return SearchHelper.cloudSearchToSynapseSearchResults(response);
+		log.debug("Response from CloudSearch: " + response);
+
+		try {
+			return SearchHelper.csSearchResultsToSynapseSearchResults(response);
+		} catch (JSONException e) {
+			throw new DatastoreException("Results conversion failed for request " + url + " with response " + response, e);
+		}
 	}
 
 	/**
@@ -131,7 +137,7 @@ public class SearchController extends BaseController {
 		}
 
 		// Merge boolean queries as needed and escape them
-		String cleanedSearchQuery = SearchHelper.cleanUpBooleanSearchQueries(searchQuery);
+		String cleanedSearchQuery = SearchHelper.cleanUpSearchQueries(searchQuery);
 
 		String url = CLOUD_SEARCH_ENDPOINT + "?" + cleanedSearchQuery;
 		log.debug("About to request " + url);

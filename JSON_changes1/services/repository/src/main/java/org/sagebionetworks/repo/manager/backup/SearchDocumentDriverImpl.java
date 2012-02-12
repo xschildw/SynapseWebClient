@@ -80,6 +80,7 @@ public class SearchDocumentDriverImpl implements SearchDocumentDriver {
 				.unmodifiableMap(searchableNodeAnnotations);
 
 		Map<String, FacetTypeNames> facetTypes = new HashMap<String, FacetTypeNames>();
+		facetTypes.put("node_type", FacetTypeNames.LITERAL);
 		facetTypes.put("disease", FacetTypeNames.LITERAL);
 		facetTypes.put("tissue", FacetTypeNames.LITERAL);
 		facetTypes.put("species", FacetTypeNames.LITERAL);
@@ -266,11 +267,11 @@ public class SearchDocumentDriverImpl implements SearchDocumentDriver {
 
 		JSONObject document = formulateSearchDocument(node, rev,
 				benefactorBackup.getAcl());
-		outputStream.write(convertToCloudSearchDocument(document));
+		outputStream.write(cleanSearchDocument(document));
 		outputStream.flush();
 	}
 
-	static byte[] convertToCloudSearchDocument(JSONObject document)
+	static byte[] cleanSearchDocument(JSONObject document)
 			throws JSONException, UnsupportedEncodingException {
 		String serializedDocument = document.toString(4);
 

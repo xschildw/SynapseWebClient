@@ -33,7 +33,8 @@ public class SearchHelper {
 			.getName());
 
 	/**
-	 * Formulate the boolean query to enforce an access controll list for a particular user
+	 * Formulate the boolean query to enforce an access controll list for a
+	 * particular user
 	 * 
 	 * @param userInfo
 	 * @return the acl boolean query
@@ -53,8 +54,8 @@ public class SearchHelper {
 			if (0 < authorizationFilter.length()) {
 				authorizationFilter += " ";
 			}
-			authorizationFilter += SearchDocumentDriverImpl.ACL_INDEX_FIELD + ":'" + group.getName()
-					+ "'";
+			authorizationFilter += SearchDocumentDriverImpl.ACL_INDEX_FIELD
+					+ ":'" + group.getName() + "'";
 		}
 		if (1 == groups.size()) {
 			authorizationFilter = "bq=" + authorizationFilter;
@@ -65,18 +66,19 @@ public class SearchHelper {
 	}
 
 	/**
-	 * Merge and escape CloudSearch boolean queries as needed
+	 * Merge and urlescape CS boolean queries as needed. urlescapse free text
+	 * queries as needed too.
 	 * 
 	 * @param query
 	 * @return the cleaned up query string
 	 * @throws UnsupportedEncodingException
 	 */
-	public static String cleanUpBooleanSearchQueries(String query)
+	public static String cleanUpSearchQueries(String query)
 			throws UnsupportedEncodingException {
 
 		// Make sure the url is well-formed so that we can correctly clean it up
 		String decodedQuery = URLDecoder.decode(query, "UTF-8");
-		if (decodedQuery.contains("%")) {
+		if (decodedQuery.contains("%") || decodedQuery.contains("+")) {
 			throw new IllegalArgumentException("Query is incorrectly encoded: "
 					+ decodedQuery);
 		}
@@ -86,7 +88,7 @@ public class SearchHelper {
 		int numAndClauses = 0;
 		String splits[] = decodedQuery.split("&");
 		for (int i = 0; i < splits.length; i++) {
-			if (0 == splits[i].indexOf("bq=")) {
+			if (splits[i].startsWith("bq=")) {
 				if (0 < booleanQuery.length()) {
 					booleanQuery += " ";
 				}
@@ -101,7 +103,13 @@ public class SearchHelper {
 				if (0 < escapedQuery.length()) {
 					escapedQuery += "&";
 				}
-				escapedQuery += splits[i];
+				if (splits[i].startsWith("q=")) {
+					escapedQuery += "q="
+							+ URLEncoder
+									.encode(splits[i].substring(2), "UTF-8");
+				} else {
+					escapedQuery += splits[i];
+				}
 			}
 		}
 
@@ -121,54 +129,65 @@ public class SearchHelper {
 	/**
 	 * Convert from CloudSearch JSON to a JSONEntity
 	 * 
-	 * TODO later when Schema2Pojo supports maps, make a JSONEntity for the
-	 * CloudSearch object
+	 * TODO later when Schema2Pojo supports maps, make a JSONEntity for the CS
+	 * object
 	 * 
-	 * @param cloudSearchResponse
+	 * @param csResponse
 	 * @return the SearchResults JSONEntity
 	 * @throws JSONException
 	 */
-	public static SearchResults cloudSearchToSynapseSearchResults(
-			String cloudSearchResponse) throws JSONException {
-		JSONObject csResults = new JSONObject(cloudSearchResponse);
+	public static SearchResults csSearchResultsToSynapseSearchResults(
+			String csResponse) throws JSONException {
+		JSONObject csResults = new JSONObject(csResponse);
 		SearchResults results = new SearchResults();
+		List<Hit> hits = new ArrayList<Hit>();
+		results.setHits(hits);
+		List<Facet> facets = new ArrayList<Facet>();
+		results.setFacets(facets);
+
 		results.setMatchExpression(csResults.getString("match-expr"));
 		results.setFound(csResults.getJSONObject("hits").getLong("found"));
 		results.setStart(csResults.getJSONObject("hits").getLong("start"));
-		List<Hit> hits = new ArrayList<Hit>();
-		results.setHits(hits);
 
 		JSONArray csHits = csResults.getJSONObject("hits").getJSONArray("hit");
 		for (int i = 0; i < csHits.length(); i++) {
 			JSONObject csHit = csHits.getJSONObject(i).getJSONObject("data");
 			Hit hit = new Hit();
-			if (csHit.has("id")) {
-				hit.setId(csHit.getString("id"));
-			}
-			if (csHit.has("name")) {
-				hit.setName(csHit.getString("name"));
-			}
-			if (csHit.has("etag")) {
-				hit.setEtag(csHit.getString("etag"));
-			}
-			if (csHit.has("description")) {
-				hit.setDescription(csHit.getString("description"));
+			for (String dataName : JSONObject.getNames(csHit)) {
+				String dataValue;
+				JSONArray dataValueArray = csHit.optJSONArray(dataName);
+				if (null != dataValueArray) {
+					dataValue = dataValueArray.getString(0);
+				} else {
+					dataValue = csHit.getString(dataName);
+				}
+				// If we were using Java 7 we could do a switch statement on a
+				// String
+				if (dataName.equals("id")) {
+					hit.setId(dataValue);
+				} else if (dataName.equals("name")) {
+					hit.setName(dataValue);
+				} else if (dataName.equals("etag")) {
+					hit.setEtag(dataValue);
+				} else if (dataName.equals("description")) {
+					hit.setDescription(dataValue);
+				} else {
+					log
+							.warn("result field "
+									+ dataName
+									+ " is not properly configured, add it to the result fields that are supported");
+				}
 			}
 			hits.add(hit);
 		}
 
-		if (!csResults.has("facets")) {
+		JSONObject csFacets = csResults.optJSONObject("facets");
+		if ((null == csFacets) || (null == JSONObject.getNames(csFacets))) {
 			return results;
 		}
 
-		List<Facet> facets = new ArrayList<Facet>();
-		results.setFacets(facets);
-
-		JSONObject csFacets = csResults.getJSONObject("facets");
 		for (String facetName : JSONObject.getNames(csFacets)) {
-			Facet facet = new Facet();
-			facet.setName(facetName);
-
+			JSONObject csFacet = csFacets.getJSONObject(facetName);
 			FacetTypeNames facetType = SearchDocumentDriverImpl.FACET_TYPES
 					.get(facetName);
 			if (null == facetType) {
@@ -180,15 +199,22 @@ public class SearchHelper {
 				continue;
 			}
 
-			if (FacetTypeNames.DATE == facetType
-					|| FacetTypeNames.CONTINUOUS == facetType) {
-				facet.setMin(csFacets.getJSONObject(facetName).getLong("min"));
-				facet.setMax(csFacets.getJSONObject(facetName).getLong("max"));
-			}
+			Facet facet = new Facet();
+			facet.setName(facetName);
+			facet.setType(facetType);
 			facets.add(facet);
 
-			JSONArray csConstraints = csFacets.getJSONObject(facetName)
-					.optJSONArray("constraints");
+			if (FacetTypeNames.DATE == facetType
+					|| FacetTypeNames.CONTINUOUS == facetType) {
+				// Dev Note: don't do optLong here because zero for a min and
+				// max might not make sense for most facets
+				if (csFacet.has("min") && csFacet.has("max")) {
+					facet.setMin(csFacet.getLong("min"));
+					facet.setMax(csFacet.getLong("max"));
+				}
+			}
+
+			JSONArray csConstraints = csFacet.optJSONArray("constraints");
 			if (null == csConstraints)
 				continue;
 
