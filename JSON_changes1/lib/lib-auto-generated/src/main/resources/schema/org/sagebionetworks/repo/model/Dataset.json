@@ -39,11 +39,7 @@
 		"releaseDate":{
 			"type":"string",
 			"format":"date-time"
-		},
-		"species": {
-			"type": "string",
-			"description": "Species of the samples of this dataset."
-		}	}
-        
+		}
+	}
 }
 }

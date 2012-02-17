@@ -60,6 +60,7 @@ public class CodeMetadataProvider implements
 
 	@Override
 	public void validateEntity(Code entity, EntityEvent event) {
+// TODO: Should the versionNumber be set to 1 if null?
 //		if (entity.getVersion() == null) {
 //			entity.setVersion("1.0.0");
 //		}

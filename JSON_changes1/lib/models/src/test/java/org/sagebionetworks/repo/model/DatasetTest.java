@@ -33,7 +33,8 @@ public class DatasetTest {
 		ds1.setModifiedOn(d);
 		ds1.setName("name");
 		ds1.setUri("uri");
-//		ds1.setVersion("1.0.0");
+
+//	TODO: Remove Locationable from .json and following code
 		ds1.setVersionComment("versionComment");
 		ds1.setVersionLabel("versionLabel");
 		ds1.setVersionNumber(1L);
@@ -41,37 +42,20 @@ public class DatasetTest {
 		ds1.setVersions("versions");
 		ds1.setContentType("txt");
 		ds1.setMd5("abcdef");
-
-		ds1.setEulaId("0");
-		ds1.setHasClinicalData(Boolean.TRUE);
-		ds1.setHasGeneticData(Boolean.TRUE);
-		ds1.setHasExpressionData(Boolean.TRUE);
-
 		List<LocationData> ldl = new ArrayList<LocationData>();
 		LocationData ld = new LocationData();
 		ld.setPath("path");
 		ld.setType(LocationTypeNames.sage);
 		ldl.add(ld);
 		ds1.setLocations(ldl);
-		
-//		CurationTrackingData cdt = new CurationTrackingData();
-//		cdt.setOwner("owner");
-//		cdt.setStatus(CurationStatusNames.loaded);
-//
-//		AcquisitionTrackingData adt = new AcquisitionTrackingData();
-//		adt.setOwner("owner");
-//		adt.setComments("comments");
-//		adt.setDataAcquisitionReference("reference");
-//		adt.setFollowupRequirements("followupRequirements");
-//		adt.setRequestor("requestor");
-//		adt.setStatus(AcquisitionStatusNames.denied);
-//
-//		DatasetTrackingData ddt = new DatasetTrackingData();
-//		ddt.setAcquisitionTrackingData(adt);
-//		ddt.setCurationTrackingData(cdt);
-//		
-//		ds1.setTrackingData(ddt);
-		
+
+
+		ds1.setEulaId("0");
+		ds1.setHasClinicalData(Boolean.TRUE);
+		ds1.setHasGeneticData(Boolean.TRUE);
+		ds1.setHasExpressionData(Boolean.TRUE);
+		ds1.setStatus("status");
+
 //		String disease1, disease2;
 //		disease1 = "disease1";
 //		disease2 = "disease2";

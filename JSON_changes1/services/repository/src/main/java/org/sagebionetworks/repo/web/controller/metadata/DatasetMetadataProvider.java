@@ -106,6 +106,7 @@ public class DatasetMetadataProvider implements TypeSpecificMetadataProvider<Dat
 	 */
 	@Override
 	public void validateEntity(Dataset entity, EntityEvent event) {
+// TODO: Dataset is not going to be Locationable anymore, version will disappear
 //		if(entity.getVersion() == null){
 //			entity.setVersion("1.0.0");
 //		}

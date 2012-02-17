@@ -226,9 +226,8 @@ public class SerializationUseCases {
 		ds.setParentId("90");
 		ds.setReleaseDate(new Date(45669l));
 		ds.setStatus("cool");
-//		ds.setLocations("location/456");
+// TODO: Removing Locationable from dataset, no need to add Location data in test
 		ds.setUri("dataset/456");
-//		ds.setVersion("1.0.0");
 		return ds;
 	}
 

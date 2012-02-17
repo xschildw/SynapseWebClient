@@ -32,11 +32,15 @@
 			],
             
 		},
+        "tissueType":{
+            "type":"string",
+            "description":"Type of tissue for the samples in this layer"
+        },
 		"platform":{
 			"type":"string",
 			"description":"Chip platform for the samples in this layer"
 		},
-		"platformVendor":{
+		"processingFacility":{
 			"type":"string",
 			"description":"Location where the samples for this layer were processed"
 		},

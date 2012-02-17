@@ -77,6 +77,7 @@ public class LayerMetadataProvider implements
 
 	@Override
 	public void validateEntity(Layer entity, EntityEvent event) {
+// TODO: Sould we set version info if null?
 //		if (entity.getVersion() == null) {
 //			entity.setVersion("1.0.0");
 //		}

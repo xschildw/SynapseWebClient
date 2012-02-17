@@ -17,61 +17,9 @@
 					"destination": {"name": "", "type": "", "bucket": "deleted"}
 				},
 				{
-					"source": {"name": "Acknowledgement", "type": "string", "bucket": "additional"},
-					"destination": {"name": "acknowledgement", "type": "string", "bucket": "additional"}
-				},
-				{
-					"source": {"name": "Citation", "type": "string", "bucket": "additional"},
-					"destination": {"name": "citation", "type": "string", "bucket": "additional"}
-				},
-				{
-					"source": {"name": "Cross", "type": "string", "bucket": "additional"},
-					"destination": {"name": "cross", "type": "string", "bucket": "additional"}
-				},
-				{
-					"source": {"name": "CurationStep", "type": "string", "bucket": "additional"},
-					"destination": {"name": "curationStep", "type": "string", "bucket": "additional"}
-				},
-				{
-					"source": {"name": "DataSource", "type": "string", "bucket": "additional"},
-					"destination": {"name": "dataSource", "type": "string", "bucket": "additional"}
-				},
-				{
-					"source": {"name": "Institution", "type": "string", "bucket": "additional"},
-					"destination": {"name": "institution", "type": "string", "bucket": "additional"}
-				},
-				{
-					"source": {"name": "Internal_Name", "type": "string", "bucket": "additional"},
-					"destination": {"name": "internalName", "type": "string", "bucket": "additional"}
-				},
-				{
-					"source": {"name": "Investigator", "type": "string", "bucket": "additional"},
-					"destination": {"name": "investigator", "type": "string", "bucket": "additional"}
-				},
-				{
-					"source": {"name": "Posting_Restriction", "type": "string", "bucket": "additional"},
-					"destination": {"name": "postingRestriction", "type": "string", "bucket": "additional"}
-				},
-				{
 					"source": {"name": "Tissue_Tumor", "type": "string", "bucket": "additional"},
 					"destination": {"name": "", "type": "", "bucket": "deleted"}
-				},
-				{
-					"source": {"name": "Type", "type": "string", "bucket": "additional"},
-					"destination": {"name": "type", "type": "string", "bucket": "additional"}
-				},
-				{
-					"source": {"name": "pubmed_id", "type": "long", "bucket": "additional"},
-					"destination": {"name": "pubmedId", "type": "long", "bucket": "additional"}
-				},
-				{
-					"source": {"name": "curationNotes", "type": "string", "bucket": "additional"},
-					"destination": {"name": "releaseNotes", "type": "string", "bucket": "additional"}
-				},
-				{
-					"source": {"name": "release_notes", "type": "string", "bucket": "additional"},
-					"destination": {"name": "releaseNotes", "type": "string", "bucket": "additional"}
-				},
+				}
 			]
 		},
 		{
@@ -88,14 +36,6 @@
 				{
 					"source": {"name": "QcDate", "type": "string", "bucket": "primary"},
 					"destination": {"name": "", "type": "", "bucket": "deleted"}
-				},
-				{
-					"source": {"name": "processingFacility", "type": "string", "bucket": "primary"},
-					"destination": {"name": "platformVendor", "type": "string", "bucket": "primary"}
-				},
-				{
-					"source": {"name": "num_samples", "type": "long", "bucket": "primary"},
-					"destination": {"name": "numSamples", "type": "long", "bucket": "primary"}
 				}
 			]
 		},

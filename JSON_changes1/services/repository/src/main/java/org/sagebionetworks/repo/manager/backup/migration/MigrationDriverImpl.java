@@ -5,7 +5,7 @@ import java.util.List;
 
 import org.sagebionetworks.repo.model.NodeRevisionBackup;
 import org.sagebionetworks.repo.model.EntityType;
-//import org.sagebionetworks.repo.model.registry.MigrationDataLoaderImpl;
+import org.sagebionetworks.repo.model.registry.MigrationDataLoaderImpl;
 import org.sagebionetworks.repo.model.registry.MigrationSpecDataLoaderImpl;
 import org.sagebionetworks.repo.model.registry.MigrationSpecData;
 

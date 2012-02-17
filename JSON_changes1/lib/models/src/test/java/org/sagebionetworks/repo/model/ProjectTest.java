@@ -31,7 +31,6 @@ public class ProjectTest {
 		p1.setName("name");
 		p1.setParentId("0");
 		p1.setUri("uri");
-//		p1.setVersion("version");
 		
 		p1.setStatus("status");
 
@@ -60,7 +59,6 @@ public class ProjectTest {
 //		p1.setModifiedOn(d);
 //		p1.setParentId("0");
 //		p1.setUri("uri");
-//		p1.setVersion("version");
 //		adapter = p1.writeToJSONObject(adapter);
 //		
 //		return;
