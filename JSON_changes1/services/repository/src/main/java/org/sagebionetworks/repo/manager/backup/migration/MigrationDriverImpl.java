@@ -32,7 +32,7 @@ public class MigrationDriverImpl implements MigrationDriver{
 		// The first step goes from v0 to v1
 		revisionSteps.add(new RevisionStepV0toV1(msd));
 		// Apply an Migration data
-//		revisionSteps.add(new ApplyMigrationData(new  MigrationDataLoaderImpl().loadMigrationData()));
+		revisionSteps.add(new ApplyMigrationData(new  MigrationDataLoaderImpl().loadMigrationData()));
 		revisionSteps.add(new GenericMigrator(msd));
 	}
 
