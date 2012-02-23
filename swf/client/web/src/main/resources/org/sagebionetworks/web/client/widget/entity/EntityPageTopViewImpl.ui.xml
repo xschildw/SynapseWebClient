@@ -1,0 +1,34 @@
+<!DOCTYPE ui:UiBinder SYSTEM "http://dl.google.com/gwt/DTD/xhtml.ent">
+<ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"
+	xmlns:g="urn:import:com.google.gwt.user.client.ui" xmlns:d="urn:import:com.google.gwt.dom.client">
+
+	<ui:with field='icons'
+		type='org.sagebionetworks.web.client.IconsImageBundle' />
+
+	<g:HTMLPanel>
+
+				<div class="span-24 notopmargin">
+					<g:SimplePanel ui:field="breadcrumbsPanel"/>
+				</div>
+				
+				<div class="span-24 notopmargin">
+					<div class="span-17 notopmargin">
+					&nbsp;
+					</div>
+					<div class="span-6 notopmargin" style="text-align: right;">
+						<g:SimplePanel ui:field="actionMenuPanel" />
+					</div>
+				</div>
+				
+				<div class="span-24 notopmargin">
+	  				<div class="portal">		
+						<!-- <g:SimplePanel ui:field="portalPanel" styleName="portal rounded dropshaddow"/>  -->							
+						<g:SimplePanel ui:field="portalPanel"/>	
+						<g:SimplePanel ui:field="portalPanelSingleCol"/>							
+						<g:SimplePanel ui:field="portalPanelThreeCol"/>
+						<g:SimplePanel ui:field="portalPanelRstudio"/>
+					</div>						
+				</div>
+	</g:HTMLPanel>
+</ui:UiBinder>
+
