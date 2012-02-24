@@ -96,11 +96,6 @@ public class TemplatedConfigurationImpl implements TemplatedConfiguration {
 	@Override
 	public String getProperty(String propertyName) {
 		String propertyValue = null;
-		log
-				.info(propertyName
-						+ "="
-						+ System.getProperty(propertyName)
-						+ " from System properties (just FYI if replacement syntax was used in the props file)");
 		if (stackPropertyOverrides.containsKey(propertyName)) {
 			propertyValue = stackPropertyOverrides.getProperty(propertyName);
 			log.info(propertyName + "=" + propertyValue
