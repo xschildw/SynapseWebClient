@@ -9,7 +9,8 @@ import com.amazonaws.services.simpleworkflow.flow.annotations.WorkflowRegistrati
  *
  */
 @Workflow
-@WorkflowRegistrationOptions(defaultExecutionStartToCloseTimeoutSeconds = TcgaActivities.ONE_DAY_OF_SECONDS) 
+@WorkflowRegistrationOptions(defaultExecutionStartToCloseTimeoutSeconds = TcgaActivities.ONE_DAY_OF_SECONDS,
+		defaultTaskList = TcgaWorkflow.DECISIONS_TASK_LIST) 
 public interface TcgaWorkflow {
 	
 	/**

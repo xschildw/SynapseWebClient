@@ -2,6 +2,7 @@ package org.sagebionetworks.workflow.curation;
 
 import org.sagebionetworks.workflow.Constants;
 
+import com.amazonaws.services.simpleworkflow.flow.annotations.Asynchronous;
 import com.amazonaws.services.simpleworkflow.flow.core.Promise;
 import com.amazonaws.services.simpleworkflow.flow.core.TryCatchFinally;
 
@@ -26,11 +27,7 @@ public class TcgaWorkflowImpl implements TcgaWorkflow {
 			protected void doTry() throws Throwable {
 
 				Promise<String> rawLayerId = client.createMetadata(datasetId, tcgaUrl, doneIfExists);
-
-				if(Constants.WORKFLOW_DONE != rawLayerId.get()) {
-					Promise<String> message = client.formulateNotificationMessage(rawLayerId);
-					client.notifyFollowers(NOTIFICATION_SNS_TOPIC, NOTIFICATION_SUBJECT, message.get(), message);
-				}
+				notifyFollowersIfApplicable(rawLayerId);
 			}
 
 			@Override
@@ -43,5 +40,13 @@ public class TcgaWorkflowImpl implements TcgaWorkflow {
 				// do nothing
 			}
 		};
+	}
+	
+	@Asynchronous
+	private void notifyFollowersIfApplicable(Promise<String> rawLayerId) {
+		if(Constants.WORKFLOW_DONE != rawLayerId.get()) {
+			Promise<String> message = client.formulateNotificationMessage(rawLayerId);
+			client.notifyFollowers(NOTIFICATION_SNS_TOPIC, NOTIFICATION_SUBJECT, message.get(), message);
+		}
 	}
 }

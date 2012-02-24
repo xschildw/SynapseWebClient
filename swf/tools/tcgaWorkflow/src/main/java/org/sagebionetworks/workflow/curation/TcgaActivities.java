@@ -19,7 +19,9 @@ import com.amazonaws.services.simpleworkflow.flow.annotations.ExponentialRetry;
  * 
  */
 @Activities(version=TcgaActivities.VERSION) 
-@ActivityRegistrationOptions(defaultTaskScheduleToStartTimeoutSeconds = TcgaActivities.ONE_DAY_OF_SECONDS, defaultTaskStartToCloseTimeoutSeconds = TcgaActivities.ONE_DAY_OF_SECONDS)
+@ActivityRegistrationOptions(defaultTaskScheduleToStartTimeoutSeconds = TcgaActivities.ONE_DAY_OF_SECONDS, 
+		defaultTaskStartToCloseTimeoutSeconds = TcgaActivities.ONE_DAY_OF_SECONDS,
+		defaultTaskList = TcgaActivities.ACTIVITIES_TASK_LIST)
 public interface TcgaActivities {
 
 	/**

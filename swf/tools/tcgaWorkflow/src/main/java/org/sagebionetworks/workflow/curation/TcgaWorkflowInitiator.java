@@ -32,13 +32,13 @@ public class TcgaWorkflowInitiator {
 	private static final String TCGA_REPOSITORY = "http://tcga-data.nci.nih.gov/tcgafiles/ftp_auth/distro_ftpusers/anonymous/tumor/";
 	private static final Logger log = Logger
 			.getLogger(TcgaWorkflowInitiator.class.getName());
-	TcgaWorkflowClientExternal workflow;
+	TcgaWorkflowClientExternalFactory clientFactory;
 
 	/**
-	 * @param workflow
+	 * @param clientFactory
 	 */
-	public TcgaWorkflowInitiator(TcgaWorkflowClientExternal workflow) {
-		this.workflow = workflow;
+	public TcgaWorkflowInitiator(TcgaWorkflowClientExternalFactory clientFactory) {
+		this.clientFactory = clientFactory;
 	}
 
 	class ArchiveObserver implements SimpleObserver<String> {
@@ -110,8 +110,9 @@ public class TcgaWorkflowInitiator {
 			String urlComponents[] = url.split("/");
 
 			String datasetAbbreviation = urlComponents[urlComponents.length - 1];
-			String datasetName = configHelper.getTCGADatasetName(datasetAbbreviation);
-			
+			String datasetName = configHelper
+					.getTCGADatasetName(datasetAbbreviation);
+
 			JSONObject results = null;
 			int sleep = 1000;
 			while (null == results) {
@@ -120,27 +121,28 @@ public class TcgaWorkflowInitiator {
 						// Try finding the right dataset to update via
 						// annotation tcgaDiseaseStudy
 						results = synapse
-						.query("select * from dataset where dataset.tcgaDiseaseStudy == '"
-								+ datasetAbbreviation
-								+ "' and dataset.parentId == " + projectId);
+								.query("select * from dataset where dataset.tcgaDiseaseStudy == '"
+										+ datasetAbbreviation
+										+ "' and dataset.parentId == "
+										+ projectId);
 						int numDatasetsFound = results
-						.getInt("totalNumberOfResults");
+								.getInt("totalNumberOfResults");
 						if (0 == numDatasetsFound) {
 							results = synapse
-							.query("select * from dataset where dataset.tcgaDiseaseStudy == '"
-									+ datasetAbbreviation.toUpperCase()
-									+ "' and dataset.parentId == "
-									+ projectId);
+									.query("select * from dataset where dataset.tcgaDiseaseStudy == '"
+											+ datasetAbbreviation.toUpperCase()
+											+ "' and dataset.parentId == "
+											+ projectId);
 						}
 					} else {
 						// Try finding the right dataset to update via our
 						// static mapping of TCGA disease codes to SageBio
 						// dataset names
 						results = synapse
-						.query("select * from dataset where dataset.name == '"
-								+ datasetName
-								+ "' and dataset.parentId == "
-								+ projectId);
+								.query("select * from dataset where dataset.name == '"
+										+ datasetName
+										+ "' and dataset.parentId == "
+										+ projectId);
 					}
 				} catch (SynapseException ex) {
 					if (ex.getCause() instanceof SocketTimeoutException) {
@@ -154,8 +156,8 @@ public class TcgaWorkflowInitiator {
 				int numDatasetsFound = results.getInt("totalNumberOfResults");
 				if (0 == numDatasetsFound) {
 					// If Synapse doesn't have a dataset for it, skip it
-					log.debug("Skipping dataset " + datasetAbbreviation + " at url "
-							+ url);
+					log.debug("Skipping dataset " + datasetAbbreviation
+							+ " at url " + url);
 				} else {
 					JSONObject datasetQueryResult = results.getJSONArray(
 							"results").getJSONObject(0);
@@ -171,6 +173,8 @@ public class TcgaWorkflowInitiator {
 
 					Collection<String> urls = observer.getResults();
 					for (String layerUrl : urls) {
+						TcgaWorkflowClientExternal workflow = clientFactory
+								.getClient();
 						workflow.addRawTcgaLayer(datasetId, layerUrl, true);
 						log.info("Kicked off workflow for " + layerUrl);
 					}
@@ -201,9 +205,9 @@ public class TcgaWorkflowInitiator {
 
 		TcgaWorkflowClientExternalFactory clientFactory = new TcgaWorkflowClientExternalFactoryImpl(
 				swfService, domain);
-		TcgaWorkflowClientExternal workflow = clientFactory.getClient();
 
-		TcgaWorkflowInitiator initiator = new TcgaWorkflowInitiator(workflow);
+		TcgaWorkflowInitiator initiator = new TcgaWorkflowInitiator(
+				clientFactory);
 		initiator.initiateWorkflowTasks();
 
 		System.exit(0);
