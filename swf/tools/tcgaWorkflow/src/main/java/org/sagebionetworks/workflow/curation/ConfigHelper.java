@@ -1,6 +1,9 @@
 package org.sagebionetworks.workflow.curation;
 
 import java.io.File;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.http.client.HttpClient;
 import org.apache.log4j.Logger;
@@ -22,11 +25,13 @@ public class ConfigHelper {
 
 	private static final String DEFAULT_PROPERTIES_FILENAME = "/tcgaWorkflow.properties";
 	private static final String TEMPLATE_PROPERTIES = "/tcgaWorkflowTemplate.properties";
+	private static final String TCGA_ABBREVIATION_PREFIX = "abbrev_";
 
 	private static final Logger log = Logger.getLogger(ConfigHelper.class
 			.getName());
 
 	private static WorkflowTemplatedConfiguration configuration = null;
+	private static Map<String, String> ABBREV2NAME = null;
 
 	static {
 		configuration = new WorkflowTemplatedConfigurationImpl(
@@ -43,6 +48,20 @@ public class ConfigHelper {
 		if (!cacheDir.exists()) {
 			cacheDir.mkdirs();
 		}
+
+		Map<String, String> abbrev2name = new HashMap<String, String>();
+		for (String key : configuration.getAllPropertyNames()) {
+			if (key.startsWith(TCGA_ABBREVIATION_PREFIX)) {
+				String value = configuration.getProperty(key);
+				abbrev2name.put(key
+						.substring(TCGA_ABBREVIATION_PREFIX.length()), value);
+			}
+		}
+		ABBREV2NAME = Collections.unmodifiableMap(abbrev2name);
+	}
+
+	public static String getTCGADatasetName(String abbreviatedTCGADatasetName) {
+		return ABBREV2NAME.get(abbreviatedTCGADatasetName);
 	}
 
 	/**

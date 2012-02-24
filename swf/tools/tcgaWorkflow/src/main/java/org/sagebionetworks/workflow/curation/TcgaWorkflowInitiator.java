@@ -110,25 +110,37 @@ public class TcgaWorkflowInitiator {
 			String urlComponents[] = url.split("/");
 
 			String datasetAbbreviation = urlComponents[urlComponents.length - 1];
-
+			String datasetName = configHelper.getTCGADatasetName(datasetAbbreviation);
+			
 			JSONObject results = null;
 			int sleep = 1000;
 			while (null == results) {
 				try {
-					// Try finding the right dataset to update via
-					// annotation tcgaDiseaseStudy
-					results = synapse
-							.query("select * from dataset where dataset.tcgaDiseaseStudy == '"
-									+ datasetAbbreviation
-									+ "' and dataset.parentId == " + projectId);
-					int numDatasetsFound = results
-							.getInt("totalNumberOfResults");
-					if (0 == numDatasetsFound) {
+					if (null == datasetName) {
+						// Try finding the right dataset to update via
+						// annotation tcgaDiseaseStudy
 						results = synapse
-								.query("select * from dataset where dataset.tcgaDiseaseStudy == '"
-										+ datasetAbbreviation.toUpperCase()
-										+ "' and dataset.parentId == "
-										+ projectId);
+						.query("select * from dataset where dataset.tcgaDiseaseStudy == '"
+								+ datasetAbbreviation
+								+ "' and dataset.parentId == " + projectId);
+						int numDatasetsFound = results
+						.getInt("totalNumberOfResults");
+						if (0 == numDatasetsFound) {
+							results = synapse
+							.query("select * from dataset where dataset.tcgaDiseaseStudy == '"
+									+ datasetAbbreviation.toUpperCase()
+									+ "' and dataset.parentId == "
+									+ projectId);
+						}
+					} else {
+						// Try finding the right dataset to update via our
+						// static mapping of TCGA disease codes to SageBio
+						// dataset names
+						results = synapse
+						.query("select * from dataset where dataset.name == '"
+								+ datasetName
+								+ "' and dataset.parentId == "
+								+ projectId);
 					}
 				} catch (SynapseException ex) {
 					if (ex.getCause() instanceof SocketTimeoutException) {

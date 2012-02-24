@@ -61,6 +61,16 @@ public class TcgaWorkflowITCase {
 					+ " datasets with name " + datasetName);
 		}
 	}
+	
+	/**
+	 * @throws Exception
+	 */
+	@Test
+	public void testTCGAAbbreviation2Name() throws Exception {
+		assertEquals("Colon Adenocarcinoma TCGA", ConfigHelper
+				.getTCGADatasetName("coad"));
+
+	}
 
 	/**
 	 * @throws Exception
