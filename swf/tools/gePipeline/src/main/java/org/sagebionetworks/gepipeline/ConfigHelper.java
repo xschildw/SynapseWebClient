@@ -7,6 +7,7 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.sagebionetworks.TemplatedConfiguration;
+import org.sagebionetworks.TemplatedConfigurationImpl;
 import org.sagebionetworks.client.Synapse;
 
 import com.amazonaws.ClientConfiguration;
@@ -33,11 +34,11 @@ public class ConfigHelper {
 	private static Map<String, String> ABBREV2NAME = null;
 
 	static {
-		configuration = new TemplatedConfiguration(DEFAULT_PROPERTIES_FILENAME,
+		configuration = new TemplatedConfigurationImpl(DEFAULT_PROPERTIES_FILENAME,
 				TEMPLATE_PROPERTIES);
 		// Load the stack configuration the first time this class is referenced
 		try {
-			configuration.reloadStackConfiguration();
+			configuration.reloadConfiguration();
 		} catch (Throwable t) {
 			log.error(t.getMessage(), t);
 			throw new RuntimeException(t);

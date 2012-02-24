@@ -1,4 +1,4 @@
-package org.sagebionetworks.workflow.activity;
+package org.sagebionetworks.workflow.curation;
 
 import java.io.File;
 import java.io.IOException;
@@ -12,22 +12,19 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.HttpClient;
-import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.sagebionetworks.client.Synapse;
+import org.sagebionetworks.client.exceptions.SynapseException;
 import org.sagebionetworks.repo.model.Layer;
 import org.sagebionetworks.repo.model.LayerTypeNames;
 import org.sagebionetworks.repo.model.LocationData;
 import org.sagebionetworks.repo.model.LocationTypeNames;
 import org.sagebionetworks.utils.HttpClientHelper;
 import org.sagebionetworks.utils.HttpClientHelperException;
-import org.sagebionetworks.utils.MD5ChecksumHelper;
 import org.sagebionetworks.workflow.Constants;
 import org.sagebionetworks.workflow.UnrecoverableException;
-import org.sagebionetworks.workflow.curation.ConfigHelper;
 
 /**
  * Workflow activities relevant to curation - specifically the metadata creation
@@ -36,8 +33,7 @@ import org.sagebionetworks.workflow.curation.ConfigHelper;
  * @author deflaux
  * 
  */
-public class Curation {
-	private static final HttpClient httpClient;
+public class TcgaCuration {
 
 	private static final String TCGA_STATUS = "raw";
 	private static final String TCGA_FORMAT = "tsv";
@@ -49,13 +45,6 @@ public class Curation {
 	 */
 	public static final Pattern TCGA_DATA_REGEXP = Pattern
 			.compile("^([^_]+)_([^\\.]+)\\.([^\\.]+)\\.([^\\.]+)\\.(\\d+)\\.(\\d+)\\.(\\d+).*");
-	
-	
-	static {
-		httpClient = HttpClientHelper.createNewClient(true);
-		ThreadSafeClientConnManager manager = (ThreadSafeClientConnManager) httpClient.getConnectionManager();
-		manager.setDefaultMaxPerRoute(ConfigHelper.getHttpClientMaxConnsPerRoute());
-	}
 
 	/**
 	 * Create or update metadata for TCGA layers
@@ -70,16 +59,24 @@ public class Curation {
 	 * @param datasetId
 	 * @param tcgaUrl
 	 * @return the layerId for the layer metadata created
-	 * @throws Exception
+	 * @throws HttpClientHelperException
+	 * @throws IOException
+	 * @throws UnrecoverableException
+	 * @throws NoSuchAlgorithmException
+	 * @throws ClientProtocolException
+	 * @throws SynapseException
+	 * @throws JSONException
 	 */
 	public static String doCreateSynapseMetadataForTcgaSourceLayer(
 			Boolean doneIfExists, String datasetId, String tcgaUrl)
-			throws Exception {
+			throws ClientProtocolException, NoSuchAlgorithmException,
+			UnrecoverableException, IOException, HttpClientHelperException,
+			SynapseException, JSONException {
 
 		Map<String, String> metadata = formulateMetadataFromTcgaUrl(tcgaUrl,
 				true);
 
-		Synapse synapse = ConfigHelper.createSynapseClient();
+		Synapse synapse = ConfigHelper.getSynapseClient();
 		JSONObject results = synapse
 				.query("select * from layer where layer.parentId == "
 						+ datasetId + " and layer.name == '"
@@ -145,8 +142,8 @@ public class Curation {
 		// our datastore
 		if (!metadata.containsKey("md5")) {
 			File tempFile = File.createTempFile("tcga", "data");
-			HttpClientHelper.downloadFile(httpClient, tcgaUrl, tempFile
-					.getAbsolutePath());
+			tempFile = HttpClientHelper.getContent(
+					ConfigHelper.getHttpClient(), tcgaUrl, tempFile);
 			layer = (Layer) synapse
 					.uploadLocationableToSynapse(layer, tempFile);
 			tempFile.delete();
@@ -249,8 +246,8 @@ public class Curation {
 
 		String md5 = null;
 		try {
-			String md5FileContents = HttpClientHelper.getContent(
-					httpClient, tcgaUrl + ".md5");
+			String md5FileContents = HttpClientHelper.getContent(ConfigHelper
+					.getHttpClient(), tcgaUrl + ".md5");
 			String fileInfo[] = md5FileContents.split("\\s+");
 			if (2 != fileInfo.length) {
 				throw new UnrecoverableException(
@@ -263,18 +260,7 @@ public class Curation {
 			// 404s are okay, not all TCGA files have a corresponding md5 file
 			// (e.g., clinical data), later on we will download the file and
 			// compute the md5 checksum
-			if (404 == e.getHttpStatus()) {
-				// TODO remove this bit of code for PLFM-880 when we upgrade to
-				// the new verison of SWF which will allow us to switch to a
-				// more recent AWSSDK which will allow us to use multipart
-				// upload
-				File dataFile = File.createTempFile("tcga", "data");
-				HttpClientHelper.downloadFile(httpClient, tcgaUrl, dataFile.getAbsolutePath());
-				md5 = MD5ChecksumHelper.getMD5Checksum(dataFile
-						.getAbsolutePath());
-				metadata.put("md5", md5);
-				dataFile.delete();
-			} else {
+			if (404 != e.getHttpStatus()) {
 				throw e;
 			}
 		}
@@ -287,13 +273,15 @@ public class Curation {
 	 * 
 	 * @param layerId
 	 * @return a somewhat helpful message for use in notifications :-)
-	 * @throws Exception
+	 * @throws SynapseException
+	 * @throws UnrecoverableException
+	 * @throws JSONException
 	 */
 	public static String formulateLayerCreationMessage(String layerId)
-			throws Exception {
+			throws SynapseException, JSONException, UnrecoverableException {
 		StringBuilder message = new StringBuilder();
 
-		Synapse synapse = ConfigHelper.createSynapseClient();
+		Synapse synapse = ConfigHelper.getSynapseClient();
 		JSONObject layerResults = synapse
 				.query("select * from layer where layer.id == " + layerId);
 		if (0 == layerResults.getInt("totalNumberOfResults")) {

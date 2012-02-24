@@ -1,124 +1,101 @@
 package org.sagebionetworks.workflow.curation;
 
 import java.io.File;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 
+import org.apache.http.client.HttpClient;
 import org.apache.log4j.Logger;
-import org.sagebionetworks.TemplatedConfiguration;
 import org.sagebionetworks.client.Synapse;
+import org.sagebionetworks.client.exceptions.SynapseException;
+import org.sagebionetworks.workflow.WorkflowTemplatedConfiguration;
+import org.sagebionetworks.workflow.WorkflowTemplatedConfigurationImpl;
 
-import com.amazonaws.ClientConfiguration;
-import com.amazonaws.auth.AWSCredentials;
-import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.simpleworkflow.AmazonSimpleWorkflow;
-import com.amazonaws.services.simpleworkflow.AmazonSimpleWorkflowClient;
 import com.amazonaws.services.sns.AmazonSNS;
-import com.amazonaws.services.sns.AmazonSNSClient;
 
 /**
- * Configuration Helper to used to create Synapse and AWS service clients.
+ * Configuration Helper to used to manage configuration specific to this
+ * workflow and access general workflow configuration and clients.
+ * 
+ * @author deflaux
  */
 public class ConfigHelper {
 
 	private static final String DEFAULT_PROPERTIES_FILENAME = "/tcgaWorkflow.properties";
 	private static final String TEMPLATE_PROPERTIES = "/tcgaWorkflowTemplate.properties";
-	private static final String TCGA_ABBREVIATION_PREFIX = "abbrev_";
 
 	private static final Logger log = Logger.getLogger(ConfigHelper.class
 			.getName());
 
-	private static TemplatedConfiguration configuration = null;
-	private static Map<String, String> ABBREV2NAME = null;
+	private static WorkflowTemplatedConfiguration configuration = null;
 
 	static {
-		configuration = new TemplatedConfiguration(DEFAULT_PROPERTIES_FILENAME,
-				TEMPLATE_PROPERTIES);
+		configuration = new WorkflowTemplatedConfigurationImpl(
+				DEFAULT_PROPERTIES_FILENAME, TEMPLATE_PROPERTIES);
 		// Load the stack configuration the first time this class is referenced
 		try {
-			configuration.reloadStackConfiguration();
+			configuration.reloadConfiguration();
 		} catch (Throwable t) {
 			log.error(t.getMessage(), t);
 			throw new RuntimeException(t);
 		}
-		
+
 		File cacheDir = new File(getLocalCacheDir());
-		if(!cacheDir.exists()) {
+		if (!cacheDir.exists()) {
 			cacheDir.mkdirs();
 		}
-		
-		Map<String, String> abbrev2name = new HashMap<String, String>();
-		for(String key : configuration.getAllPropertyNames()) {
-			if(key.startsWith(TCGA_ABBREVIATION_PREFIX)) {
-				String value = configuration.getProperty(key);
-				abbrev2name.put(key.substring(TCGA_ABBREVIATION_PREFIX.length()), value);
-			}
-		}
-		ABBREV2NAME = Collections.unmodifiableMap(abbrev2name);
 	}
 
-	public static String getTCGADatasetName(String abbreviatedTCGADatasetName) {
-		return ABBREV2NAME.get(abbreviatedTCGADatasetName);
-	}
-	
 	/**
-	 * Create a synchronous Simple Workflow Framework (SWF) Client
+	 * Get the shared synchronous Simple Workflow Framework (SWF) Client
 	 * 
 	 * @return the SWF client
 	 */
-	public static AmazonSimpleWorkflow createSWFClient() {
-		ClientConfiguration config = new ClientConfiguration()
-				.withSocketTimeout(70 * 1000);
-		AWSCredentials awsCredentials = new BasicAWSCredentials(configuration.getIAMUserId(),
-				configuration.getIAMUserKey());
-		AmazonSimpleWorkflow client = new AmazonSimpleWorkflowClient(
-				awsCredentials, config);
-		client.setEndpoint(configuration.getProperty("aws.swf.endpoint"));
-		return client;
+	public static AmazonSimpleWorkflow getSWFClient() {
+		return configuration.getSWFClient();
 	}
 
 	/**
-	 * Create a synchronous Simple Notification Service (SNS) client
+	 * Get the shared synchronous Simple Notification Service (SNS) client
 	 * 
 	 * @return the SNS Client
 	 */
-	public static AmazonSNS createSNSClient() {
-		AWSCredentials snsAWSCredentials = new BasicAWSCredentials(configuration.getIAMUserId(),
-				configuration.getIAMUserKey());
-		AmazonSNS client = new AmazonSNSClient(snsAWSCredentials);
-		client.setEndpoint(configuration.getProperty("aws.sns.endpoint"));
-		return client;
+	public static AmazonSNS getSNSClient() {
+		return configuration.getSNSClient();
 	}
 
 	/**
+	 * Get the shared Synapse client
+	 * 
 	 * @return the Synapse client
-	 * @throws Exception
+	 * @throws SynapseException
 	 */
-	public static Synapse createSynapseClient() throws Exception {
-		Synapse synapse = new Synapse();
-
-		synapse.setRepositoryEndpoint(getRepositoryServiceEndpoint());
-		synapse.setAuthEndpoint(getAuthenticationServicePrivateEndpoint());
-		synapse.login(getSynapseUsername(), 
-				getSynapsePassword());
-		return synapse;
+	public static Synapse getSynapseClient() throws SynapseException {
+		return configuration.getSynapseClient();
 	}
 
 	/**
-	 * @return the Synpase username to log in as for this workflow
+	 * Get the shared HttpClient
+	 * 
+	 * @return the HttpClient
 	 */
-	public static String getSynapseUsername() {
-		return configuration.getProperty("org.sagebionetworks.synapse.username");
+	public static HttpClient getHttpClient() {
+		return configuration.getHttpClient();
 	}
-	
+
 	/**
-	 * @return the Synapse password 
+	 * @return the stack name
 	 */
-	public static String getSynapsePassword() {
-		return configuration.getDecryptedProperty("org.sagebionetworks.synapse.password");
+	public static String getStack() {
+		return configuration.getStack();
 	}
-	
+
+	/**
+	 * @return the portal endpoint
+	 */
+	public static String getPortalEndpoint() {
+		return configuration.getPortalEndpoint();
+	}
+
 	/**
 	 * @return the localCacheDir
 	 */
@@ -130,36 +107,8 @@ public class ConfigHelper {
 	 * @return the Simple Notification Service topic to use for this workflow
 	 */
 	public static String getWorkflowSnsTopic() {
-		return configuration.getProperty("org.sagebionetworks.sns.topic.workflow");
-	}
-	
-	/**
-	 * @return auth service endpoint
-	 */
-	public static String getAuthenticationServicePrivateEndpoint() {
-		return configuration.getAuthenticationServicePrivateEndpoint();
-	}
-	
-	/**
-	 * @return repo service endpoint
-	 */
-	public static String getRepositoryServiceEndpoint() {
-		return configuration.getRepositoryServiceEndpoint();
+		return configuration
+				.getProperty("org.sagebionetworks.sns.topic.workflow");
 	}
 
-	/**
-	 * @return the portal endpoint
-	 */
-	public static String getPortalEndpoint() {
-		return configuration.getPortalEndpoint();
-	}
-	
-	public static String getRScriptPath() {
-		return configuration.getRScriptPath();
-	}
-	
-	public static int getHttpClientMaxConnsPerRoute() {
-		return configuration.getHttpClientMaxConnsPerRoute();
-	}
-	
 }

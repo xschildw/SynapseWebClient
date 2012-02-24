@@ -1,7 +1,6 @@
-package org.sagebionetworks.workflow.activity;
+package org.sagebionetworks.workflow;
 
 import org.apache.log4j.Logger;
-import org.sagebionetworks.workflow.curation.ConfigHelper;
 
 import com.amazonaws.services.sns.AmazonSNS;
 import com.amazonaws.services.sns.model.PublishRequest;
@@ -25,13 +24,13 @@ public class Notification {
 	 * Subscribe a particular recipients email address to the specified SNS
 	 * topic
 	 * 
+	 * @param snsClient 
 	 * @param topic
 	 * @param recipient
 	 */
-	public static void doSnsSubscribeFollower(String topic, String recipient) {
+	public static void doSnsSubscribeFollower(AmazonSNS snsClient, String topic, String recipient) {
 		log.debug("subscribing to " + topic + " " + recipient);
 
-		AmazonSNS snsClient = ConfigHelper.createSNSClient();
 		SubscribeRequest subscribeRequest = new SubscribeRequest(topic,
 				EMAIL_SNS_PROTOCOL, recipient);
 
@@ -44,14 +43,14 @@ public class Notification {
 	 * Notify followers subscribed to an SNS topic by publishing a message to
 	 * the specified topic
 	 * 
+	 * @param snsClient 
 	 * @param topic
 	 * @param subject
 	 * @param message
 	 */
-	public static void doSnsNotifyFollowers(String topic, String subject,
+	public static void doSnsNotifyFollowers(AmazonSNS snsClient, String topic, String subject,
 			String message) {
 
-		AmazonSNS snsClient = ConfigHelper.createSNSClient();
 		PublishRequest publishRequest = new PublishRequest(topic, message,
 				subject);
 

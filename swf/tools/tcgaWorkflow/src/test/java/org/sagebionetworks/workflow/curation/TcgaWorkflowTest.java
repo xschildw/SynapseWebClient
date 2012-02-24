@@ -6,7 +6,6 @@ import java.util.Map;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.sagebionetworks.workflow.activity.Curation;
 
 /**
  * @author deflaux
@@ -26,7 +25,7 @@ public class TcgaWorkflowTest {
 	 */
 	@Test
 	public void testDoCreateExpressionMetadata() throws Exception {
-		Map<String, String> metadata = Curation
+		Map<String, String> metadata = TcgaCuration
 				.formulateMetadataFromTcgaUrl("http://tcga-data.nci.nih.gov/tcgafiles/ftp_auth/distro_ftpusers/anonymous/tumor/coad/cgcc/unc.edu/agilentg4502a_07_3/transcriptome/unc.edu_COAD.AgilentG4502A_07_3.Level_2.2.0.0.tar.gz", false);
 
 		assertEquals("E", metadata.get("type"));
@@ -48,7 +47,7 @@ public class TcgaWorkflowTest {
 	 */
 	@Test
 	public void testDoCreateClinicalMetadata() throws Exception {
-		Map<String, String> metadata = Curation
+		Map<String, String> metadata = TcgaCuration
 				.formulateMetadataFromTcgaUrl("http://tcga-data.nci.nih.gov/tcgafiles/ftp_auth/distro_ftpusers/anonymous/tumor/coad/bcr/minbiotab/clin/clinical_patient_public_coad.txt", false);
 
 		assertEquals("C", metadata.get("type"));
@@ -64,7 +63,7 @@ public class TcgaWorkflowTest {
 	public void testDoCreateGeneticMetadata() throws Exception {
 		String geneticDataUrl = "http://tcga-data.nci.nih.gov/tcgafiles/ftp_auth/distro_ftpusers/anonymous/tumor/coad/cgcc/broad.mit.edu/genome_wide_snp_6/snp/broad.mit.edu_COAD.Genome_Wide_SNP_6.mage-tab.1.1007.0.tar.gz";
 
-		Map<String, String> metadata = Curation
+		Map<String, String> metadata = TcgaCuration
 				.formulateMetadataFromTcgaUrl(geneticDataUrl, false);
 
 		assertEquals("G", metadata.get("type"));

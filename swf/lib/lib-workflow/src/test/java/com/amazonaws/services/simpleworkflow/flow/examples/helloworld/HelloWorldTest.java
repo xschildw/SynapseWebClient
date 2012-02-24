@@ -16,6 +16,7 @@ package com.amazonaws.services.simpleworkflow.flow.examples.helloworld;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -64,6 +65,7 @@ public class HelloWorldTest {
      * dummy workflow context the same client that is used for creation of child
      * workflows is used.
      */
+    @Ignore
     @Test
     public void testThroughClient() throws Exception {
         HelloWorldWorkflowClient workflow = workflowFactory.getClient();

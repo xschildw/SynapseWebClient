@@ -14,11 +14,8 @@ import org.sagebionetworks.repo.model.Layer;
 import org.sagebionetworks.repo.model.LayerTypeNames;
 import org.sagebionetworks.workflow.Constants;
 import org.sagebionetworks.workflow.UnrecoverableException;
-import org.sagebionetworks.workflow.activity.Curation;
-import org.sagebionetworks.workflow.activity.Notification;
-import org.sagebionetworks.workflow.activity.Processing;
-import org.sagebionetworks.workflow.activity.Processing.ScriptResult;
 import org.sagebionetworks.workflow.curation.ConfigHelper;
+import org.sagebionetworks.workflow.curation.TcgaCuration;
 
 import com.amazonaws.AmazonServiceException;
 
@@ -52,7 +49,7 @@ public class IT525TcgaWorkflow {
 	static public void setUpBeforeClass() throws Exception {
 		String datasetName = "Colon Adenocarcinoma TCGA";
 
-		synapse = ConfigHelper.createSynapseClient();
+		synapse = ConfigHelper.getSynapseClient();
 		JSONObject results = synapse
 				.query("select * from dataset where dataset.name == '"
 						+ datasetName + "'");
@@ -71,17 +68,8 @@ public class IT525TcgaWorkflow {
 	 * @throws Exception
 	 */
 	@Test
-	public void testTCGAAbbreviation2Name() throws Exception {
-		assertEquals("Colon Adenocarcinoma TCGA", ConfigHelper
-				.getTCGADatasetName("coad"));
-	}
-
-	/**
-	 * @throws Exception
-	 */
-	@Test
 	public void testDoCreateClinicalMetadata() throws Exception {
-		clinicalLayerId = Curation
+		clinicalLayerId = TcgaCuration
 				.doCreateSynapseMetadataForTcgaSourceLayer(
 						false,
 						datasetId,
@@ -108,7 +96,7 @@ public class IT525TcgaWorkflow {
 	 */
 	@Test
 	public void testDoCreateExpressionLevel1Metadata() throws Exception {
-		expressionLevel1LayerId = Curation
+		expressionLevel1LayerId = TcgaCuration
 				.doCreateSynapseMetadataForTcgaSourceLayer(
 						false,
 						datasetId,
@@ -141,7 +129,7 @@ public class IT525TcgaWorkflow {
 	 */
 	@Test
 	public void testDoCreateExpressionLevel2Metadata() throws Exception {
-		expressionLevel2LayerId = Curation
+		expressionLevel2LayerId = TcgaCuration
 				.doCreateSynapseMetadataForTcgaSourceLayer(
 						false,
 						datasetId,
@@ -174,7 +162,7 @@ public class IT525TcgaWorkflow {
 	 */
 	@Test
 	public void testDoCreateGeneticMetadata() throws Exception {
-		String geneticLayerId = Curation
+		String geneticLayerId = TcgaCuration
 				.doCreateSynapseMetadataForTcgaSourceLayer(
 						false,
 						datasetId,

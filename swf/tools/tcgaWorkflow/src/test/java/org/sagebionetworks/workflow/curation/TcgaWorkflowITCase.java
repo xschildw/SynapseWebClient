@@ -13,11 +13,8 @@ import org.sagebionetworks.client.Synapse;
 import org.sagebionetworks.repo.model.Layer;
 import org.sagebionetworks.repo.model.LayerTypeNames;
 import org.sagebionetworks.workflow.Constants;
+import org.sagebionetworks.workflow.Notification;
 import org.sagebionetworks.workflow.UnrecoverableException;
-import org.sagebionetworks.workflow.activity.Curation;
-import org.sagebionetworks.workflow.activity.Notification;
-import org.sagebionetworks.workflow.activity.Processing;
-import org.sagebionetworks.workflow.activity.Processing.ScriptResult;
 
 import com.amazonaws.AmazonServiceException;
 
@@ -50,7 +47,7 @@ public class TcgaWorkflowITCase {
 	static public void setUpBeforeClass() throws Exception {
 		String datasetName = "Colon Adenocarcinoma TCGA";
 
-		synapse = ConfigHelper.createSynapseClient();
+		synapse = ConfigHelper.getSynapseClient();
 		JSONObject results = synapse
 				.query("select * from dataset where dataset.name == '"
 						+ datasetName + "'");
@@ -69,17 +66,8 @@ public class TcgaWorkflowITCase {
 	 * @throws Exception
 	 */
 	@Test
-	public void testTCGAAbbreviation2Name() throws Exception {
-		assertEquals("Colon Adenocarcinoma TCGA", ConfigHelper
-				.getTCGADatasetName("coad"));
-	}
-
-	/**
-	 * @throws Exception
-	 */
-	@Test
 	public void testDoCreateClinicalMetadata() throws Exception {
-		clinicalLayerId = Curation
+		clinicalLayerId = TcgaCuration
 				.doCreateSynapseMetadataForTcgaSourceLayer(
 						false,
 						datasetId,
@@ -87,10 +75,10 @@ public class TcgaWorkflowITCase {
 		assertFalse(Constants.WORKFLOW_DONE.equals(clinicalLayerId));
 
 		Layer layer = synapse.getEntity(clinicalLayerId, Layer.class);
-		
+
 		assertTrue(0 < layer.getMd5().length());
 		assertEquals(1, layer.getLocations().size());
-		
+
 		JSONObject allAnnotations = synapse.getEntity(layer.getAnnotations());
 		JSONObject annotations = allAnnotations
 				.getJSONObject("stringAnnotations");
@@ -106,7 +94,7 @@ public class TcgaWorkflowITCase {
 	 */
 	@Test
 	public void testDoCreateExpressionLevel1Metadata() throws Exception {
-		expressionLevel1LayerId = Curation
+		expressionLevel1LayerId = TcgaCuration
 				.doCreateSynapseMetadataForTcgaSourceLayer(
 						false,
 						datasetId,
@@ -139,7 +127,7 @@ public class TcgaWorkflowITCase {
 	 */
 	@Test
 	public void testDoCreateExpressionLevel2Metadata() throws Exception {
-		expressionLevel2LayerId = Curation
+		expressionLevel2LayerId = TcgaCuration
 				.doCreateSynapseMetadataForTcgaSourceLayer(
 						false,
 						datasetId,
@@ -172,7 +160,7 @@ public class TcgaWorkflowITCase {
 	 */
 	@Test
 	public void testDoCreateGeneticMetadata() throws Exception {
-		String geneticLayerId = Curation
+		String geneticLayerId = TcgaCuration
 				.doCreateSynapseMetadataForTcgaSourceLayer(
 						false,
 						datasetId,
@@ -205,64 +193,10 @@ public class TcgaWorkflowITCase {
 	 * @throws Exception
 	 */
 	@Test
-	public void testRScriptWorkflowSkip() throws Exception {
-
-		ScriptResult scriptResult = null;
-
-		Synapse synapse = ConfigHelper.createSynapseClient();
-		JSONObject results = synapse
-				.query("select * from dataset where dataset.name == 'MSKCC Prostate Cancer'");
-		assertTrue(1 <= results.getInt("totalNumberOfResults"));
-		String mskccId = results.getJSONArray("results").getJSONObject(0)
-				.getString("dataset.id");
-
-		// Pass the id for the
-		scriptResult = Processing.doProcessLayer(
-				"./src/test/resources/createMatrix.r", mskccId, "fakeLayerId");
-
-		assertEquals(Constants.WORKFLOW_DONE, scriptResult
-				.getProcessedLayerId());
-
-	}
-
-	/**
-	 * @throws Exception
-	 */
-	@Test
 	public void testDoFormulateNotificationMessage() throws Exception {
-		String message = Curation
+		String message = TcgaCuration
 				.formulateLayerCreationMessage(expressionLevel2LayerId);
 		assertNotNull(message);
-	}
-
-	/**
-	 * @throws Exception
-	 */
-	@Test
-	public void testRScript() throws Exception {
-
-		ScriptResult scriptResult = null;
-
-		scriptResult = Processing.doProcessLayer(
-				"./src/test/resources/createMatrix.r", datasetId,
-				expressionLevel2LayerId);
-
-		assertFalse(Constants.WORKFLOW_DONE.equals(scriptResult
-				.getProcessedLayerId()));
-
-	}
-
-	/**
-	 * @throws Exception
-	 */
-	@Test
-	public void testDoProcessData() throws Exception {
-		ScriptResult scriptResult = Processing.doProcessLayer(
-				"./src/test/resources/stdoutKeepAlive.sh", datasetId,
-				expressionLevel2LayerId);
-		assertFalse(Constants.WORKFLOW_DONE.equals(scriptResult
-				.getProcessedLayerId()));
-
 	}
 
 	/**
@@ -271,8 +205,8 @@ public class TcgaWorkflowITCase {
 	public void testDoNotifyFollowers() {
 		try {
 			String topic = ConfigHelper.getWorkflowSnsTopic();
-			Notification.doSnsNotifyFollowers(topic,
-					"integration test subject",
+			Notification.doSnsNotifyFollowers(ConfigHelper.getSNSClient(),
+					topic, "integration test subject",
 					"integration test message, yay!");
 		} catch (AmazonServiceException e) {
 			log.error(e);

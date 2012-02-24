@@ -15,7 +15,7 @@
       <module>tcgaWorkflow</module>
       <module>wikiutil</module>
       <module>DatasetMetadataLoader</module>
-      <module>gePipeline</module>
+<!--       <module>gePipeline</module> -->
       <module>SynapseDeployer</module>
       <module>tool-migration-utility</module>
     </modules>
