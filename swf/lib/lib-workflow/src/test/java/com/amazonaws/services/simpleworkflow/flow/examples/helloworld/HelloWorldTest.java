@@ -16,7 +16,6 @@ package com.amazonaws.services.simpleworkflow.flow.examples.helloworld;
 
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -25,10 +24,10 @@ import com.amazonaws.services.simpleworkflow.flow.annotations.Asynchronous;
 import com.amazonaws.services.simpleworkflow.flow.core.Promise;
 import com.amazonaws.services.simpleworkflow.flow.core.Task;
 import com.amazonaws.services.simpleworkflow.flow.core.TryFinally;
+import com.amazonaws.services.simpleworkflow.flow.junit.FlowBlockJUnit4ClassRunner;
 import com.amazonaws.services.simpleworkflow.flow.junit.WorkflowTest;
-import com.amazonaws.services.simpleworkflow.flow.junit.spring.FlowSpringJUnit4ClassRunner;
 
-@RunWith(FlowSpringJUnit4ClassRunner.class)
+@RunWith(FlowBlockJUnit4ClassRunner.class)
 public class HelloWorldTest {
 
     private final class TestHelloWorldActivities implements HelloWorldActivities {
@@ -40,6 +39,23 @@ public class HelloWorldTest {
             greeting = "Hello " + name + "!";
         }
 
+        @Override
+        public String getName(){
+            try{
+                Thread.sleep(10000);
+                //Delay is for the purpose of illustration
+            }
+            catch(InterruptedException e){
+                System.out.println("Thread interrupted");
+            }
+            return "World";
+        }
+        
+        @Override
+        public void printGreeting(String greeting) {
+            System.out.println(greeting);
+        }
+        
         public String getGreeting() {
             return greeting;
         }
@@ -65,7 +81,6 @@ public class HelloWorldTest {
      * dummy workflow context the same client that is used for creation of child
      * workflows is used.
      */
-    @Ignore
     @Test
     public void testThroughClient() throws Exception {
         HelloWorldWorkflowClient workflow = workflowFactory.getClient();

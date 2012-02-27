@@ -14,6 +14,8 @@
  */
 package com.amazonaws.services.simpleworkflow.flow.examples.helloworld;
 
+import com.amazonaws.services.simpleworkflow.flow.annotations.Asynchronous;
+import com.amazonaws.services.simpleworkflow.flow.core.Promise;
 
 /**
  * Implementation of the hello world workflow
@@ -25,6 +27,14 @@ public class HelloWorldWorkflowImpl implements HelloWorldWorkflow{
     @Override
     public void helloWorld(String name) {
         client.printHello(name);
+
+        Promise<String> name2 = client.getName();
+        printGreeting(name2);
+    }
+
+    @Asynchronous
+    private void printGreeting(Promise<String> name) {
+        client.printGreeting("Hello " + name.get() + "!");
     }
     
 }

@@ -24,4 +24,21 @@ public class HelloWorldActivitiesImpl implements HelloWorldActivities {
 		System.out.println("Hello " + name + "!");		
 	}
 
+    @Override
+    public String getName(){
+        try{
+            Thread.sleep(10000);
+            //Delay is for the purpose of illustration
+        }
+        catch(InterruptedException e){
+            System.out.println("Thread interrupted");
+        }
+        return "World";
+    }
+    
+    @Override
+    public void printGreeting(String greeting) {
+        System.out.println(greeting);
+    }
+    
 }

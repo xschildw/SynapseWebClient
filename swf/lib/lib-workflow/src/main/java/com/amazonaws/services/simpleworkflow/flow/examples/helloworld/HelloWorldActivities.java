@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 3012 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -24,8 +24,16 @@ import com.amazonaws.services.simpleworkflow.flow.annotations.ActivityRegistrati
 @Activities
 public interface HelloWorldActivities {
 
-    @Activity(name = "PrintHello", version = "1.0")
-    @ActivityRegistrationOptions(defaultTaskScheduleToStartTimeoutSeconds = 30, defaultTaskStartToCloseTimeoutSeconds = 10)
+    @Activity(name = "PrintHello", version = "1.1")
+    @ActivityRegistrationOptions(defaultTaskScheduleToStartTimeoutSeconds = 60, defaultTaskStartToCloseTimeoutSeconds = 30)
     void printHello(String name);
+
+    @Activity(name = "GetName", version = "1.1")
+    @ActivityRegistrationOptions(defaultTaskScheduleToStartTimeoutSeconds = 60, defaultTaskStartToCloseTimeoutSeconds = 30)
+    public String getName();
+    
+    @Activity(name = "PrintGreeting", version = "1.1")
+    @ActivityRegistrationOptions(defaultTaskScheduleToStartTimeoutSeconds = 60, defaultTaskStartToCloseTimeoutSeconds = 30)
+    public void printGreeting(String greeting);
     
 }

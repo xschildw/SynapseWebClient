@@ -30,7 +30,7 @@ public class WorkflowExecutionStarter {
         HelloWorldWorkflowClientExternal workflow = clientFactory.getClient();
         
         // Start Wrokflow Execution
-        workflow.helloWorld("User");
+        workflow.helloWorld("SanityCheckUser");
         
         // WorkflowExecution is available after workflow creation 
         WorkflowExecution workflowExecution = workflow.getWorkflowExecution();

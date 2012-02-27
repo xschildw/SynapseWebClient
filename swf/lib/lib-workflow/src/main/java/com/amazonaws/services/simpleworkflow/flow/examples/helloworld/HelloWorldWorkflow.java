@@ -22,10 +22,10 @@ import com.amazonaws.services.simpleworkflow.flow.annotations.WorkflowRegistrati
  * Contract of the hello world workflow
  */
 @Workflow
-@WorkflowRegistrationOptions(defaultExecutionStartToCloseTimeoutSeconds = 60)
+@WorkflowRegistrationOptions(defaultExecutionStartToCloseTimeoutSeconds = 120)
 public interface HelloWorldWorkflow {
 
-    @Execute(version = "1.0")
+    @Execute(version = "1.1")
     void helloWorld(String name);
 
 }
