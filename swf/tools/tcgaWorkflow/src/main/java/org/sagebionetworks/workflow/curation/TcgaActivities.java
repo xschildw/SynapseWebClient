@@ -31,7 +31,7 @@ public interface TcgaActivities {
 	/**
 	 * This version should match our sprint version each time we bump it
 	 */
-	static final String VERSION = "0.11"; 
+	static final String VERSION = "0.11.3"; 
 	/**
 	 * A really long timeout to be used when you do not have a better idea of an appropriate timeout
 	 */

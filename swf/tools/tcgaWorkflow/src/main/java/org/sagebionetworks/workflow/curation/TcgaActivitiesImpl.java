@@ -23,15 +23,15 @@ public class TcgaActivitiesImpl implements TcgaActivities {
 	@Override
 	public String createMetadata(String datasetId, String tcgaUrl,
 			Boolean doneIfExists) throws ClientProtocolException, NoSuchAlgorithmException, UnrecoverableException, IOException, HttpClientHelperException, SynapseException, JSONException  {
-		String rawLayerId = null;
+		String layerId = null;
 		try {
-			rawLayerId = TcgaCuration
+			layerId = TcgaCuration
 					.doCreateSynapseMetadataForTcgaSourceLayer(doneIfExists,
 							datasetId, tcgaUrl);
 		} catch (SocketTimeoutException e) {
 			throw new ActivityFailureException("Communication timeout, try this again");
 		}
-		return rawLayerId;
+		return layerId;
 	}
 
 	@Override
