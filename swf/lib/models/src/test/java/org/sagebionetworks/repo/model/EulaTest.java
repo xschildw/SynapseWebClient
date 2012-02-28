@@ -31,13 +31,12 @@ public class EulaTest {
 		e1.setName("name");
 		e1.setParentId("0");
 		e1.setUri("uri");
-		e1.setVersion("1.0.0");
 
 		e1.setAgreement("agreement");
 
 		adapter1 = e1.writeToJSONObject(adapter1);
 		String s = adapter1.toJSONString();
-		adapter2 = JSONObjectAdapterImpl.createAdapterFromJSONString(s);
+		adapter2 = new JSONObjectAdapterImpl(s);
 		Eula e2 = new Eula(adapter2);
 		
 		assertEquals(e1, e2);

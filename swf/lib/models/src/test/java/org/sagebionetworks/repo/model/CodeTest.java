@@ -33,11 +33,10 @@ public class CodeTest {
 		c1.setName("name");
 		c1.setParentId("0");
 		c1.setUri("uri");
-		c1.setVersion("1.0.0");
 
 		c1.setStartDate(d);
 		c1.setEndDate(d);
-		c1.setVersion("1.0.0");
+		
 		c1.setVersionComment("versionComment");
 		c1.setVersionLabel("versionLabel");
 		c1.setVersionNumber(1L);
@@ -55,7 +54,7 @@ public class CodeTest {
 
 		adapter1 = c1.writeToJSONObject(adapter1);
 		String s = adapter1.toJSONString();
-		adapter2 = JSONObjectAdapterImpl.createAdapterFromJSONString(s);
+		adapter2 = new JSONObjectAdapterImpl(s);
 		Code c2 = new Code(adapter2);
 		
 		assertEquals(c1, c2);

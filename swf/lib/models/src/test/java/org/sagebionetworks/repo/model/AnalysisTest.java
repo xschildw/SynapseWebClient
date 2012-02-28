@@ -31,14 +31,13 @@ public class AnalysisTest {
 		a1.setName("name");
 		a1.setParentId("0");
 		a1.setUri("uri");
-		a1.setVersion("1.0.0");
 
 		a1.setSteps("/steps");
 		a1.setStatus("status");
 
 		adapter1 = a1.writeToJSONObject(adapter1);
 		String s = adapter1.toJSONString();
-		adapter2 = JSONObjectAdapterImpl.createAdapterFromJSONString(s);
+		adapter2 = new JSONObjectAdapterImpl(s);
 		Analysis a2 = new Analysis(adapter2);
 		
 		assertEquals(a1, a2);

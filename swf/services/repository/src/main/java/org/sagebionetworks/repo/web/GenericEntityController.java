@@ -18,6 +18,7 @@ import org.sagebionetworks.repo.model.PaginatedResults;
 import org.sagebionetworks.repo.model.QueryResults;
 import org.sagebionetworks.repo.model.UnauthorizedException;
 import org.sagebionetworks.repo.model.UserInfo;
+import org.sagebionetworks.repo.model.auth.UserEntityPermissions;
 import org.sagebionetworks.repo.model.query.BasicQuery;
 import org.sagebionetworks.repo.web.controller.metadata.EventType;
 
@@ -89,6 +90,18 @@ public interface GenericEntityController {
 			HttpServletRequest request, Class<? extends T> clazz) throws NotFoundException,
 			DatastoreException, UnauthorizedException;
 	
+	/**
+	 * Get an entity without knowing the type
+	 * @param userId
+	 * @param id
+	 * @param request
+	 * @return
+	 * @throws NotFoundException
+	 * @throws DatastoreException
+	 * @throws UnauthorizedException
+	 */
+	public Entity getEntity(String userId, String id, HttpServletRequest request) throws NotFoundException,	DatastoreException, UnauthorizedException;
+	
 
 	/**
 	 * Same as above but takes a UserInfo instead of a username.
@@ -119,6 +132,20 @@ public interface GenericEntityController {
 	 */
 	public <T extends Entity> T getEntityForVersion(String userId, String id, Long versionNumber,
 			HttpServletRequest request, Class<? extends T> clazz) throws NotFoundException,
+			DatastoreException, UnauthorizedException;
+	
+	/**
+	 * Get an entity version for an unknown type.
+	 * @param userId
+	 * @param id
+	 * @param versionNumber
+	 * @param request
+	 * @return
+	 * @throws NotFoundException
+	 * @throws DatastoreException
+	 * @throws UnauthorizedException
+	 */
+	public Entity getEntityForVersion(String userId, String id, Long versionNumber,	HttpServletRequest request) throws NotFoundException,
 			DatastoreException, UnauthorizedException;
 	
 
@@ -343,8 +370,8 @@ public interface GenericEntityController {
 	 * @throws NotFoundException 
 	 * @throws ConflictingUpdateException 
 	 */
-	public  <T extends Entity> AccessControlList createEntityACL(String userId, AccessControlList newEntity,
-			HttpServletRequest request, Class<? extends T> clazz) throws DatastoreException,
+	public  AccessControlList createEntityACL(String userId, AccessControlList newEntity,
+			HttpServletRequest request) throws DatastoreException,
 			InvalidModelException, UnauthorizedException, NotFoundException, ConflictingUpdateException;
 
 	
@@ -360,7 +387,7 @@ public interface GenericEntityController {
 	 * @throws  ACLInheritanceException - Thrown when attempting to get the ACL for a node that inherits its permissions. The exception
 	 * will include the benefactor's ID. 
 	 */
-	public  <T extends Entity>  AccessControlList getEntityACL(String entityId, String userId, HttpServletRequest request, Class<? extends T> clazz) 
+	public  AccessControlList getEntityACL(String entityId, String userId, HttpServletRequest request) 
 		throws NotFoundException, DatastoreException, UnauthorizedException, ACLInheritanceException;
 	
 	/**
@@ -477,4 +504,14 @@ public interface GenericEntityController {
 	 */
 	public PaginatedResults<EntityHeader> getEntityReferences(String userId, String entityId, Integer versionNumber, Integer offset, Integer limit, HttpServletRequest request)
 			throws NotFoundException, DatastoreException;
+	
+	/**
+	 * Get the permission for a given user and entity combination.
+	 * @param userId
+	 * @param entityId
+	 * @return
+	 * @throws DatastoreException 
+	 * @throws NotFoundException 
+	 */
+	public UserEntityPermissions getUserEntityPermissions(String userId, String entityId) throws NotFoundException, DatastoreException;
 }

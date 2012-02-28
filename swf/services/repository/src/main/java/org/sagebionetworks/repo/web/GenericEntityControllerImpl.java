@@ -30,6 +30,7 @@ import org.sagebionetworks.repo.model.PaginatedResults;
 import org.sagebionetworks.repo.model.QueryResults;
 import org.sagebionetworks.repo.model.UnauthorizedException;
 import org.sagebionetworks.repo.model.UserInfo;
+import org.sagebionetworks.repo.model.auth.UserEntityPermissions;
 import org.sagebionetworks.repo.model.jdo.KeyFactory;
 import org.sagebionetworks.repo.model.query.BasicQuery;
 import org.sagebionetworks.repo.model.query.jdo.NodeField;
@@ -175,6 +176,13 @@ public class GenericEntityControllerImpl implements GenericEntityController {
 		return getEntity(userInfo, entityId, request, clazz, EventType.GET);
 	}
 	
+	@Override
+	public Entity getEntity(String userId, String id, HttpServletRequest request) throws NotFoundException, DatastoreException, UnauthorizedException {
+		UserInfo userInfo = userManager.getUserInfo(userId);
+		EntityHeader header = entityManager.getEntityHeader(userInfo, id);
+		EntityType type = EntityType.getFirstTypeInUrl(header.getType());
+		return getEntity(userInfo, id, request, type.getClassForType(), EventType.GET);
+	}
 	/**
 	 * Any time we fetch an entity we do so through this path.
 	 * @param <T>
@@ -238,6 +246,15 @@ public class GenericEntityControllerImpl implements GenericEntityController {
 		// Do all of the type specific stuff.
 		this.doAddServiceSpecificMetadata(info, entity, type, request, EventType.GET);
 		return entity;
+	}
+	
+	@Override
+	public Entity getEntityForVersion(String userId, String id,	Long versionNumber, HttpServletRequest request)
+			throws NotFoundException, DatastoreException, UnauthorizedException {
+		UserInfo userInfo = userManager.getUserInfo(userId);
+		EntityHeader header = entityManager.getEntityHeader(userInfo, id);
+		EntityType type = EntityType.valueOf(header.getType());
+		return getEntityForVersion(userId, id, versionNumber, request, type.getClassForType());
 	}
 
 	@Override
@@ -480,8 +497,8 @@ public class GenericEntityControllerImpl implements GenericEntityController {
 	 * @throws ConflictingUpdateException 
 	 */
 	@Override
-	public <T extends Entity> AccessControlList createEntityACL(String userId, AccessControlList newACL,
-			HttpServletRequest request, Class<? extends T> clazz) throws DatastoreException,
+	public AccessControlList createEntityACL(String userId, AccessControlList newACL,
+			HttpServletRequest request) throws DatastoreException,
 			InvalidModelException, UnauthorizedException, NotFoundException, ConflictingUpdateException {
 
 		UserInfo userInfo = userManager.getUserInfo(userId);		
@@ -493,7 +510,7 @@ public class GenericEntityControllerImpl implements GenericEntityController {
 	
 
 	@Override
-	public  <T extends Entity> AccessControlList getEntityACL(String entityId, String userId, HttpServletRequest request, Class<? extends T> clazz)
+	public  AccessControlList getEntityACL(String entityId, String userId, HttpServletRequest request)
 			throws NotFoundException, DatastoreException, UnauthorizedException, ACLInheritanceException {
 		// First try the updated
 		UserInfo userInfo = userManager.getUserInfo(userId);
@@ -618,8 +635,7 @@ public class GenericEntityControllerImpl implements GenericEntityController {
 
 
 	@Override
-	public EntityHeader getEntityHeader(String userId, String entityId)
-			throws NotFoundException, DatastoreException, UnauthorizedException {
+	public EntityHeader getEntityHeader(String userId, String entityId)	throws NotFoundException, DatastoreException, UnauthorizedException {
 		UserInfo userInfo = userManager.getUserInfo(userId);
 		return entityManager.getEntityHeader(userInfo, entityId);
 	}
@@ -661,6 +677,20 @@ public class GenericEntityControllerImpl implements GenericEntityController {
 		String urlPath = request.getRequestURL()==null ? "" : request.getRequestURL().toString();
 		return new PaginatedResults(urlPath,  results.getEntityHeaders(), results.getTotalNumberOfResults(), offset, limit, /*sort*/null, /*ascending*/true);
 	}
+
+
+	@Override
+	public UserEntityPermissions getUserEntityPermissions(String userId, String entityId) throws NotFoundException, DatastoreException {
+		UserInfo userInfo = userManager.getUserInfo(userId);
+		// TODO Auto-generated method stub
+		return permissionsManager.getUserPermissionsForEntity(userInfo, entityId);
+	}
+
+
+
+
+
+
 
 
 }

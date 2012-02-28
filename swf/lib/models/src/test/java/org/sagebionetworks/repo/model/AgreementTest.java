@@ -31,12 +31,11 @@ public class AgreementTest {
 		a1.setName("name");
 		a1.setParentId("0");
 		a1.setUri("uri");
-		a1.setVersion("1.0.0");
 		
 		adapter1 = a1.writeToJSONObject(adapter1);
 		String s = adapter1.toJSONString();
 		System.out.println(s);
-		adapter2 = JSONObjectAdapterImpl.createAdapterFromJSONString(s);
+		adapter2 = new JSONObjectAdapterImpl(s);
 		Agreement a2 = new Agreement(adapter2);
 		
 		assertEquals(a1, a2);

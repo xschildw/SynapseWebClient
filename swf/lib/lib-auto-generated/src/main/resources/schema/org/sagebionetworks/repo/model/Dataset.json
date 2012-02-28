@@ -1,4 +1,5 @@
 {
+    "title":"Dataset",
     "description":"JSON schema for Dataset POJO",
     "implements":[
         {
@@ -6,12 +7,14 @@
         },
         {
             "$ref":"org.sagebionetworks.repo.model.HasLayers"
-        },        
+        },
+        
     ],
     "properties":{
         "eulaId":{
             "type":"string",
             "description":"The id of the EULA for this dataset",
+            
         },
         "hasExpressionData":{
             "type":"boolean",
@@ -34,16 +37,12 @@
         "status":{
             "type":"string",
             "description":"the status of this dataset",
-            
-        },
-        "version":{
-            "type":"string",
-            "description":"This is a fake value. Layers need to be changed to versionable."
+            "title":"Status"
         },
         "releaseDate":{
             "type":"string",
             "format":"date-time",
-            
+            "title":"Release Date"
         },
         
     }

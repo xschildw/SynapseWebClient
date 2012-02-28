@@ -31,9 +31,7 @@ public class LocationTest {
 		l1.setName("name");
 		l1.setParentId("0");
 		l1.setUri("uri");
-		l1.setVersion("1.0.0");
 
-		l1.setVersion("1.0.0");
 		l1.setVersionComment("versionComment");
 		l1.setVersionLabel("versionLabel");
 		l1.setVersionNumber(1L);
@@ -46,7 +44,7 @@ public class LocationTest {
 
 		adapter1 = l1.writeToJSONObject(adapter1);
 		String s = adapter1.toJSONString();
-		adapter2 = JSONObjectAdapterImpl.createAdapterFromJSONString(s);
+		adapter2 = new JSONObjectAdapterImpl(s);
 		Location l2 = new Location(adapter2);
 		
 		assertEquals(l1, l2);

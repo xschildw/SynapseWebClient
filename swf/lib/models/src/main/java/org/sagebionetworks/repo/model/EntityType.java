@@ -45,6 +45,9 @@ public class EntityType {
 	public static final EntityType preview = new EntityType();
 	@Deprecated // Only added for backwards compatibility.
 	public static final EntityType code = new EntityType();
+	@Deprecated // Only added for backwards compatibility.
+	public static final EntityType analysis = new EntityType();
+
 	/**
 	 * The JSON file that contains the register data.
 	 */
@@ -61,7 +64,7 @@ public class EntityType {
 			InputStream in = classLoader.getResourceAsStream(REGISTER_JSON_FILE_NAME);
 			if(in == null) throw new IllegalStateException("Cannot find the "+REGISTER_JSON_FILE_NAME+" file on the classpath");
 			String jsonString = readToString(in);
-			JSONObjectAdapter adapter = JSONObjectAdapterImpl.createAdapterFromJSONString(jsonString);
+			JSONObjectAdapter adapter = new JSONObjectAdapterImpl(jsonString);
 			// Get the model object
 			EntityRegistry registry = new EntityRegistry(adapter);
 			List<EntityTypeMetadata> typeList = registry.getEntityTypes();
@@ -91,6 +94,8 @@ public class EntityType {
 					type = preview;
 				}else if(PrefixConst.CODE.equals(meta.getUrlPrefix())){
 					type = code;
+				}else if(PrefixConst.ANALYSIS.equals(meta.getUrlPrefix())){
+					type = analysis;
 				}else{
 					type = new EntityType();
 				}				

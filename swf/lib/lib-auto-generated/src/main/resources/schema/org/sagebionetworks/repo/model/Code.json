@@ -1,4 +1,5 @@
 {
+    "title":"Code",
     "description":"JSON schema for Code POJO",
     "implements":[
         {
@@ -10,18 +11,15 @@
         "startDate":{
             "type":"string",
             "format":"date-time",
+            "title":"Start Date",
             
         },
         "endDate":{
             "type":"string",
             "format":"date-time",
+            "title":"End Date",
             
-        },
-        "version":{
-            "type":"string",
-            "description":"This is a fake version label.  The entity needs to be converted to versionable",
-            
-        },
+        }
         
     }
 }
