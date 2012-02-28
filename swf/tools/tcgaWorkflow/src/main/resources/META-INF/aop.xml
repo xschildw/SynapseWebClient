@@ -1,8 +1,0 @@
-<aspectj>
-
-<!-- This is merged with lib/lib-workflow/src/main/resources/META-INF/aop.xml -->
-   <weaver options="-verbose">
-     <include within="org.sagebionetworks.workflow.curation..*"/>
-   </weaver>
-
- </aspectj>

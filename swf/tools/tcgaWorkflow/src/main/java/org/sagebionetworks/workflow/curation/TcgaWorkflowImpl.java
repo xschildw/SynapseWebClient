@@ -33,32 +33,30 @@ public class TcgaWorkflowImpl implements TcgaWorkflow {
 	public TcgaWorkflowImpl(TcgaActivitiesClient client) {
 		this.client = client;
 	}
-	
-	//@Override
+
+	@Override
 	public void addRawTcgaLayer(final String datasetId, final String tcgaUrl,
 			final Boolean doneIfExists) {
 
-//		new TryCatchFinally() {
-//
-//			@Override
-//			protected void doTry() throws Throwable {
-				Promise<String> layerId = client.createMetadata(datasetId,
-						tcgaUrl,
+		new TryCatchFinally() {
 
-						doneIfExists);
-//				notifyFollowersIfApplicable(layerId);
-//			}
-//
-//			@Override
-//			protected void doCatch(Throwable e) throws Throwable {
-//				throw e;
-//			}
-//
-//			@Override
-//			protected void doFinally() throws Throwable {
-//				// do nothing
-//			}
-//		};
+			@Override
+			protected void doTry() throws Throwable {
+				Promise<String> layerId = client.createMetadata(datasetId,
+						tcgaUrl, doneIfExists);
+				notifyFollowersIfApplicable(layerId);
+			}
+
+			@Override
+			protected void doCatch(Throwable e) throws Throwable {
+				throw e;
+			}
+
+			@Override
+			protected void doFinally() throws Throwable {
+				// do nothing
+			}
+		};
 	}
 
 	@Asynchronous
@@ -66,8 +64,9 @@ public class TcgaWorkflowImpl implements TcgaWorkflow {
 		if (!Constants.WORKFLOW_DONE.equals(layerId.get())) {
 			Promise<String> message = client
 					.formulateNotificationMessage(layerId);
-			client.notifyFollowers(NOTIFICATION_SNS_TOPIC,
-					NOTIFICATION_SUBJECT, message.get(), message);
+			client.notifyFollowers(Promise
+					.asPromise(NOTIFICATION_SNS_TOPIC), Promise
+					.asPromise(NOTIFICATION_SUBJECT), message);
 		}
 	}
 }
