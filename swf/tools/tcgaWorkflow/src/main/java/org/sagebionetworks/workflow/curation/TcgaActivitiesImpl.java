@@ -26,8 +26,19 @@ public class TcgaActivitiesImpl implements TcgaActivities {
 		String layerId = null;
 		try {
 			layerId = TcgaCuration
-					.doCreateSynapseMetadataForTcgaSourceLayer(doneIfExists,
-							datasetId, tcgaUrl);
+					.createMetadata(
+							datasetId, tcgaUrl, doneIfExists);
+		} catch (SocketTimeoutException e) {
+			throw new ActivityFailureException("Communication timeout, try this again");
+		}
+		return layerId;
+	}
+	
+	@Override
+	public String updateLocation(String layerId, String tcgaUrl) throws ClientProtocolException, NoSuchAlgorithmException, UnrecoverableException, IOException, HttpClientHelperException, SynapseException, JSONException  {
+		try {
+			TcgaCuration
+					.updateLocation(tcgaUrl, layerId);
 		} catch (SocketTimeoutException e) {
 			throw new ActivityFailureException("Communication timeout, try this again");
 		}
@@ -36,7 +47,7 @@ public class TcgaActivitiesImpl implements TcgaActivities {
 
 	@Override
 	public String formulateNotificationMessage(String layerId) throws SynapseException, JSONException, UnrecoverableException {
-		return TcgaCuration.formulateLayerCreationMessage(layerId);
+		return TcgaCuration.formulateLayerNotificationMessage(layerId);
 	}
 
 	@Override

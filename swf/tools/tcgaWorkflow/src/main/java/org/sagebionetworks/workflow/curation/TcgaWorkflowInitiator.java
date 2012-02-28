@@ -11,6 +11,7 @@ import org.sagebionetworks.client.Synapse;
 import org.sagebionetworks.client.exceptions.SynapseException;
 import org.sagebionetworks.utils.SimpleObserver;
 import org.sagebionetworks.utils.WebCrawler;
+import org.sagebionetworks.workflow.Constants;
 
 import com.amazonaws.services.simpleworkflow.AmazonSimpleWorkflow;
 
@@ -20,8 +21,8 @@ import com.amazonaws.services.simpleworkflow.AmazonSimpleWorkflow;
  * everytime. It is up to the workflow to recognize and skip work already
  * processed.
  * 
- * TODO this could actually be a workflow in and of itself, but it actually
- * completes in tens of seconds so its not worth the effort at this time
+ * TODO this could actually be a workflow in and of itself, but its cheaper to
+ * run this in cron
  * 
  * @author deflaux
  */
@@ -57,7 +58,7 @@ public class TcgaWorkflowInitiator {
 				return;
 
 			Map<String, String> metadata = TcgaCuration
-					.formulateMetadataFromTcgaUrl(url, false);
+					.formulateMetadataFromTcgaUrl(url);
 
 			// Since the URLs come in in order of lowest to highest
 			// revision, this will keep overwriting the earlier revisions in
@@ -173,10 +174,18 @@ public class TcgaWorkflowInitiator {
 
 					Collection<String> urls = observer.getResults();
 					for (String layerUrl : urls) {
-						TcgaWorkflowClientExternal workflow = clientFactory
-								.getClient();
-						workflow.addRawTcgaLayer(datasetId, layerUrl, true);
-						log.info("Kicked off workflow for " + layerUrl);
+						try {
+							String layerId = TcgaCuration.createMetadata(datasetId, layerUrl, true);
+							if(!Constants.WORKFLOW_DONE.equals(layerId)) {
+								TcgaWorkflowClientExternal workflow = clientFactory
+									.getClient();
+								workflow.addLocationToRawTcgaLayer(layerId, layerUrl);
+								log.info("Kicked off workflow for " + layerUrl);
+							}
+						}
+						catch(Exception e) {
+							log.error(e);
+						}
 					}
 				}
 			}

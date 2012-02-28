@@ -19,11 +19,10 @@ public interface TcgaWorkflow {
 	static final String DECISIONS_TASK_LIST = "TcgaDecisions";
 	
     /**
-     * @param datasetId
+     * @param layerId
      * @param tcgaUrl
-     * @param doneIfExists 
      */
     @Execute(version = TcgaActivities.VERSION) 
-    void addRawTcgaLayer(String datasetId, String tcgaUrl, Boolean doneIfExists);
+    void addLocationToRawTcgaLayer(String layerId, String tcgaUrl);
 
 }

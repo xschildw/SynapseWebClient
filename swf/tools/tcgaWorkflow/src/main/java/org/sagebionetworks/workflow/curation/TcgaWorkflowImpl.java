@@ -35,16 +35,16 @@ public class TcgaWorkflowImpl implements TcgaWorkflow {
 	}
 
 	@Override
-	public void addRawTcgaLayer(final String datasetId, final String tcgaUrl,
-			final Boolean doneIfExists) {
+	public void addLocationToRawTcgaLayer(final String layerId, final String tcgaUrl) {
 
 		new TryCatchFinally() {
 
 			@Override
 			protected void doTry() throws Throwable {
-				Promise<String> layerId = client.createMetadata(datasetId,
-						tcgaUrl, doneIfExists);
-				notifyFollowersIfApplicable(layerId);
+				Promise<String> updatedLayerId = client.updateLocation(layerId,
+						tcgaUrl);
+				// note that updatedLayerId == layerId
+				notifyFollowersIfApplicable(updatedLayerId);
 			}
 
 			@Override

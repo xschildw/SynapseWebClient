@@ -18,10 +18,6 @@ import com.amazonaws.services.simpleworkflow.flow.annotations.Asynchronous;
 import com.amazonaws.services.simpleworkflow.flow.core.Promise;
 import com.amazonaws.services.simpleworkflow.flow.core.Task;
 import com.amazonaws.services.simpleworkflow.flow.core.TryFinally;
-import com.amazonaws.services.simpleworkflow.flow.examples.helloworld.HelloWorldActivities;
-import com.amazonaws.services.simpleworkflow.flow.examples.helloworld.HelloWorldWorkflow;
-import com.amazonaws.services.simpleworkflow.flow.examples.helloworld.HelloWorldWorkflowClient;
-import com.amazonaws.services.simpleworkflow.flow.examples.helloworld.HelloWorldWorkflowImpl;
 import com.amazonaws.services.simpleworkflow.flow.junit.FlowBlockJUnit4ClassRunner;
 import com.amazonaws.services.simpleworkflow.flow.junit.WorkflowTest;
 
@@ -33,7 +29,7 @@ import com.amazonaws.services.simpleworkflow.flow.junit.WorkflowTest;
 public class TcgaWorkflowTest {
 
 	private static final String EXPECTED_RESULT = "workflow"
-			+ ":createMetadata" + ":formulateNotificationMessage"
+			+ ":updateLocation" + ":formulateNotificationMessage"
 			+ ":notifyFollowers";
 
 	private final class TestTcgaActivities implements TcgaActivities {
@@ -53,13 +49,26 @@ public class TcgaWorkflowTest {
 				NoSuchAlgorithmException, UnrecoverableException, IOException,
 				HttpClientHelperException, SynapseException, JSONException {
 			try {
-				Thread.sleep(10000);
+				Thread.sleep(1000);
 				// Delay is for the purpose of illustration
 			} catch (InterruptedException e) {
 			}
 			result += ":createMetadata";
 			return result;
 		}
+
+		@Override
+		public String updateLocation(String layerId, String tcgaUrl)
+				throws ClientProtocolException, NoSuchAlgorithmException,
+				UnrecoverableException, IOException, HttpClientHelperException,
+				SynapseException, JSONException {
+			try {
+				Thread.sleep(1000);
+				// Delay is for the purpose of illustration
+			} catch (InterruptedException e) {
+			}
+			result += ":updateLocation";
+			return result;		}
 
 		@Override
 		public String formulateNotificationMessage(String layerId)
@@ -115,8 +124,7 @@ public class TcgaWorkflowTest {
 	@Test
 	public void testThroughClient() throws Exception {
 		TcgaWorkflowClient workflow = workflowFactory.getClient();
-		Promise<Void> done = workflow.addRawTcgaLayer("datasetId", "tcgaUrl",
-				true);
+		Promise<Void> done = workflow.addLocationToRawTcgaLayer("fakeLayerId", "fakeTcgaUrl");
 		assertResult(done);
 	}
 
@@ -132,8 +140,7 @@ public class TcgaWorkflowTest {
 	@Test
 	public void testThroughClientAssertWithTask() throws Exception {
 		TcgaWorkflowClient workflow = workflowFactory.getClient();
-		Promise<Void> done = workflow.addRawTcgaLayer("datasetId", "tcgaUrl",
-				true);
+		Promise<Void> done = workflow.addLocationToRawTcgaLayer("fakeLayerId", "fakeTcgaUrl");
 		new Task(done) {
 
 			@Override
@@ -157,7 +164,7 @@ public class TcgaWorkflowTest {
 			protected void doTry() throws Throwable {
 				// addRawTcgaLayer returns void so we use TryFinally
 				// to wait for its completion
-				workflow.addRawTcgaLayer("datasetId", "tcgaUrl", true);
+				workflow.addLocationToRawTcgaLayer("fakeLayerId", "fakeTcgaUrl");
 			}
 
 			@Override

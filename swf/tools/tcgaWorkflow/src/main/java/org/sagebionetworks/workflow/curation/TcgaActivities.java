@@ -65,6 +65,23 @@ public interface TcgaActivities {
 
 	/**
 	 * @param layerId
+	 * @param tcgaUrl
+	 * @return the layerId of the newly created or updated layer
+	 * @throws JSONException 
+	 * @throws SynapseException 
+	 * @throws HttpClientHelperException 
+	 * @throws IOException 
+	 * @throws UnrecoverableException 
+	 * @throws NoSuchAlgorithmException 
+	 * @throws ClientProtocolException 
+	 */
+	@Activity(version = VERSION)
+	@ActivityRegistrationOptions(defaultTaskScheduleToStartTimeoutSeconds = ONE_DAY_OF_SECONDS, defaultTaskStartToCloseTimeoutSeconds = ONE_DAY_OF_SECONDS)
+	@ExponentialRetry(initialRetryIntervalSeconds = INITIAL_RETRY_INTERVAL_SECONDS, maximumAttempts = NUM_RETRIES)
+	String updateLocation(String layerId, String tcgaUrl) throws ClientProtocolException, NoSuchAlgorithmException, UnrecoverableException, IOException, HttpClientHelperException, SynapseException, JSONException;
+
+	/**
+	 * @param layerId
 	 * @return the body of the notification message
 	 * @throws UnrecoverableException 
 	 * @throws JSONException 

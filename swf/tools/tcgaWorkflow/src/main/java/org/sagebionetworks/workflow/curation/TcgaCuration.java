@@ -50,7 +50,7 @@ public class TcgaCuration {
 	 * Create or update metadata for TCGA layers
 	 * 
 	 * TCGA URLs are well-formed. Extract metadata from the path and filename
-	 * portions of the TCGA URL and also the md5 file.
+	 * portions of the TCGA URL.
 	 * 
 	 * <domain>_<disease study>.<platform>.<serial index>.<revision>.<series>
 	 * 
@@ -67,14 +67,13 @@ public class TcgaCuration {
 	 * @throws SynapseException
 	 * @throws JSONException
 	 */
-	public static String doCreateSynapseMetadataForTcgaSourceLayer(
-			Boolean doneIfExists, String datasetId, String tcgaUrl)
+	public static String createMetadata (
+			String datasetId, String tcgaUrl, Boolean doneIfExists)
 			throws ClientProtocolException, NoSuchAlgorithmException,
 			UnrecoverableException, IOException, HttpClientHelperException,
 			SynapseException, JSONException {
 
-		Map<String, String> metadata = formulateMetadataFromTcgaUrl(tcgaUrl,
-				true);
+		Map<String, String> metadata = formulateMetadataFromTcgaUrl(tcgaUrl);
 
 		Synapse synapse = ConfigHelper.getSynapseClient();
 		JSONObject results = synapse
@@ -86,9 +85,7 @@ public class TcgaCuration {
 		if (1 == numLayersFound) {
 			layer = synapse.getEntity(results.getJSONArray("results")
 					.getJSONObject(0).getString("layer.id"), Layer.class);
-			if (metadata.containsKey("md5")
-					&& metadata.get("md5").equals(layer.getMd5())
-					&& doneIfExists) {
+			if (doneIfExists || (layer.getType() != LayerTypeNames.C)) {
 				return Constants.WORKFLOW_DONE;
 			}
 		} else if (1 < numLayersFound) {
@@ -106,15 +103,6 @@ public class TcgaCuration {
 		layer.setType(LayerTypeNames.valueOf(metadata.get("type")));
 		if (metadata.containsKey("platform"))
 			layer.setPlatform(metadata.get("platform"));
-		if (metadata.containsKey("md5")) {
-			layer.setMd5(metadata.get("md5"));
-			List<LocationData> locations = new ArrayList<LocationData>();
-			LocationData location = new LocationData();
-			location.setPath(tcgaUrl);
-			location.setType(LocationTypeNames.external);
-			locations.add(location);
-			layer.setLocations(locations);
-		}
 
 		// Create or update the layer in Synapse, as appropriate
 		if (null == layer.getId()) {
@@ -138,17 +126,6 @@ public class TcgaCuration {
 		// Update the annotations in Synapse
 		synapse.putEntity(layer.getAnnotations(), annotations);
 
-		// If this was unversionsed data from TCGA, download it and import it to
-		// our datastore
-		if (!metadata.containsKey("md5")) {
-			File tempFile = File.createTempFile("tcga", "data");
-			tempFile = HttpClientHelper.getContent(
-					ConfigHelper.getHttpClient(), tcgaUrl, tempFile);
-			layer = (Layer) synapse
-					.uploadLocationableToSynapse(layer, tempFile);
-			tempFile.delete();
-		}
-
 		return layer.getId();
 	}
 
@@ -166,11 +143,64 @@ public class TcgaCuration {
 	}
 
 	/**
-	 * Given a TCGA url, parse it to extract metadata out of it, including the
-	 * checksum of the data
+	 * Given a layer id and a TCGA source url, update the location
 	 * 
 	 * @param tcgaUrl
-	 * @param getMD5
+	 * @param layerId
+	 * @throws ClientProtocolException
+	 * @throws NoSuchAlgorithmException
+	 * @throws UnrecoverableException
+	 * @throws IOException
+	 * @throws HttpClientHelperException
+	 * @throws SynapseException
+	 * @throws JSONException
+	 */
+	public static void updateLocation(
+			String tcgaUrl, String layerId) throws ClientProtocolException,
+			NoSuchAlgorithmException, UnrecoverableException, IOException,
+			HttpClientHelperException, SynapseException, JSONException {
+
+		Synapse synapse = ConfigHelper.getSynapseClient();
+		Layer layer = synapse.getEntity(layerId, Layer.class);
+
+		try {
+			String md5FileContents = HttpClientHelper.getContent(ConfigHelper
+					.getHttpClient(), tcgaUrl + ".md5");
+			String fileInfo[] = md5FileContents.split("\\s+");
+			if (2 != fileInfo.length) {
+				throw new UnrecoverableException(
+						"malformed md5 file from tcga: " + md5FileContents);
+			}
+			layer.setMd5(fileInfo[0]);
+			List<LocationData> locations = new ArrayList<LocationData>();
+			LocationData location = new LocationData();
+			location.setPath(tcgaUrl);
+			location.setType(LocationTypeNames.external);
+			locations.add(location);
+			layer.setLocations(locations);
+			layer = synapse.putEntity(layer);
+		} catch (HttpClientHelperException e) {
+			// 404s are okay, not all TCGA files have a corresponding md5 file
+			// (e.g., clinical data), later on we will download the file and
+			// compute the md5 checksum
+			if (404 != e.getHttpStatus()) {
+				throw e;
+			}
+			// If this was unversionsed data from TCGA, download it and import
+			// it to our datastore
+			File tempFile = File.createTempFile("tcga", "data");
+			tempFile = HttpClientHelper.getContent(
+					ConfigHelper.getHttpClient(), tcgaUrl, tempFile);
+			layer = (Layer) synapse
+					.uploadLocationableToSynapse(layer, tempFile);
+			tempFile.delete();
+		}
+	}
+
+	/**
+	 * Given a TCGA url, parse it to extract metadata out of it
+	 * 
+	 * @param tcgaUrl
 	 * @return a map holding all the metadata we could reverse engineer from the
 	 *         TCGA Url
 	 * @throws UnrecoverableException
@@ -180,7 +210,7 @@ public class TcgaCuration {
 	 * @throws ClientProtocolException
 	 */
 	public static Map<String, String> formulateMetadataFromTcgaUrl(
-			String tcgaUrl, boolean getMD5) throws UnrecoverableException,
+			String tcgaUrl) throws UnrecoverableException,
 			ClientProtocolException, NoSuchAlgorithmException, IOException,
 			HttpClientHelperException {
 
@@ -241,30 +271,6 @@ public class TcgaCuration {
 							+ "): " + pathComponents[LAYER_TYPE_INDEX]);
 		}
 
-		if (!getMD5)
-			return metadata;
-
-		String md5 = null;
-		try {
-			String md5FileContents = HttpClientHelper.getContent(ConfigHelper
-					.getHttpClient(), tcgaUrl + ".md5");
-			String fileInfo[] = md5FileContents.split("\\s+");
-			if (2 != fileInfo.length) {
-				throw new UnrecoverableException(
-						"malformed md5 file from tcga: " + md5FileContents);
-			}
-			md5 = fileInfo[0];
-			metadata.put("md5", md5);
-
-		} catch (HttpClientHelperException e) {
-			// 404s are okay, not all TCGA files have a corresponding md5 file
-			// (e.g., clinical data), later on we will download the file and
-			// compute the md5 checksum
-			if (404 != e.getHttpStatus()) {
-				throw e;
-			}
-		}
-
 		return metadata;
 	}
 
@@ -277,7 +283,7 @@ public class TcgaCuration {
 	 * @throws UnrecoverableException
 	 * @throws JSONException
 	 */
-	public static String formulateLayerCreationMessage(String layerId)
+	public static String formulateLayerNotificationMessage(String layerId)
 			throws SynapseException, JSONException, UnrecoverableException {
 		StringBuilder message = new StringBuilder();
 
