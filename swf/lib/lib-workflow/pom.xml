@@ -29,6 +29,12 @@
     
     <!-- Dependencies of flow-build-tools, need a proper pom for that -->
     <dependency>
+      <groupId>org.aspectj</groupId>
+      <artifactId>aspectjweaver</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+
+    <dependency>
       <groupId>org.freemarker</groupId>
       <artifactId>freemarker</artifactId>
       <!-- Latest 2.3.x (not 2.4.x), at least 2.3.18 -->
@@ -144,6 +150,16 @@
           </execution>
         </executions>
       </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <forkMode>pertest</forkMode>
+          <argLine>-javaagent:${settings.localRepository}/org/aspectj/aspectjweaver/${org.aspectj.version}/aspectjweaver-${org.aspectj.version}.jar</argLine>
+        </configuration>
+      </plugin>
+      
     </plugins>
   </build>
   
