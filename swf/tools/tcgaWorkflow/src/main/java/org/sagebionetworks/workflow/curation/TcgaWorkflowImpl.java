@@ -33,32 +33,32 @@ public class TcgaWorkflowImpl implements TcgaWorkflow {
 	public TcgaWorkflowImpl(TcgaActivitiesClient client) {
 		this.client = client;
 	}
-
-	@Override
+	
+	//@Override
 	public void addRawTcgaLayer(final String datasetId, final String tcgaUrl,
 			final Boolean doneIfExists) {
 
-		new TryCatchFinally() {
-
-			@Override
-			protected void doTry() throws Throwable {
+//		new TryCatchFinally() {
+//
+//			@Override
+//			protected void doTry() throws Throwable {
 				Promise<String> layerId = client.createMetadata(datasetId,
 						tcgaUrl,
 
 						doneIfExists);
-				notifyFollowersIfApplicable(layerId);
-			}
-
-			@Override
-			protected void doCatch(Throwable e) throws Throwable {
-				throw e;
-			}
-
-			@Override
-			protected void doFinally() throws Throwable {
-				// do nothing
-			}
-		};
+//				notifyFollowersIfApplicable(layerId);
+//			}
+//
+//			@Override
+//			protected void doCatch(Throwable e) throws Throwable {
+//				throw e;
+//			}
+//
+//			@Override
+//			protected void doFinally() throws Throwable {
+//				// do nothing
+//			}
+//		};
 	}
 
 	@Asynchronous

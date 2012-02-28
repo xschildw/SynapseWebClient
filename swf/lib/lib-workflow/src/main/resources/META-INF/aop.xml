@@ -8,7 +8,6 @@
 
    <weaver options="-verbose">
      <include within="com.amazonaws.services.simpleworkflow.flow.examples..*"/>
-     <include within="org.sagebionetworks..*"/>
    </weaver>
 
  </aspectj>

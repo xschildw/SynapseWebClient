@@ -42,7 +42,7 @@ public class HelloWorldTest {
         @Override
         public String getName(){
             try{
-                Thread.sleep(10000);
+                Thread.sleep(1000);
                 //Delay is for the purpose of illustration
             }
             catch(InterruptedException e){
