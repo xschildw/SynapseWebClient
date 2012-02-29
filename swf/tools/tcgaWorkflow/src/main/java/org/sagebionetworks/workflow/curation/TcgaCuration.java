@@ -75,7 +75,7 @@ public class TcgaCuration {
 
 		Map<String, String> metadata = formulateMetadataFromTcgaUrl(tcgaUrl);
 
-		Synapse synapse = ConfigHelper.getSynapseClient();
+		Synapse synapse = TcgaWorkflowConfigHelper.getSynapseClient();
 		JSONObject results = synapse
 				.query("select * from layer where layer.parentId == "
 						+ datasetId + " and layer.name == '"
@@ -160,11 +160,11 @@ public class TcgaCuration {
 			NoSuchAlgorithmException, UnrecoverableException, IOException,
 			HttpClientHelperException, SynapseException, JSONException {
 
-		Synapse synapse = ConfigHelper.getSynapseClient();
+		Synapse synapse = TcgaWorkflowConfigHelper.getSynapseClient();
 		Layer layer = synapse.getEntity(layerId, Layer.class);
 
 		try {
-			String md5FileContents = HttpClientHelper.getContent(ConfigHelper
+			String md5FileContents = HttpClientHelper.getContent(TcgaWorkflowConfigHelper
 					.getHttpClient(), tcgaUrl + ".md5");
 			String fileInfo[] = md5FileContents.split("\\s+");
 			if (2 != fileInfo.length) {
@@ -190,7 +190,7 @@ public class TcgaCuration {
 			// it to our datastore
 			File tempFile = File.createTempFile("tcga", "data");
 			tempFile = HttpClientHelper.getContent(
-					ConfigHelper.getHttpClient(), tcgaUrl, tempFile);
+					TcgaWorkflowConfigHelper.getHttpClient(), tcgaUrl, tempFile);
 			layer = (Layer) synapse
 					.uploadLocationableToSynapse(layer, tempFile);
 			tempFile.delete();
@@ -287,7 +287,7 @@ public class TcgaCuration {
 			throws SynapseException, JSONException, UnrecoverableException {
 		StringBuilder message = new StringBuilder();
 
-		Synapse synapse = ConfigHelper.getSynapseClient();
+		Synapse synapse = TcgaWorkflowConfigHelper.getSynapseClient();
 		JSONObject layerResults = synapse
 				.query("select * from layer where layer.id == " + layerId);
 		if (0 == layerResults.getInt("totalNumberOfResults")) {
@@ -312,7 +312,7 @@ public class TcgaCuration {
 		message.append(" for dataset ").append(
 				datasetResults.getJSONArray("results").getJSONObject(0).get(
 						"dataset.name"));
-		message.append("\n").append(ConfigHelper.getPortalEndpoint()).append(
+		message.append("\n").append(TcgaWorkflowConfigHelper.getPortalEndpoint()).append(
 				"/#Layer:").append(layerQueryResult.get("layer.id")).append(
 				";Dataset:").append(layerQueryResult.get("layer.parentId"));
 		message.append("\n\nLayer\n").append(layerResults.toString(4));

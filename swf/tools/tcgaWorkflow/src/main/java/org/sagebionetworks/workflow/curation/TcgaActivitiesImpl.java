@@ -52,7 +52,7 @@ public class TcgaActivitiesImpl implements TcgaActivities {
 
 	@Override
 	public void notifyFollowers(String recipient, String subject, String message) {
-		Notification.doSnsNotifyFollowers(ConfigHelper.getSNSClient(), recipient, subject, message);
+		Notification.doSnsNotifyFollowers(TcgaWorkflowConfigHelper.getSNSClient(), recipient, subject, message);
 		
 	}
 }

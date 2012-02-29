@@ -1,5 +1,7 @@
 package org.sagebionetworks.workflow.curation;
 
+import org.sagebionetworks.workflow.Constants;
+
 import com.amazonaws.services.simpleworkflow.flow.annotations.Execute;
 import com.amazonaws.services.simpleworkflow.flow.annotations.Workflow;
 import com.amazonaws.services.simpleworkflow.flow.annotations.WorkflowRegistrationOptions;
@@ -9,7 +11,7 @@ import com.amazonaws.services.simpleworkflow.flow.annotations.WorkflowRegistrati
  *
  */
 @Workflow
-@WorkflowRegistrationOptions(defaultExecutionStartToCloseTimeoutSeconds = TcgaActivities.ONE_DAY_OF_SECONDS,
+@WorkflowRegistrationOptions(defaultExecutionStartToCloseTimeoutSeconds = Constants.ONE_DAY_OF_SECONDS,
 		defaultTaskList = TcgaWorkflow.DECISIONS_TASK_LIST) 
 public interface TcgaWorkflow {
 	

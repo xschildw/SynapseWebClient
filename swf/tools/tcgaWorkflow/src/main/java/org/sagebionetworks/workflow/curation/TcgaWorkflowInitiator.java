@@ -77,12 +77,12 @@ public class TcgaWorkflowInitiator {
 	}
 
 	class DatasetObserver implements SimpleObserver<String> {
-		ConfigHelper configHelper;
+		TcgaWorkflowConfigHelper configHelper;
 		Synapse synapse;
 		String projectId;
 
 		DatasetObserver() throws Exception {
-			synapse = ConfigHelper.getSynapseClient();
+			synapse = TcgaWorkflowConfigHelper.getSynapseClient();
 
 			JSONObject results = synapse
 					.query("select * from project where project.name == '"
@@ -209,8 +209,8 @@ public class TcgaWorkflowInitiator {
 	 */
 	public static void main(String[] args) throws Exception {
 		// Create the client for Simple Workflow Service
-		AmazonSimpleWorkflow swfService = ConfigHelper.getSWFClient();
-		String domain = ConfigHelper.getStack();
+		AmazonSimpleWorkflow swfService = TcgaWorkflowConfigHelper.getSWFClient();
+		String domain = TcgaWorkflowConfigHelper.getStack();
 
 		TcgaWorkflowClientExternalFactory clientFactory = new TcgaWorkflowClientExternalFactoryImpl(
 				swfService, domain);

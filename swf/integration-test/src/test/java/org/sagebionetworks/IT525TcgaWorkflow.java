@@ -16,7 +16,7 @@ import org.sagebionetworks.repo.model.LocationTypeNames;
 import org.sagebionetworks.workflow.Constants;
 import org.sagebionetworks.workflow.Notification;
 import org.sagebionetworks.workflow.UnrecoverableException;
-import org.sagebionetworks.workflow.curation.ConfigHelper;
+import org.sagebionetworks.workflow.curation.TcgaWorkflowConfigHelper;
 import org.sagebionetworks.workflow.curation.TcgaCuration;
 
 import com.amazonaws.AmazonServiceException;
@@ -49,7 +49,7 @@ public class IT525TcgaWorkflow {
 	static public void setUpBeforeClass() throws Exception {
 		String datasetName = "Colon Adenocarcinoma TCGA";
 
-		synapse = ConfigHelper.getSynapseClient();
+		synapse = TcgaWorkflowConfigHelper.getSynapseClient();
 		JSONObject results = synapse
 				.query("select * from dataset where dataset.name == '"
 						+ datasetName + "'");
@@ -69,7 +69,7 @@ public class IT525TcgaWorkflow {
 	 */
 	@Test
 	public void testTCGAAbbreviation2Name() throws Exception {
-		assertEquals("Colon Adenocarcinoma TCGA", ConfigHelper
+		assertEquals("Colon Adenocarcinoma TCGA", TcgaWorkflowConfigHelper
 				.getTCGADatasetName("coad"));
 
 	}
@@ -228,8 +228,8 @@ public class IT525TcgaWorkflow {
 	@Test
 	public void testDoNotifyFollowers() {
 		try {
-			String topic = ConfigHelper.getWorkflowSnsTopic();
-			Notification.doSnsNotifyFollowers(ConfigHelper.getSNSClient(),
+			String topic = TcgaWorkflowConfigHelper.getWorkflowSnsTopic();
+			Notification.doSnsNotifyFollowers(TcgaWorkflowConfigHelper.getSNSClient(),
 					topic, "integration test subject",
 					"integration test message, yay!");
 		} catch (AmazonServiceException e) {

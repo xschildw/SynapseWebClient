@@ -18,8 +18,8 @@ public class TcgaWorkflowActivityService {
      * @throws Exception
      */
     public static void main(String[] args) throws Exception {
-        AmazonSimpleWorkflow swfService = ConfigHelper.getSWFClient();
-        String domain = ConfigHelper.getStack();
+        AmazonSimpleWorkflow swfService = TcgaWorkflowConfigHelper.getSWFClient();
+        String domain = TcgaWorkflowConfigHelper.getStack();
 
         final ActivityWorker worker = new ActivityWorker(swfService, domain, TcgaActivities.ACTIVITIES_TASK_LIST);
 

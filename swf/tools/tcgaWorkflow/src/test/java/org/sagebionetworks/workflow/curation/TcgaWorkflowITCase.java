@@ -46,7 +46,7 @@ public class TcgaWorkflowITCase {
 	static public void setUpBeforeClass() throws Exception {
 		String datasetName = "Colon Adenocarcinoma TCGA";
 
-		synapse = ConfigHelper.getSynapseClient();
+		synapse = TcgaWorkflowConfigHelper.getSynapseClient();
 		JSONObject results = synapse
 				.query("select * from dataset where dataset.name == '"
 						+ datasetName + "'");
@@ -66,7 +66,7 @@ public class TcgaWorkflowITCase {
 	 */
 	@Test
 	public void testTCGAAbbreviation2Name() throws Exception {
-		assertEquals("Colon Adenocarcinoma TCGA", ConfigHelper
+		assertEquals("Colon Adenocarcinoma TCGA", TcgaWorkflowConfigHelper
 				.getTCGADatasetName("coad"));
 
 	}
@@ -225,8 +225,8 @@ public class TcgaWorkflowITCase {
 	@Test
 	public void testDoNotifyFollowers() {
 		try {
-			String topic = ConfigHelper.getWorkflowSnsTopic();
-			Notification.doSnsNotifyFollowers(ConfigHelper.getSNSClient(),
+			String topic = TcgaWorkflowConfigHelper.getWorkflowSnsTopic();
+			Notification.doSnsNotifyFollowers(TcgaWorkflowConfigHelper.getSNSClient(),
 					topic, "integration test subject",
 					"integration test message, yay!");
 		} catch (AmazonServiceException e) {

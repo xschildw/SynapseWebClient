@@ -82,6 +82,11 @@ public interface WorkflowTemplatedConfiguration extends TemplatedConfiguration {
 	public String getSynapsePassword();
 
 	/**
+	 * @return the Synapse secret key to log in with for this workflow
+	 */
+	public String getSynapseSecretKey();
+
+	/**
 	 * Create a new Synapse client configured with the Synapse credentials of
 	 *         this workflow
 	 *         
@@ -121,5 +126,4 @@ public interface WorkflowTemplatedConfiguration extends TemplatedConfiguration {
 	 * @return the path to the rscript executable
 	 */
 	public String getRScriptPath();
-
 }

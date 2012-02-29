@@ -131,6 +131,11 @@ public class WorkflowTemplatedConfigurationImpl extends
 	public String getSynapsePassword() {
 		return getDecryptedProperty("org.sagebionetworks.synapse.password");
 	}
+	
+	@Override
+	public String getSynapseSecretKey() {
+		return getDecryptedProperty("org.sagebionetworks.synapse.secretkey");
+	}
 
 	@Override
 	public Synapse createSynapseClient() throws SynapseException {

@@ -13,7 +13,7 @@ import com.amazonaws.services.simpleworkflow.flow.core.TryCatchFinally;
 public class TcgaWorkflowImpl implements TcgaWorkflow {
 
 	private static final String NOTIFICATION_SUBJECT = "TCGA Workflow Notification ";
-	private static final String NOTIFICATION_SNS_TOPIC = ConfigHelper
+	private static final String NOTIFICATION_SNS_TOPIC = TcgaWorkflowConfigHelper
 			.getWorkflowSnsTopic();
 
 	private TcgaActivitiesClient client;

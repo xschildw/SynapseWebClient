@@ -21,13 +21,13 @@ import com.amazonaws.services.sns.AmazonSNS;
  * 
  * @author deflaux
  */
-public class ConfigHelper {
+public class TcgaWorkflowConfigHelper {
 
 	private static final String DEFAULT_PROPERTIES_FILENAME = "/tcgaWorkflow.properties";
 	private static final String TEMPLATE_PROPERTIES = "/tcgaWorkflowTemplate.properties";
 	private static final String TCGA_ABBREVIATION_PREFIX = "abbrev_";
 
-	private static final Logger log = Logger.getLogger(ConfigHelper.class
+	private static final Logger log = Logger.getLogger(TcgaWorkflowConfigHelper.class
 			.getName());
 
 	private static WorkflowTemplatedConfiguration configuration = null;

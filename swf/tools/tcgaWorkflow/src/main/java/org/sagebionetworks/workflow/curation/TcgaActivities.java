@@ -7,6 +7,7 @@ import org.apache.http.client.ClientProtocolException;
 import org.json.JSONException;
 import org.sagebionetworks.client.exceptions.SynapseException;
 import org.sagebionetworks.utils.HttpClientHelperException;
+import org.sagebionetworks.workflow.Constants;
 import org.sagebionetworks.workflow.UnrecoverableException;
 
 import com.amazonaws.services.simpleworkflow.flow.annotations.Activities;
@@ -19,8 +20,8 @@ import com.amazonaws.services.simpleworkflow.flow.annotations.ExponentialRetry;
  * 
  */
 @Activities(version=TcgaActivities.VERSION) 
-@ActivityRegistrationOptions(defaultTaskScheduleToStartTimeoutSeconds = TcgaActivities.ONE_DAY_OF_SECONDS, 
-		defaultTaskStartToCloseTimeoutSeconds = TcgaActivities.ONE_DAY_OF_SECONDS,
+@ActivityRegistrationOptions(defaultTaskScheduleToStartTimeoutSeconds = Constants.ONE_DAY_OF_SECONDS, 
+		defaultTaskStartToCloseTimeoutSeconds = Constants.ONE_DAY_OF_SECONDS,
 		defaultTaskList = TcgaActivities.ACTIVITIES_TASK_LIST)
 public interface TcgaActivities {
 
@@ -32,10 +33,7 @@ public interface TcgaActivities {
 	 * This version should match our sprint version each time we bump it
 	 */
 	static final String VERSION = "0.11.3"; 
-	/**
-	 * A really long timeout to be used when you do not have a better idea of an appropriate timeout
-	 */
-	static final int ONE_DAY_OF_SECONDS = 86400;
+
 	/**
 	 * Retries for file downloads
 	 */
@@ -59,7 +57,8 @@ public interface TcgaActivities {
 	 * @throws ClientProtocolException 
 	 */
 	@Activity(version = VERSION)
-	@ActivityRegistrationOptions(defaultTaskScheduleToStartTimeoutSeconds = ONE_DAY_OF_SECONDS, defaultTaskStartToCloseTimeoutSeconds = ONE_DAY_OF_SECONDS)
+	@ActivityRegistrationOptions(defaultTaskScheduleToStartTimeoutSeconds = Constants.ONE_DAY_OF_SECONDS, 
+			defaultTaskStartToCloseTimeoutSeconds = Constants.ONE_DAY_OF_SECONDS)
 	@ExponentialRetry(initialRetryIntervalSeconds = INITIAL_RETRY_INTERVAL_SECONDS, maximumAttempts = NUM_RETRIES)
 	String createMetadata(String datasetId, String tcgaUrl, Boolean doneIfExists) throws ClientProtocolException, NoSuchAlgorithmException, UnrecoverableException, IOException, HttpClientHelperException, SynapseException, JSONException;
 
@@ -76,7 +75,8 @@ public interface TcgaActivities {
 	 * @throws ClientProtocolException 
 	 */
 	@Activity(version = VERSION)
-	@ActivityRegistrationOptions(defaultTaskScheduleToStartTimeoutSeconds = ONE_DAY_OF_SECONDS, defaultTaskStartToCloseTimeoutSeconds = ONE_DAY_OF_SECONDS)
+	@ActivityRegistrationOptions(defaultTaskScheduleToStartTimeoutSeconds = Constants.ONE_DAY_OF_SECONDS, 
+			defaultTaskStartToCloseTimeoutSeconds = Constants.ONE_DAY_OF_SECONDS)
 	@ExponentialRetry(initialRetryIntervalSeconds = INITIAL_RETRY_INTERVAL_SECONDS, maximumAttempts = NUM_RETRIES)
 	String updateLocation(String layerId, String tcgaUrl) throws ClientProtocolException, NoSuchAlgorithmException, UnrecoverableException, IOException, HttpClientHelperException, SynapseException, JSONException;
 
@@ -88,7 +88,8 @@ public interface TcgaActivities {
 	 * @throws SynapseException 
 	 */
 	@Activity(version = VERSION)
-	@ActivityRegistrationOptions(defaultTaskScheduleToStartTimeoutSeconds = ONE_DAY_OF_SECONDS, defaultTaskStartToCloseTimeoutSeconds = ONE_DAY_OF_SECONDS)
+	@ActivityRegistrationOptions(defaultTaskScheduleToStartTimeoutSeconds = Constants.ONE_DAY_OF_SECONDS, 
+			defaultTaskStartToCloseTimeoutSeconds = Constants.ONE_DAY_OF_SECONDS)
 	String formulateNotificationMessage(String layerId) throws SynapseException, JSONException, UnrecoverableException;
 
 	/**
@@ -97,7 +98,8 @@ public interface TcgaActivities {
 	 * @param message
 	 */
 	@Activity(version = VERSION)
-	@ActivityRegistrationOptions(defaultTaskScheduleToStartTimeoutSeconds = ONE_DAY_OF_SECONDS, defaultTaskStartToCloseTimeoutSeconds = ONE_DAY_OF_SECONDS)
+	@ActivityRegistrationOptions(defaultTaskScheduleToStartTimeoutSeconds = Constants.ONE_DAY_OF_SECONDS, 
+			defaultTaskStartToCloseTimeoutSeconds = Constants.ONE_DAY_OF_SECONDS)
 	void notifyFollowers(String recipient, String subject, String message);
 
 }

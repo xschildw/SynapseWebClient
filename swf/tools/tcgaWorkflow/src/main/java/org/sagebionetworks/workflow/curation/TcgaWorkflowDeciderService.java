@@ -17,8 +17,8 @@ public class TcgaWorkflowDeciderService {
 	 * @throws Exception
 	 */
 	public static void main(String[] args) throws Exception {
-		AmazonSimpleWorkflow swfService = ConfigHelper.getSWFClient();
-		String domain = ConfigHelper.getStack();
+		AmazonSimpleWorkflow swfService = TcgaWorkflowConfigHelper.getSWFClient();
+		String domain = TcgaWorkflowConfigHelper.getStack();
 
 		final WorkflowWorker worker = new WorkflowWorker(swfService, domain,
 				TcgaWorkflow.DECISIONS_TASK_LIST);
