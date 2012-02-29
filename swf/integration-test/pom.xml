@@ -292,10 +292,10 @@
 			<artifactId>tcgaWorkflow</artifactId>
 		</dependency>
 
-<!-- 		<dependency> -->
-<!-- 			<groupId>org.sagebionetworks</groupId> -->
-<!-- 			<artifactId>gePipeline</artifactId> -->
-<!-- 		</dependency> -->
+ 		<dependency>
+ 			<groupId>org.sagebionetworks</groupId>
+ 			<artifactId>gePipeline</artifactId>
+ 		</dependency>
 
 		<dependency>
 			<groupId>org.sagebionetworks</groupId>

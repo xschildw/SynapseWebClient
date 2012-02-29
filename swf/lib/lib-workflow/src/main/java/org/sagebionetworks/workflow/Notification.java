@@ -24,11 +24,12 @@ public class Notification {
 	 * Subscribe a particular recipients email address to the specified SNS
 	 * topic
 	 * 
-	 * @param snsClient 
+	 * @param snsClient
 	 * @param topic
 	 * @param recipient
 	 */
-	public static void doSnsSubscribeFollower(AmazonSNS snsClient, String topic, String recipient) {
+	public static void doSnsSubscribeFollower(AmazonSNS snsClient,
+			String topic, String recipient) {
 		log.debug("subscribing to " + topic + " " + recipient);
 
 		SubscribeRequest subscribeRequest = new SubscribeRequest(topic,
@@ -39,20 +40,37 @@ public class Notification {
 
 	}
 
+	// Per
+	// http://docs.amazonwebservices.com/sns/latest/api/
+	// Constraints: Messages must be UTF-8 encoded strings at most 8 KB in size
+	// (8192 bytes, not 8192 characters).
+	public static int MAX_MESSAGE_BYTE_LENGTH = 8000;
+
+	public static String truncateMessageToMaxLength(String message) {
+		int byteLength = message.getBytes().length;
+		while (byteLength > MAX_MESSAGE_BYTE_LENGTH) {
+			int newCharLength = message.length() * MAX_MESSAGE_BYTE_LENGTH
+					/ byteLength;
+			message = message.substring(0, newCharLength);
+			byteLength = message.getBytes().length;
+		}
+		return message;
+	}
+
 	/**
 	 * Notify followers subscribed to an SNS topic by publishing a message to
 	 * the specified topic
 	 * 
-	 * @param snsClient 
+	 * @param snsClient
 	 * @param topic
 	 * @param subject
 	 * @param message
 	 */
-	public static void doSnsNotifyFollowers(AmazonSNS snsClient, String topic, String subject,
-			String message) {
+	public static void doSnsNotifyFollowers(AmazonSNS snsClient, String topic,
+			String subject, String message) {
 
-		PublishRequest publishRequest = new PublishRequest(topic, message,
-				subject);
+		PublishRequest publishRequest = new PublishRequest(topic,
+				truncateMessageToMaxLength(message), subject);
 
 		PublishResult publishResult = snsClient.publish(publishRequest);
 		log.debug("SNS publish: " + publishResult + " to topic " + topic);

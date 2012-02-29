@@ -15,8 +15,22 @@ import org.sagebionetworks.StackConfiguration;
 public class IT700SynapseRClient {
 
 	/**
-	 * This fails due to dependencies upon pdflatex, etc.
-	 * 
+	 * Instead of updating the bamboo EBS volume, use this test to install some more R packages
+	 * @throws Exception
+	 */
+	@Test
+	public void testInstallSomeRPackages() throws Exception {
+		String cmd[] = {
+				Helpers.getRPath(),
+				"-e",
+				"install.packages('XML', repos=c('http://cran.revolutionanalytics.com/'))" };
+		ExternalProcessResult result = ExternalProcessHelper
+				.runExternalProcess(cmd);
+		assertEquals("std-out:\n"+result.getStdout()+"\nstd-err:  "+result.getStderr(), 0, result.getReturnCode());
+		assertTrue("std-out:\n"+result.getStdout()+"\nstd-err:  "+result.getStderr(), 0 <= result.getStdout().indexOf(" 0 errors, 0 failures"));
+	}
+
+	/**
 	 * @throws Exception
 	 */
 	@Test
