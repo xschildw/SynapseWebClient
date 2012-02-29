@@ -23,7 +23,7 @@ public class IT700SynapseRClient {
 		String cmd[] = {
 				Helpers.getRPath(),
 				"-e",
-				"install.packages('XML', repos=c('http://cran.revolutionanalytics.com/'))" };
+				".libPaths('target') ; install.packages('XML', repos=c('http://cran.revolutionanalytics.com/'))" };
 		ExternalProcessResult result = ExternalProcessHelper
 				.runExternalProcess(cmd);
 		assertEquals("std-out:\n"+result.getStdout()+"\nstd-err:  "+result.getStderr(), 0, result.getReturnCode());
