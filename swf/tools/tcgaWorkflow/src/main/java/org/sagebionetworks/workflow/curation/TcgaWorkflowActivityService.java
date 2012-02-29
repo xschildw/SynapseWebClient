@@ -54,6 +54,5 @@ public class TcgaWorkflowActivityService {
             e.printStackTrace();
         }
         System.exit(0);
-
     }
 }

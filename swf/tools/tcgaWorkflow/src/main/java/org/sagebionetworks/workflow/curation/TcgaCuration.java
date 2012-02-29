@@ -23,6 +23,7 @@ import org.sagebionetworks.repo.model.LocationData;
 import org.sagebionetworks.repo.model.LocationTypeNames;
 import org.sagebionetworks.utils.HttpClientHelper;
 import org.sagebionetworks.utils.HttpClientHelperException;
+import org.sagebionetworks.utils.MD5ChecksumHelper;
 import org.sagebionetworks.workflow.Constants;
 import org.sagebionetworks.workflow.UnrecoverableException;
 
@@ -155,14 +156,15 @@ public class TcgaCuration {
 	 * @throws SynapseException
 	 * @throws JSONException
 	 */
-	public static void updateLocation(
+	public static boolean updateLocation(
 			String tcgaUrl, String layerId) throws ClientProtocolException,
 			NoSuchAlgorithmException, UnrecoverableException, IOException,
 			HttpClientHelperException, SynapseException, JSONException {
 
 		Synapse synapse = TcgaWorkflowConfigHelper.getSynapseClient();
 		Layer layer = synapse.getEntity(layerId, Layer.class);
-
+		String md5;
+		
 		try {
 			String md5FileContents = HttpClientHelper.getContent(TcgaWorkflowConfigHelper
 					.getHttpClient(), tcgaUrl + ".md5");
@@ -171,7 +173,12 @@ public class TcgaCuration {
 				throw new UnrecoverableException(
 						"malformed md5 file from tcga: " + md5FileContents);
 			}
-			layer.setMd5(fileInfo[0]);
+			md5 = fileInfo[0];
+			if(md5.equals(layer.getMd5())) {
+				return false;
+			}
+			
+			layer.setMd5(md5);
 			List<LocationData> locations = new ArrayList<LocationData>();
 			LocationData location = new LocationData();
 			location.setPath(tcgaUrl);
@@ -179,6 +186,7 @@ public class TcgaCuration {
 			locations.add(location);
 			layer.setLocations(locations);
 			layer = synapse.putEntity(layer);
+			
 		} catch (HttpClientHelperException e) {
 			// 404s are okay, not all TCGA files have a corresponding md5 file
 			// (e.g., clinical data), later on we will download the file and
@@ -191,10 +199,18 @@ public class TcgaCuration {
 			File tempFile = File.createTempFile("tcga", "data");
 			tempFile = HttpClientHelper.getContent(
 					TcgaWorkflowConfigHelper.getHttpClient(), tcgaUrl, tempFile);
+			md5 = MD5ChecksumHelper.getMD5Checksum(tempFile.getAbsolutePath());
+
+			if(md5.equals(layer.getMd5())) {
+				return false;
+			}
+
 			layer = (Layer) synapse
-					.uploadLocationableToSynapse(layer, tempFile);
+					.uploadLocationableToSynapse(layer, tempFile, md5);
 			tempFile.delete();
 		}
+		
+		return true;
 	}
 
 	/**

@@ -33,6 +33,7 @@ public class TcgaWorkflowInitiator {
 	private static final String TCGA_REPOSITORY = "http://tcga-data.nci.nih.gov/tcgafiles/ftp_auth/distro_ftpusers/anonymous/tumor/";
 	private static final Logger log = Logger
 			.getLogger(TcgaWorkflowInitiator.class.getName());
+
 	TcgaWorkflowClientExternalFactory clientFactory;
 
 	/**
@@ -111,7 +112,7 @@ public class TcgaWorkflowInitiator {
 			String urlComponents[] = url.split("/");
 
 			String datasetAbbreviation = urlComponents[urlComponents.length - 1];
-			String datasetName = configHelper
+			String datasetName = TcgaWorkflowConfigHelper
 					.getTCGADatasetName(datasetAbbreviation);
 
 			JSONObject results = null;

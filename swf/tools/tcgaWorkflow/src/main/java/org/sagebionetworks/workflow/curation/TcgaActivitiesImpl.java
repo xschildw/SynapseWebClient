@@ -8,6 +8,7 @@ import org.apache.http.client.ClientProtocolException;
 import org.json.JSONException;
 import org.sagebionetworks.client.exceptions.SynapseException;
 import org.sagebionetworks.utils.HttpClientHelperException;
+import org.sagebionetworks.workflow.Constants;
 import org.sagebionetworks.workflow.Notification;
 import org.sagebionetworks.workflow.UnrecoverableException;
 
@@ -36,11 +37,15 @@ public class TcgaActivitiesImpl implements TcgaActivities {
 	
 	@Override
 	public String updateLocation(String layerId, String tcgaUrl) throws ClientProtocolException, NoSuchAlgorithmException, UnrecoverableException, IOException, HttpClientHelperException, SynapseException, JSONException  {
+		boolean locationWasUpdated;
 		try {
-			TcgaCuration
+			locationWasUpdated = TcgaCuration
 					.updateLocation(tcgaUrl, layerId);
 		} catch (SocketTimeoutException e) {
 			throw new ActivityFailureException("Communication timeout, try this again");
+		}
+		if(!locationWasUpdated) {
+			return Constants.WORKFLOW_DONE;
 		}
 		return layerId;
 	}

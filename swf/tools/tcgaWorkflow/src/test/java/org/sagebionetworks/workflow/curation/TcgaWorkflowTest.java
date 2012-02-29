@@ -12,6 +12,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.sagebionetworks.client.exceptions.SynapseException;
 import org.sagebionetworks.utils.HttpClientHelperException;
+import org.sagebionetworks.workflow.Constants;
 import org.sagebionetworks.workflow.UnrecoverableException;
 
 import com.amazonaws.services.simpleworkflow.flow.annotations.Asynchronous;
@@ -31,10 +32,14 @@ public class TcgaWorkflowTest {
 	private static final String EXPECTED_RESULT = "workflow"
 			+ ":updateLocation" + ":formulateNotificationMessage"
 			+ ":notifyFollowers";
+	private static final String EXPECTED_SECOND_RESULT = "workflow"
+			+ ":updateLocation" + ":formulateNotificationMessage"
+			+ ":notifyFollowers" + ":updateLocation";
 
 	private final class TestTcgaActivities implements TcgaActivities {
 
 		String result = "workflow";
+		boolean needToUpdateLocation = true;
 
 		/**
 		 * @return the result
@@ -54,7 +59,7 @@ public class TcgaWorkflowTest {
 			} catch (InterruptedException e) {
 			}
 			result += ":createMetadata";
-			return result;
+			return "1234";
 		}
 
 		@Override
@@ -68,7 +73,12 @@ public class TcgaWorkflowTest {
 			} catch (InterruptedException e) {
 			}
 			result += ":updateLocation";
-			return result;		}
+			if (!needToUpdateLocation) {
+				return Constants.WORKFLOW_DONE;
+			}
+			needToUpdateLocation = false;
+			return "1234";
+		}
 
 		@Override
 		public String formulateNotificationMessage(String layerId)
@@ -124,13 +134,26 @@ public class TcgaWorkflowTest {
 	@Test
 	public void testThroughClient() throws Exception {
 		TcgaWorkflowClient workflow = workflowFactory.getClient();
-		Promise<Void> done = workflow.addLocationToRawTcgaLayer("fakeLayerId", "fakeTcgaUrl");
+		Promise<Void> done = workflow.addLocationToRawTcgaLayer("fakeLayerId",
+				"fakeTcgaUrl");
 		assertResult(done);
 	}
 
 	@Asynchronous
 	private void assertResult(Promise<Void> done) {
 		Assert.assertEquals(EXPECTED_RESULT, activitiesImplementation
+				.getResult());
+		// Now that we know our first workflow has completed, kick off a second
+		// one and it should not notify followers
+		TcgaWorkflowClient secondWorkflow = workflowFactory.getClient();
+		Promise<Void> doneAgain = secondWorkflow.addLocationToRawTcgaLayer(
+				"fakeLayerId", "fakeTcgaUrl");
+		assertSecondResult(doneAgain);
+	}
+
+	@Asynchronous
+	private void assertSecondResult(Promise<Void> done) {
+		Assert.assertEquals(EXPECTED_SECOND_RESULT, activitiesImplementation
 				.getResult());
 	}
 
@@ -140,13 +163,28 @@ public class TcgaWorkflowTest {
 	@Test
 	public void testThroughClientAssertWithTask() throws Exception {
 		TcgaWorkflowClient workflow = workflowFactory.getClient();
-		Promise<Void> done = workflow.addLocationToRawTcgaLayer("fakeLayerId", "fakeTcgaUrl");
+		Promise<Void> done = workflow.addLocationToRawTcgaLayer("fakeLayerId",
+				"fakeTcgaUrl");
 		new Task(done) {
 
 			@Override
 			protected void doExecute() throws Throwable {
 				Assert.assertEquals(EXPECTED_RESULT, activitiesImplementation
 						.getResult());
+				// Now that we know our first workflow has completed, kick off a
+				// second
+				// one and it should not notify followers
+				TcgaWorkflowClient secondWorkflow = workflowFactory.getClient();
+				Promise<Void> doneAgain = secondWorkflow
+						.addLocationToRawTcgaLayer("fakeLayerId", "fakeTcgaUrl");
+				new Task(doneAgain) {
+
+					@Override
+					protected void doExecute() throws Throwable {
+						Assert.assertEquals(EXPECTED_SECOND_RESULT,
+								activitiesImplementation.getResult());
+					}
+				};
 			}
 		};
 	}
@@ -164,13 +202,34 @@ public class TcgaWorkflowTest {
 			protected void doTry() throws Throwable {
 				// addRawTcgaLayer returns void so we use TryFinally
 				// to wait for its completion
-				workflow.addLocationToRawTcgaLayer("fakeLayerId", "fakeTcgaUrl");
+				workflow
+						.addLocationToRawTcgaLayer("fakeLayerId", "fakeTcgaUrl");
 			}
 
 			@Override
 			protected void doFinally() throws Throwable {
 				Assert.assertEquals(EXPECTED_RESULT, activitiesImplementation
 						.getResult());
+				// Now that we know our first workflow has completed, kick off a
+				// second
+				// one and it should not notify followers
+				final TcgaWorkflowClient secondWorkflow = workflowFactory
+						.getClient();
+				new TryFinally() {
+					@Override
+					protected void doTry() throws Throwable {
+						// addRawTcgaLayer returns void so we use TryFinally
+						// to wait for its completion
+						secondWorkflow.addLocationToRawTcgaLayer("fakeLayerId",
+								"fakeTcgaUrl");
+					}
+
+					@Override
+					protected void doFinally() throws Throwable {
+						Assert.assertEquals(EXPECTED_SECOND_RESULT,
+								activitiesImplementation.getResult());
+					}
+				};
 			}
 		};
 	}

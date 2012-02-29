@@ -43,7 +43,6 @@ public class TcgaWorkflowImpl implements TcgaWorkflow {
 			protected void doTry() throws Throwable {
 				Promise<String> updatedLayerId = client.updateLocation(layerId,
 						tcgaUrl);
-				// note that updatedLayerId == layerId
 				notifyFollowersIfApplicable(updatedLayerId);
 			}
 

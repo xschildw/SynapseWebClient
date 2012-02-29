@@ -49,6 +49,5 @@ public class TcgaWorkflowDeciderService {
 		}
 
 		System.exit(0);
-
 	}
 }

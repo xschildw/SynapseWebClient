@@ -79,8 +79,11 @@ public class TcgaWorkflowITCase {
 		String url = "http://tcga-data.nci.nih.gov/tcgafiles/ftp_auth/distro_ftpusers/anonymous/tumor/coad/bcr/minbiotab/clin/clinical_public_coad.tar.gz";
 		layerId = TcgaCuration.createMetadata(datasetId, url, false);
 		assertFalse(Constants.WORKFLOW_DONE.equals(layerId));
-		TcgaCuration.updateLocation(url, layerId);
-
+		boolean layerWasUpdated = TcgaCuration.updateLocation(url, layerId);
+		assertTrue(layerWasUpdated);
+		layerWasUpdated = TcgaCuration.updateLocation(url, layerId);
+		assertFalse(layerWasUpdated);
+		
 		Layer layer = synapse.getEntity(layerId, Layer.class);
 
 		assertTrue(0 < layer.getMd5().length());
@@ -106,7 +109,10 @@ public class TcgaWorkflowITCase {
 		String url = "http://tcga-data.nci.nih.gov/tcgafiles/ftp_auth/distro_ftpusers/anonymous/tumor/coad/cgcc/unc.edu/agilentg4502a_07_3/transcriptome/unc.edu_COAD.AgilentG4502A_07_3.Level_1.1.4.0.tar.gz";
 		layerId = TcgaCuration.createMetadata(datasetId, url, false);
 		assertFalse(Constants.WORKFLOW_DONE.equals(layerId));
-		TcgaCuration.updateLocation(url, layerId);
+		boolean layerWasUpdated = TcgaCuration.updateLocation(url, layerId);
+		assertTrue(layerWasUpdated);
+		layerWasUpdated = TcgaCuration.updateLocation(url, layerId);
+		assertFalse(layerWasUpdated);
 
 		Layer layer = synapse.getEntity(layerId, Layer.class);
 
@@ -143,7 +149,10 @@ public class TcgaWorkflowITCase {
 		String url = "http://tcga-data.nci.nih.gov/tcgafiles/ftp_auth/distro_ftpusers/anonymous/tumor/coad/cgcc/unc.edu/agilentg4502a_07_3/transcriptome/unc.edu_COAD.AgilentG4502A_07_3.Level_2.2.0.0.tar.gz";
 		layerId = TcgaCuration.createMetadata(datasetId, url, false);
 		assertFalse(Constants.WORKFLOW_DONE.equals(layerId));
-		TcgaCuration.updateLocation(url, layerId);
+		boolean layerWasUpdated = TcgaCuration.updateLocation(url, layerId);
+		assertTrue(layerWasUpdated);
+		layerWasUpdated = TcgaCuration.updateLocation(url, layerId);
+		assertFalse(layerWasUpdated);
 
 		Layer layer = synapse.getEntity(layerId, Layer.class);
 
@@ -180,7 +189,10 @@ public class TcgaWorkflowITCase {
 		String url = "http://tcga-data.nci.nih.gov/tcgafiles/ftp_auth/distro_ftpusers/anonymous/tumor/coad/cgcc/broad.mit.edu/genome_wide_snp_6/snp/broad.mit.edu_COAD.Genome_Wide_SNP_6.mage-tab.1.1007.0.tar.gz";
 		layerId = TcgaCuration.createMetadata(datasetId, url, false);
 		assertFalse(Constants.WORKFLOW_DONE.equals(layerId));
-		TcgaCuration.updateLocation(url, layerId);
+		boolean layerWasUpdated = TcgaCuration.updateLocation(url, layerId);
+		assertTrue(layerWasUpdated);
+		layerWasUpdated = TcgaCuration.updateLocation(url, layerId);
+		assertFalse(layerWasUpdated);
 
 		Layer layer = synapse.getEntity(layerId, Layer.class);
 
