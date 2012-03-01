@@ -5,7 +5,6 @@ import org.joda.time.LocalDate;
 import com.amazonaws.services.simpleworkflow.flow.ActivitySchedulingOptions;
 import com.amazonaws.services.simpleworkflow.flow.annotations.Asynchronous;
 import com.amazonaws.services.simpleworkflow.flow.core.Promise;
-import com.amazonaws.services.simpleworkflow.flow.core.Settable;
 import com.amazonaws.services.simpleworkflow.flow.core.TryCatchFinally;
 
 /**
@@ -16,7 +15,8 @@ public class GEPWorkflowImpl implements GEPWorkflow {
 	private static final String NOTIFICATION_SUBJECT = "GEP Workflow Notification ";
 	private static final String NOTIFICATION_SNS_TOPIC = GEPWorkflowConfigHelper
 			.getWorkflowSnsTopic();
-	private static final String script = GEPWorkflowConfigHelper.getGEPipelineWorkflowScript();
+	private static final String script = GEPWorkflowConfigHelper
+			.getGEPipelineWorkflowScript();
 
 	// TODO use return code for this status rather than parsing message
 	private static final String NO_CHANGE_MESSAGE = "has not changed since last update";
@@ -24,7 +24,8 @@ public class GEPWorkflowImpl implements GEPWorkflow {
 	// for testing, can set the workflow to 'no-op', i.e. just close out the
 	// instance
 	// without doing anything
-	private static final String NOOP = GEPWorkflowConfigHelper.getGEPipelineNoop();
+	private static final String NOOP = GEPWorkflowConfigHelper
+			.getGEPipelineNoop();
 
 	private GEPActivitiesClient client;
 
@@ -65,13 +66,11 @@ public class GEPWorkflowImpl implements GEPWorkflow {
 				/**
 				 * Run the processing step(s) on this data
 				 */
-				Settable<String> stdout = new Settable<String>();
-				Settable<String> stderr = new Settable<String>();
 				// 'result' is the message returned by the workflow,
 				// other returned data are in 'processedLayerId', 'stdout',
 				// 'stderr'
 				Promise<String> result = processData(activityInput,
-						activityRequirement, stdout, stderr);
+						activityRequirement);
 
 				notifyDataProcessed(result);
 			}
@@ -107,8 +106,7 @@ public class GEPWorkflowImpl implements GEPWorkflow {
 	// passed in as 'activityRequirement'
 	@Asynchronous
 	private Promise<String> processData(String activityInput,
-			String activityRequirement, Settable<String> stdout,
-			Settable<String> stderr) {
+			String activityRequirement) {
 
 		ActivitySchedulingOptions options = new ActivitySchedulingOptions();
 
@@ -124,8 +122,8 @@ public class GEPWorkflowImpl implements GEPWorkflow {
 			throw new IllegalArgumentException("Unexpected "
 					+ activityRequirement);
 		}
-		
-		return client.processData(script, activityInput, stdout, stderr);
+
+		return client.processData(script, activityInput);
 	}
 
 }

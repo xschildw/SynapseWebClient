@@ -1,22 +1,13 @@
 package org.sagebionetworks.gepipeline;
 
-import java.io.IOException;
-import java.security.NoSuchAlgorithmException;
-
-import org.apache.http.client.ClientProtocolException;
-import org.json.JSONException;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.sagebionetworks.client.exceptions.SynapseException;
-import org.sagebionetworks.utils.HttpClientHelperException;
-import org.sagebionetworks.workflow.UnrecoverableException;
 
 import com.amazonaws.services.simpleworkflow.flow.annotations.Asynchronous;
 import com.amazonaws.services.simpleworkflow.flow.core.Promise;
-import com.amazonaws.services.simpleworkflow.flow.core.Settable;
 import com.amazonaws.services.simpleworkflow.flow.core.Task;
 import com.amazonaws.services.simpleworkflow.flow.core.TryFinally;
 import com.amazonaws.services.simpleworkflow.flow.junit.FlowBlockJUnit4ClassRunner;
@@ -29,8 +20,7 @@ import com.amazonaws.services.simpleworkflow.flow.junit.WorkflowTest;
 @RunWith(FlowBlockJUnit4ClassRunner.class)
 public class GEPWorkflowTest {
 
-	private static final String EXPECTED_RESULT = "workflow"
-			+ ":processData"
+	private static final String EXPECTED_RESULT = "workflow" + ":processData"
 			+ ":notifyFollower";
 
 	private final class TestGEPActivities implements GEPActivities {
@@ -45,26 +35,28 @@ public class GEPWorkflowTest {
 		}
 
 		@Override
-		public String processData(String script, String activityInput,
-				Settable<String> stdout, Settable<String> stderr) {
+		public String processData(String script,
+				String activityInput) {
 			try {
 				Thread.sleep(1000);
 				// Delay is for the purpose of illustration
+
 			} catch (InterruptedException e) {
 			}
 			result += ":processData";
 			return result;
 		}
-		
+
 		@Override
 		public void notifyFollower(String recipient, String subject,
 				String message) {
 			try {
+				System.out.println("THERE!");
 				Thread.sleep(1000);
 				// Delay is for the purpose of illustration
 			} catch (InterruptedException e) {
 			}
-			result += ":notifyFollower";			
+			result += ":notifyFollower";
 		}
 
 	}
@@ -99,7 +91,8 @@ public class GEPWorkflowTest {
 	@Test
 	public void testThroughClient() throws Exception {
 		GEPWorkflowClient workflow = workflowFactory.getClient();
-		Promise<Void> done = workflow.runMetaGenomicsPipeline("activityInput", "activityRequirement");
+		Promise<Void> done = workflow.runMetaGenomicsPipeline("GSE1234",
+				GEPWorkflow.ACTIVITY_REQUIREMENT_SMALL);
 		assertResult(done);
 	}
 
@@ -115,7 +108,8 @@ public class GEPWorkflowTest {
 	@Test
 	public void testThroughClientAssertWithTask() throws Exception {
 		GEPWorkflowClient workflow = workflowFactory.getClient();
-		Promise<Void> done = workflow.runMetaGenomicsPipeline("activityInput", "activityRequirement");
+		Promise<Void> done = workflow.runMetaGenomicsPipeline("GSE1234",
+				GEPWorkflow.ACTIVITY_REQUIREMENT_SMALL);
 		new Task(done) {
 
 			@Override
@@ -139,7 +133,8 @@ public class GEPWorkflowTest {
 			protected void doTry() throws Throwable {
 				// this workflow returns void so we use TryFinally
 				// to wait for its completion
-				workflow.runMetaGenomicsPipeline("activityInput", "activityRequirement");
+				workflow.runMetaGenomicsPipeline("GSE1234",
+						GEPWorkflow.ACTIVITY_REQUIREMENT_SMALL);
 			}
 
 			@Override
