@@ -14,16 +14,6 @@
         
     ],
     "properties":{
-        "species":{
-            "type":"string",
-            "description":"The species associated with this dataset",
-            "title":"Species"
-        },
-		"disease":{
-            "type":"string",
-            "description":"The disease associated with this dataset",
-            "title":"Disease"
-		},
         "eulaId":{
             "type":"string",
             "description":"The id of the EULA for this dataset",
