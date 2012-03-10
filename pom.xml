@@ -31,27 +31,10 @@
 	</modules>
 
 	<repositories>
-      <repository>
-        <id>sagebionetworks-snapshots-local</id>
-        <name>sagebionetworks-snapshots-local</name>
-        <url>http://sagebionetworks.artifactoryonline.com/sagebionetworks/libs-snapshots-local
-        </url>
-      </repository>
 	  <repository>
 		<id>sagebionetworks-releases-local</id>
 		<name>sagebionetworks-releases-local</name>
 		<url>http://sagebionetworks.artifactoryonline.com/sagebionetworks/libs-releases-local
-		</url>
-	  </repository>
-      <repository>
-        <id>sagebionetworks-plugins-snapshots-local</id>
-        <name>sagebionetworks-plugins-snapshots-local</name>
-        <url>http://sagebionetworks.artifactoryonline.com/sagebionetworks/plugins-snapshots-local</url>
-      </repository>
-	  <repository>
-		<id>sagebionetworks-plugins-releases-local</id>
-		<name>sagebionetworks-plugins-releases-local</name>
-		<url>http://sagebionetworks.artifactoryonline.com/sagebionetworks/plugins-releases-local
 		</url>
 	  </repository>
 	  <repository>
@@ -585,7 +568,7 @@
 		<repository>
 			<id>sagebionetworks</id>
 			<name>sagebionetworks-releases</name>
-			<url>http://sagebionetworks.artifactoryonline.com/sagebionetworks/libs-snapshots-local
+			<url>http://sagebionetworks.artifactoryonline.com/sagebionetworks/libs-releases-local
 			</url>
 		</repository>
 		<snapshotRepository>
