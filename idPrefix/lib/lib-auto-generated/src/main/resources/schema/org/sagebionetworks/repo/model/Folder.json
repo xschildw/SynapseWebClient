@@ -1,0 +1,14 @@
+{
+    "title":"Folder",
+    "description":"JSON schema for Folder POJO",
+    "implements":[
+        {
+            "$ref":"org.sagebionetworks.repo.model.Entity"
+        },
+        {
+            "$ref":"org.sagebionetworks.repo.model.HasShortcuts"
+        },
+        
+    ],
+    
+}

@@ -1,0 +1,101 @@
+<!DOCTYPE ui:UiBinder SYSTEM "http://dl.google.com/gwt/DTD/xhtml.ent">
+<ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"
+	xmlns:g="urn:import:com.google.gwt.user.client.ui" 
+	xmlns:c="urn:import:com.google.gwt.user.cellview.client"
+	xmlns:s="urn:import:org.sagebionetworks.web.client.view">
+		
+	<ui:style>
+		.important {
+			font-weight: bold;
+		}
+		
+		.rowTop {
+			vertical-align: top;
+		}
+	</ui:style>
+		
+	<g:HTMLPanel>
+
+	<!-- start header -->
+	<!-- MAIN CONTAINER -->
+		<!-- HEADER -->
+        <div class="color-line"></div>
+        <div class="clear"></div>
+    	<div class="container"> 		
+			<g:SimplePanel ui:field="header" />
+	        	<div class="span-24 notopmargin">
+	<!-- end header -->
+		            <div class="span-24 separator"></div>
+
+					<ul class="breadcrumbs">
+						<li class="breadcrumb"><a href="#Home:0">Home</a> > All Projects</li>
+					</ul>
+					
+					<div class="span-24 separator-inner"></div>
+		            
+		            <div class="span-24 slider-area-inner">
+		            	<g:SimplePanel ui:field="createProjectPanel" />
+					</div>
+		            <div class="span-24 separator-inner"></div>
+					
+					<h2>What is a Synapse Project?</h2>
+					<div class="info">
+						Projects are a great place to organize your work. Here are a few things you can do with a Synapse Project: 											
+					</div>			
+					<div class="">
+						<div class="span-12 inner-12 view">
+		                	<div class="span-6 notopmargin">
+		                    	<div class="item left"><a href="images/slide-1-1.jpg" class="item-preview spec-border-ie" rel="prettyPhoto" title=""><img class="img-preview spec-border"  src="images/gallery/4col-1.jpg" alt=" "/></a></div>
+		                    </div>
+		                    <h4 class="colored">Feature</h4>
+		                    <p>Description</p>
+		                </div>
+						<div class="span-12 inner-12 view last">
+		                	<div class="span-6 notopmargin">
+		                    	<div class="item left"><a href="images/slide-1-1.jpg" class="item-preview spec-border-ie" rel="prettyPhoto" title=""><img class="img-preview spec-border"  src="images/gallery/4col-1.jpg" alt=" "/></a></div>
+		                    </div>
+		                    <h4 class="colored">Feature</h4>
+		                    <p>Description</p>
+		                </div>
+					
+						<div class="span-12 inner-12 view">
+		                	<div class="span-6 notopmargin">
+		                    	<div class="item left"><a href="images/slide-1-1.jpg" class="item-preview spec-border-ie" rel="prettyPhoto" title=""><img class="img-preview spec-border"  src="images/gallery/4col-1.jpg" alt=" "/></a></div>
+		                    </div>
+		                    <h4 class="colored">Feature</h4>
+		                    <p>Description</p>
+		                </div>
+						<div class="span-12 inner-12 view last">
+		                	<div class="span-6 notopmargin">
+		                    	<div class="item left"><a href="images/slide-1-1.jpg" class="item-preview spec-border-ie" rel="prettyPhoto" title=""><img class="img-preview spec-border"  src="images/gallery/4col-1.jpg" alt=" "/></a></div>
+		                    </div>
+		                    <h4 class="colored">Feature</h4>
+		                    <p>Description</p>
+		                </div>
+					
+						<div class="span-12 inner-12 view">
+		                	<div class="span-6 notopmargin">
+		                    	<div class="item left"><a href="images/slide-1-1.jpg" class="item-preview spec-border-ie" rel="prettyPhoto" title=""><img class="img-preview spec-border"  src="images/gallery/4col-1.jpg" alt=" "/></a></div>
+		                    </div>
+		                    <h4 class="colored">Feature</h4>
+		                    <p>Description</p>
+		                </div>
+						<div class="span-12 inner-12 view last">
+		                	<div class="span-6 notopmargin">
+		                    	<div class="item left"><a href="images/slide-1-1.jpg" class="item-preview spec-border-ie" rel="prettyPhoto" title=""><img class="img-preview spec-border"  src="images/gallery/4col-1.jpg" alt=" "/></a></div>
+		                    </div>
+		                    <h4 class="colored">Feature</h4>
+		                    <p>Description</p>
+		                </div>
+					
+					</div>		
+				</div>		
+					
+<!-- start footer -->
+            <div class="clear"></div>
+        </div> <!-- close class="container" -->
+		<g:SimplePanel ui:field="footer" />
+<!-- end footer -->
+
+	</g:HTMLPanel>
+</ui:UiBinder> 

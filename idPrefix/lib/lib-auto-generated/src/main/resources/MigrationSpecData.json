@@ -1,0 +1,134 @@
+{
+	"migrationMetadata": [
+		{
+			"entityType": "project",
+			"fields": [
+				{
+					"source": {"name": "version", "type": "string", "bucket": "primary"},
+					"destination": {"name": "", "type": "", "bucket": "deleted"}
+				},
+				
+			]
+		},
+		{
+			"entityType": "dataset",
+			"fields": [
+				{
+					"source": {"name": "version", "type": "string", "bucket": "primary"},
+					"destination": {"name": "", "type": "", "bucket": "deleted"}
+				},
+				{
+					"source": {"name": "Tissue_Tumor", "type": "string", "bucket": "additional"},
+					"destination": {"name": "", "type": "", "bucket": "deleted"}
+				},
+				{
+					"source": {"name": "species", "type": "string", "bucket": "additional"},
+					"destination": {"name": "species", "type": "string", "bucket": "primary"}
+				},
+				{
+					"source": {"name": "Species", "type": "string", "bucket": "additional"},
+					"destination": {"name": "species", "type": "string", "bucket": "primary"}
+				},
+				{
+					"source": {"name": "disease", "type": "string", "bucket": "additional"},
+					"destination": {"name": "disease", "type": "string", "bucket": "primary"}
+				},
+				{
+					"source": {"name": "Disease", "type": "string", "bucket": "additional"},
+					"destination": {"name": "disease", "type": "string", "bucket": "primary"}
+				},
+				{
+					"source": {"name": "Posting_Restriction", "type": "string", "bucket": "additional"},
+					"destination": {"name": "", "type": "", "bucket": "deleted"}
+				},
+				{
+					"source": {"name": "pubmed_id", "type": "string", "bucket": "additional"},
+					"destination": {"name": "pubmedId", "type": "string", "bucket": "additional"}
+				},
+				{
+					"source": {"name": "releaseDate", "type": "string", "bucket": "additional"},
+					"destination": {"name": "", "type": "", "bucket": "deleted"}
+				},
+			]
+		},
+		{
+			"entityType": "layer",
+			"fields": [
+				{
+					"source": {"name": "version", "type": "string", "bucket": "primary"},
+					"destination": {"name": "", "type": "", "bucket": "deleted"}
+				},
+				{
+					"source": {"name": "QcBy", "type": "string", "bucket": "primary"},
+					"destination": {"name": "", "type": "", "bucket": "deleted"}
+				},
+				{
+					"source": {"name": "QcDate", "type": "string", "bucket": "primary"},
+					"destination": {"name": "", "type": "", "bucket": "deleted"}
+				},
+				{
+					"source": {"name": "qcBy", "type": "string", "bucket": "primary"},
+					"destination": {"name": "", "type": "", "bucket": "deleted"}
+				},
+				{
+					"source": {"name": "qcDate", "type": "string", "bucket": "primary"},
+					"destination": {"name": "", "type": "", "bucket": "deleted"}
+				},
+			]
+		},
+		{
+			"entityType": "eula",
+			"fields": [
+				{
+					"source": {"name": "version", "type": "string", "bucket": "primary"},
+					"destination": {"name": "", "type": "", "bucket": "deleted"}
+				}
+			]
+		},
+		{
+			"entityType": "analysis",
+			"fields": [
+				{
+					"source": {"name": "version", "type": "string", "bucket": "primary"},
+					"destination": {"name": "", "type": "", "bucket": "deleted"}
+				}
+			]
+		},
+		{
+			"entityType": "agreement",
+			"fields": [
+				{
+					"source": {"name": "version", "type": "string", "bucket": "primary"},
+					"destination": {"name": "", "type": "", "bucket": "deleted"}
+				}
+			]
+		},
+		{
+			"entityType": "code",
+			"fields": [
+				{
+					"source": {"name": "version", "type": "string", "bucket": "primary"},
+					"destination": {"name": "", "type": "", "bucket": "deleted"}
+				}
+			]
+		},
+		{
+			"entityType": "step",
+			"fields": [
+				{
+					"source": {"name": "version", "type": "string", "bucket": "primary"},
+					"destination": {"name": "", "type": "", "bucket": "deleted"}
+				}
+			]
+		},
+		{
+			"entityType": "preview",
+			"fields": [
+				{
+					"source": {"name": "version", "type": "string", "bucket": "primary"},
+					"destination": {"name": "", "type": "", "bucket": "deleted"}
+				}
+			]
+		}
+	]
+}

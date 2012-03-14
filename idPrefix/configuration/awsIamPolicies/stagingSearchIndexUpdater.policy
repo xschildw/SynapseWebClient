@@ -1,0 +1,20 @@
+{       
+    "Statement":
+        [
+            {
+                "Action": [
+                    "s3:GetObject",
+                    "s3:DeleteObject"
+                ],
+                "Effect": "Allow",
+                "Resource": "arn:aws:s3:::stagingworkflow.sagebase.org/Search/*"
+            },
+            {
+                "Action": [
+                    "s3:GetObject"
+                ],
+                "Effect": "Allow",
+                "Resource": "arn:aws:s3:::configuration.sagebase.org/SearchUpdater/staging*.properties"
+            }
+        ]
+    }
