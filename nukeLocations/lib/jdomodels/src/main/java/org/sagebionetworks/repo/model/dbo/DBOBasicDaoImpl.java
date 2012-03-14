@@ -169,6 +169,7 @@ public class DBOBasicDaoImpl implements DBOBasicDao, InitializingBean {
 		try{
 			return simpleJdbcTempalte.queryForObject(fetchSql, mapping, namedParameters);
 		}catch(EmptyResultDataAccessException e){
+			System.out.println("!!!!!!!!!!!!Can't get " + clazz.getName() + " " + namedParameters);
 			throw new NotFoundException("The resource you are attempting to access cannot be found");
 		}
 	}

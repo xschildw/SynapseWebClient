@@ -106,6 +106,16 @@ public class ServiceConstants {
 	public static final String QUERY_PARAM = "query";
 
 	/**
+	 * Request parameter for the ids in a batch request.
+	 */
+	public static final String BATCH_PARAM = "batch";
+	
+	/**
+	 * Separator string for the list of ids in a batch request.
+	 */
+	public static final String BATCH_PARAM_VALUE_SEPARATOR = ",";
+	
+	/**
 	 * Request parameter specific to GET requests for layer locations so that we
 	 * can return a presigned URL for an S3 GET, HEAD, or DELETE operation
 	 */

@@ -21,6 +21,7 @@ import org.sagebionetworks.repo.model.Annotations;
 import org.sagebionetworks.repo.model.DatastoreException;
 import org.sagebionetworks.repo.model.EntityHeader;
 import org.sagebionetworks.repo.model.EntityPath;
+import org.sagebionetworks.repo.model.PaginatedResults;
 import org.sagebionetworks.repo.model.Project;
 import org.sagebionetworks.repo.model.auth.UserEntityPermissions;
 import org.sagebionetworks.repo.web.NotFoundException;
@@ -131,6 +132,30 @@ public class EntityControllerTest {
 		UserEntityPermissions uep = entityServletHelper.getUserEntityPermissions(id, TEST_USER1);
 		assertNotNull(uep);
 		assertTrue(uep.getCanEdit());
+	}
+	
+	@Test
+	public void testEntityTypeBatch() throws Exception {
+		List<String> ids = new ArrayList<String>();
+		for(int i = 0; i < 12; i++) {
+			Project p = new Project();
+			p.setName("EntityTypeBatchItem" + i);
+			p.setEntityType(p.getClass().getName());
+			Project clone = (Project) entityServletHelper.createEntity(p, TEST_USER1);
+			String id = clone.getId();
+			toDelete.add(id);
+			ids.add(id);
+		}
+	
+		PaginatedResults<EntityHeader> results = entityServletHelper.getEntityTypeBatch(ids, TEST_USER1);
+		assertNotNull(results);
+		assertEquals(12, results.getTotalNumberOfResults());
+		List<String> outputIds = new ArrayList<String>();
+		for(EntityHeader header : results.getResults()) {
+			outputIds.add(header.getId());
+		}
+		assertEquals(ids.size(), outputIds.size());
+		assertTrue(ids.containsAll(outputIds));
 	}
 	
 	@Test
