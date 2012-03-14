@@ -31,6 +31,7 @@ import org.sagebionetworks.repo.model.NodeDAO;
 import org.sagebionetworks.repo.model.NodeQueryDao;
 import org.sagebionetworks.repo.model.NodeQueryResults;
 import org.sagebionetworks.repo.model.UserInfo;
+import org.sagebionetworks.repo.model.jdo.KeyFactory;
 import org.sagebionetworks.repo.model.jdo.NodeTestUtils;
 import org.sagebionetworks.repo.model.query.BasicQuery;
 import org.sagebionetworks.repo.model.query.Compartor;
@@ -629,7 +630,7 @@ public class JDONodeQueryDAOImplTest {
 		query.setLimit(3);
 		query.setOffset(0);
 		List<Expression> filters = new ArrayList<Expression>();
-		Expression expression = new Expression(new CompoundId(null, NodeConstants.COL_PARENT_ID), Compartor.EQUALS, nodeIds.get(1));
+		Expression expression = new Expression(new CompoundId(null, NodeConstants.COL_PARENT_ID), Compartor.EQUALS, KeyFactory.stringToKey(nodeIds.get(1)));
 		filters.add(expression);
 		query.setFilters(filters);
 		// Execute the query.
@@ -655,7 +656,7 @@ public class JDONodeQueryDAOImplTest {
 		query.setLimit(3);
 		query.setOffset(0);
 		List<Expression> filters = new ArrayList<Expression>();
-		Long id = new Long(nodeIds.get(1));
+		Long id = KeyFactory.stringToKey(nodeIds.get(1));
 		Expression expression = new Expression(new CompoundId(null, NodeConstants.COL_PARENT_ID), Compartor.EQUALS, id);
 		filters.add(expression);
 		query.setFilters(filters);
@@ -671,7 +672,7 @@ public class JDONodeQueryDAOImplTest {
 		Node node = nodeDao.getNode(nodeId);
 		assertNotNull(node);
 		assertEquals("layerName1", node.getName());	
-		assertEquals(id.toString(), node.getParentId());
+		assertEquals(KeyFactory.keyToString(id), node.getParentId());
 	}
 	
 	@Test

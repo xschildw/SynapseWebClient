@@ -9,7 +9,6 @@ import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -35,7 +34,6 @@ import org.sagebionetworks.repo.model.NodeDAO;
 import org.sagebionetworks.repo.model.NodeInheritanceDAO;
 import org.sagebionetworks.repo.model.NodeRevisionBackup;
 import org.sagebionetworks.repo.model.Reference;
-import org.sagebionetworks.repo.model.util.RandomAnnotationsUtil;
 import org.sagebionetworks.repo.web.NotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.jdo.JdoObjectRetrievalFailureException;
@@ -117,7 +115,7 @@ public class NodeDAOImplTest {
 		toDelete.add(id);
 		assertNotNull(id);
 		// This node should exist
-		assertTrue(nodeDao.doesNodeExist(Long.parseLong(id)));
+		assertTrue(nodeDao.doesNodeExist(KeyFactory.stringToKey(id)));
 		// Make sure we can fetch it
 		Node loaded = nodeDao.getNode(id);
 		assertNotNull(id);
@@ -182,7 +180,7 @@ public class NodeDAOImplTest {
 		// Create a new node with an ID that is beyond the current max of the 
 		// ID generator.
 		long idLong = idGenerator.generateNewId() + 10;
-		String idString = new Long(idLong).toString();
+		String idString = KeyFactory.keyToString(new Long(idLong));
 		Node toCreate = NodeTestUtils.createNew("secondNodeEver");
 		toCreate.setId(idString);
 		String fetchedId = nodeDao.createNew(toCreate);
@@ -197,7 +195,7 @@ public class NodeDAOImplTest {
 	@Test
 	public void testCreateWithIdGreaterThanIdGenerator() throws Exception{
 		// Create a node with a specific id
-		String id = new Long(idGenerator.generateNewId()+10).toString();
+		String id = KeyFactory.keyToString(new Long(idGenerator.generateNewId()+10));
 		Node toCreate = NodeTestUtils.createNew("secondNodeEver");
 		toCreate.setId(id);
 		String fetchedId = nodeDao.createNew(toCreate);
@@ -561,7 +559,7 @@ public class NodeDAOImplTest {
 		loaded = nodeDao.getNode(id);
 		assertNotNull(loaded);
 		assertEquals(node.getVersionComment(), loaded.getVersionComment());
-		assertEquals(newNumber.toString(), loaded.getVersionLabel());
+		assertEquals(KeyFactory.keyToString(newNumber), loaded.getVersionLabel());
 	}
 	
 	@Test
@@ -1334,7 +1332,7 @@ public class NodeDAOImplTest {
 		// Delete the original node
 		nodeDao.delete(id);
 		// Change the etag (see: PLFM-845)
-		String newEtag = KeyFactory.keyToString(new Long(45));
+		String newEtag = "45";
 		backup.setETag(newEtag);
 		// Now create the node from the backup
 		nodeDao.createNewNodeFromBackup(backup);
@@ -1356,7 +1354,7 @@ public class NodeDAOImplTest {
 		// We will use this to do the backup.
 		backup = nodeDao.getNode(id);
 		// Change the etag (see: PLFM-845)
-		String newEtag = KeyFactory.keyToString(new Long(199));
+		String newEtag = "199";
 		backup.setETag(newEtag);
 		String newDescription = "New description";
 		backup.setDescription(newDescription);
