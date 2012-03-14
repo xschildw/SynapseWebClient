@@ -1,0 +1,21 @@
+{
+    "title":"Project",
+    "description":"JSON schema for Project POJO",
+    "implements":[
+        {
+            "$ref":"org.sagebionetworks.repo.model.Entity"
+        },
+        {
+            "$ref":"org.sagebionetworks.repo.model.HasShortcuts"
+        },
+        
+    ],
+    "properties":{
+        "status":{
+            "type":"string",
+            "description":"the status of this Project",
+            "title":"Status"
+            
+        },
+    }
+}
