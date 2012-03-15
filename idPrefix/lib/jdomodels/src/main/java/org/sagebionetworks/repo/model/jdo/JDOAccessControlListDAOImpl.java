@@ -57,7 +57,7 @@ public class JDOAccessControlListDAOImpl implements AccessControlListDAO {
 		// Bind the type
 		parameters.put(AuthorizationSqlUtil.ACCESS_TYPE_BIND_VAR, accessType.name());
 		// Bind the node id
-		parameters.put(AuthorizationSqlUtil.NODE_ID_BIND_VAR, resourceId);
+		parameters.put(AuthorizationSqlUtil.NODE_ID_BIND_VAR, KeyFactory.stringToKey(resourceId));
 		String sql = AuthorizationSqlUtil.authorizationCanAccessSQL(groups.size());
 		try{
 			Long count = simpleJdbcTempalte.queryForLong(sql, parameters);

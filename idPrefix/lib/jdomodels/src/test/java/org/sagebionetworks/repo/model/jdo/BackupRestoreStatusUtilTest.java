@@ -17,7 +17,7 @@ public class BackupRestoreStatusUtilTest {
 	public void testRoundTrip() throws DatastoreException{
 		// Make a round trip from the DTO->JDO->DTO
 		BackupRestoreStatus dto = new BackupRestoreStatus();
-		dto.setId("12");
+		dto.setId(KeyFactory.keyToString(12L));
 		dto.setStatus(DaemonStatus.COMPLETED);
 		dto.setType(DaemonType.BACKUP);
 		dto.setStartedBy("someAdmin@sagebase.org");
@@ -43,7 +43,7 @@ public class BackupRestoreStatusUtilTest {
 	public void testRoundTripWithOptionalNulls() throws DatastoreException{
 		// Make a round trip from the DTO->JDO->DTO
 		BackupRestoreStatus dto = new BackupRestoreStatus();
-		dto.setId("12");
+		dto.setId(KeyFactory.keyToString(12L));
 		dto.setStatus(DaemonStatus.COMPLETED);
 		dto.setType(DaemonType.BACKUP);
 		dto.setStartedBy("someAdmin@sagebase.org");

@@ -33,6 +33,7 @@ import org.sagebionetworks.repo.model.UserInfo;
 import org.sagebionetworks.repo.model.AuthorizationConstants.ACCESS_TYPE;
 import org.sagebionetworks.repo.model.dbo.DBOBasicDao;
 import org.sagebionetworks.repo.model.dbo.persistence.DBONode;
+import org.sagebionetworks.repo.model.jdo.KeyFactory;
 import org.sagebionetworks.repo.web.NotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -132,12 +133,12 @@ public class DBOReferenceDaoImplTest {
 		references.put("groupTwo", two);
 		// Add one to one
 		Reference ref = new Reference();
-		ref.setTargetId("123");
+		ref.setTargetId(KeyFactory.keyToString(123L));
 		ref.setTargetVersionNumber(new Long(1));
 		one.add(ref);
 		// Add one to two
 		 ref = new Reference();
-		ref.setTargetId("456");
+		ref.setTargetId(KeyFactory.keyToString(456L));
 		ref.setTargetVersionNumber(new Long(0));
 		two.add(ref);
 		// Now save to the DB
@@ -151,7 +152,7 @@ public class DBOReferenceDaoImplTest {
 		clone.put("groupThree", three);
 		// Add one to two
 		ref = new Reference();
-		ref.setTargetId("789");
+		ref.setTargetId(KeyFactory.keyToString(789L));
 		ref.setTargetVersionNumber(new Long(10));
 		three.add(ref);
 		// Replace them 
@@ -169,12 +170,12 @@ public class DBOReferenceDaoImplTest {
 		references.put("groupOne", one);
 		// Add one to one
 		Reference ref = new Reference();
-		ref.setTargetId("123");
+		ref.setTargetId(KeyFactory.keyToString(123L));
 		ref.setTargetVersionNumber(null);
 		one.add(ref);
 		// Add one to two
 		 ref = new Reference();
-		ref.setTargetId("456");
+		ref.setTargetId(KeyFactory.keyToString(456L));
 		ref.setTargetVersionNumber(new Long(12));
 		two.add(ref);
 		// Now save to the DB
@@ -192,12 +193,12 @@ public class DBOReferenceDaoImplTest {
 		references.put("groupOne", one);
 		// Add one to one
 		Reference ref = new Reference();
-		ref.setTargetId("123");
+		ref.setTargetId(KeyFactory.keyToString(123L));
 		ref.setTargetVersionNumber(new Long(12));
 		one.add(ref);
 		// Add one to two
 		ref = new Reference();
-		ref.setTargetId("123");
+		ref.setTargetId(KeyFactory.keyToString(123L));
 		ref.setTargetVersionNumber(new Long(12));
 		one.add(ref);
 		// The set is actually enforcing this for us.
@@ -217,12 +218,12 @@ public class DBOReferenceDaoImplTest {
 		references.put("groupOne", one);
 		// Add one to one
 		Reference ref = new Reference();
-		ref.setTargetId("123");
+		ref.setTargetId(KeyFactory.keyToString(123L));
 		ref.setTargetVersionNumber(null);
 		one.add(ref);
 		// Add one to two
 		ref = new Reference();
-		ref.setTargetId("123");
+		ref.setTargetId(KeyFactory.keyToString(123L));
 		ref.setTargetVersionNumber(null);
 		one.add(ref);
 		// The set is actually enforcing this for us.
@@ -242,12 +243,12 @@ public class DBOReferenceDaoImplTest {
 		references.put("groupOne", one);
 		// Add one to one
 		Reference ref = new Reference();
-		ref.setTargetId("123");
+		ref.setTargetId(KeyFactory.keyToString(123L));
 		ref.setTargetVersionNumber(new Long(1));
 		one.add(ref);
 		// Add one to two
 		ref = new Reference();
-		ref.setTargetId("123");
+		ref.setTargetId(KeyFactory.keyToString(123L));
 		ref.setTargetVersionNumber(null);
 		one.add(ref);
 		// The set is actually enforcing this for us.
@@ -282,12 +283,12 @@ public class DBOReferenceDaoImplTest {
 			references.put("groupTwo", two);
 			// Add one to one
 			Reference ref = new Reference();
-			ref.setTargetId("123");
+			ref.setTargetId(KeyFactory.keyToString(123L));
 			ref.setTargetVersionNumber(new Long(1));
 			one.add(ref);
 			// Add one to two
 			 ref = new Reference();
-			ref.setTargetId("456");
+			ref.setTargetId(KeyFactory.keyToString(456L));
 			ref.setTargetVersionNumber(new Long(0));
 			two.add(ref);
 			// Now save to the DB
@@ -301,7 +302,7 @@ public class DBOReferenceDaoImplTest {
 			references.put("groupOne", one);
 			// Add one to one
 			Reference ref = new Reference();
-			ref.setTargetId("123");
+			ref.setTargetId(KeyFactory.keyToString(123L));
 			ref.setTargetVersionNumber(new Long(1));
 			one.add(ref);
 			// Now save to the DB
@@ -337,7 +338,7 @@ public class DBOReferenceDaoImplTest {
 			references.put("groupOne", one);
 			// Add one to one
 			Reference ref = new Reference();
-			ref.setTargetId("123");
+			ref.setTargetId(KeyFactory.keyToString(123L));
 			ref.setTargetVersionNumber(new Long(2));
 			one.add(ref);
 			// Now save to the DB
@@ -379,7 +380,7 @@ public class DBOReferenceDaoImplTest {
 			references.put("groupOne", one);
 			// Add one to one
 			Reference ref = new Reference();
-			ref.setTargetId("123");
+			ref.setTargetId(KeyFactory.keyToString(123L));
 			//ref.setTargetVersionNumber(new Long(2)); <<<< LEAVE IT BLANK
 			one.add(ref);
 			// Now save to the DB
@@ -432,7 +433,7 @@ public class DBOReferenceDaoImplTest {
 		// check that permissions are set up.  'userInfo' should be able to get node0 but not node1
 		String permissionsBenefactor0 = nodeInheritanceDao.getBenefactor(""+node0.getId());
 		// node0 is its own permissions supplier
-		assertEquals(""+node0.getId()+"!="+permissionsBenefactor0, ""+node0.getId(), permissionsBenefactor0);
+		assertEquals(""+node0.getId()+"!="+permissionsBenefactor0, ""+KeyFactory.keyToString(node0.getId()), permissionsBenefactor0);
 		AccessControlList acl2 = accessControlListDao.getForResource(""+node0.getId());
 		assertNotNull(acl2);
 		Set<ResourceAccess> ras2 = acl2.getResourceAccess();
@@ -461,7 +462,7 @@ public class DBOReferenceDaoImplTest {
 			references.put("groupOne", one);
 			// Add one to one
 			Reference ref = new Reference();
-			ref.setTargetId("123");
+			ref.setTargetId(KeyFactory.keyToString(123L));
 			ref.setTargetVersionNumber(new Long(1));
 			one.add(ref);
 			// Now save to the DB
