@@ -462,7 +462,7 @@ public class NodeDAOImpl implements NodeDAO, NodeBackupDAO, InitializingBean {
 		int updated = simpleJdbcTemplate.update(UPDATE_ETAG_SQL, currentTag, longId);
 		if(updated != 1) throw new ConflictingUpdateException("Failed to lock Node: "+longId);
 		// Return the new tag
-		return KeyFactory.keyToString(currentTag);
+		return String.valueOf(currentTag);
 	}
 
 	@Transactional(readOnly = false, propagation = Propagation.REQUIRED)
