@@ -126,7 +126,7 @@ public class DBOReferenceDaoImpl implements DBOReferenceDao {
 	 */
 	@Transactional(readOnly = true)
 	@Override
-	public EntityHeaderQueryResults getReferrers(Long targetId, Integer targetVersion, UserInfo userInfo, Integer offset, Integer limit) {
+	public EntityHeaderQueryResults getReferrers(Long targetId, Integer targetVersion, UserInfo userInfo, Integer offset, Integer limit) throws DatastoreException {
 		if(targetId == null) throw new IllegalArgumentException("targetId cannot be null");
 		// Build up the results from the DB.
 		final List<EntityHeader> results = new ArrayList<EntityHeader>();
@@ -155,12 +155,17 @@ public class DBOReferenceDaoImpl implements DBOReferenceDao {
 		simpleJdbcTemplate.query(fullQuery, new RowMapper<EntityHeader>() {
 			@Override
 			public EntityHeader mapRow(ResultSet rs, int rowNum) throws SQLException {
-				EntityHeader referrer = new EntityHeader();
-				referrer.setId(""+rs.getLong(COL_NODE_ID));
-				referrer.setName(rs.getString(COL_NODE_NAME));
-				referrer.setType(EntityType.getTypeForId((short)rs.getInt(COL_NODE_TYPE)).name());
-				results.add(referrer);
-				return referrer;
+				try {
+					EntityHeader referrer = new EntityHeader();
+					referrer.setId(KeyFactory.keyToString(rs.getLong(COL_NODE_ID)));
+					referrer.setName(rs.getString(COL_NODE_NAME));
+					referrer.setType(EntityType.getTypeForId((short)rs.getInt(COL_NODE_TYPE)).name());
+					results.add(referrer);
+					return referrer;
+				}
+				catch(DatastoreException e) {
+					throw new SQLException(e);
+				}
 			}
 		}, fullParameters);
 		EntityHeaderQueryResults ehqr = new EntityHeaderQueryResults();

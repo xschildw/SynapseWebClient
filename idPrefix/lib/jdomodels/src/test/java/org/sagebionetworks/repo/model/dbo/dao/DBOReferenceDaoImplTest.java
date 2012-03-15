@@ -260,9 +260,9 @@ public class DBOReferenceDaoImplTest {
 		assertEquals(references, clone);
 	}
 	
-	private static Set<Long> justIds(Collection<EntityHeader> ehs) {
+	private static Set<Long> justIds(Collection<EntityHeader> ehs) throws DatastoreException {
 		Set<Long> ans = new HashSet<Long>();
-		for (EntityHeader eh : ehs) ans.add(Long.parseLong(eh.getId()));
+		for (EntityHeader eh : ehs) ans.add(KeyFactory.stringToKey(eh.getId()));
 		return ans;
 	}
 	
@@ -443,7 +443,7 @@ public class DBOReferenceDaoImplTest {
 		assertTrue(accessControlListDao.canAccess(userInfo.getGroups(), permissionsBenefactor0, ACCESS_TYPE.READ));
 		String permissionsBenefactor1 = nodeInheritanceDao.getBenefactor(""+node1.getId());
 		// node1 is its own permissions supplier
-		assertEquals(""+node1.getId()+"!="+permissionsBenefactor1, ""+node1.getId(), permissionsBenefactor1);
+		assertEquals(""+node1.getId()+"!="+permissionsBenefactor1, KeyFactory.keyToString(node1.getId()), permissionsBenefactor1);
 		assertFalse(accessControlListDao.canAccess(userInfo.getGroups(), permissionsBenefactor1, ACCESS_TYPE.READ));
 		
 		// now should only find referrers which allow the created group
