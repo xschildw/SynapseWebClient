@@ -1,9 +1,9 @@
 package org.sagebionetworks.repo.web.controller;
 
-import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
@@ -18,10 +18,10 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.sagebionetworks.repo.manager.TestUserDAO;
 import org.sagebionetworks.repo.model.Annotations;
+import org.sagebionetworks.repo.model.BatchResults;
 import org.sagebionetworks.repo.model.DatastoreException;
 import org.sagebionetworks.repo.model.EntityHeader;
 import org.sagebionetworks.repo.model.EntityPath;
-import org.sagebionetworks.repo.model.PaginatedResults;
 import org.sagebionetworks.repo.model.Project;
 import org.sagebionetworks.repo.model.auth.UserEntityPermissions;
 import org.sagebionetworks.repo.web.NotFoundException;
@@ -147,7 +147,7 @@ public class EntityControllerTest {
 			ids.add(id);
 		}
 	
-		PaginatedResults<EntityHeader> results = entityServletHelper.getEntityTypeBatch(ids, TEST_USER1);
+		BatchResults<EntityHeader> results = entityServletHelper.getEntityTypeBatch(ids, TEST_USER1);
 		assertNotNull(results);
 		assertEquals(12, results.getTotalNumberOfResults());
 		List<String> outputIds = new ArrayList<String>();

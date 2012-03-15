@@ -13,17 +13,16 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.sagebionetworks.repo.ServiceConstants;
 import org.sagebionetworks.repo.model.Annotations;
 import org.sagebionetworks.repo.model.AuthorizationConstants;
+import org.sagebionetworks.repo.model.BatchResults;
 import org.sagebionetworks.repo.model.DatastoreException;
 import org.sagebionetworks.repo.model.Entity;
 import org.sagebionetworks.repo.model.EntityHeader;
 import org.sagebionetworks.repo.model.EntityPath;
-import org.sagebionetworks.repo.model.EntityType;
-import org.sagebionetworks.repo.model.PaginatedResults;
 import org.sagebionetworks.repo.model.auth.UserEntityPermissions;
 import org.sagebionetworks.repo.web.NotFoundException;
-import org.sagebionetworks.repo.web.ServiceConstants;
 import org.sagebionetworks.repo.web.UrlHelpers;
 import org.sagebionetworks.schema.adapter.JSONObjectAdapter;
 import org.sagebionetworks.schema.adapter.JSONObjectAdapterException;
@@ -346,7 +345,7 @@ public class EntityServletTestHelper {
 	 * @throws JSONException
 	 * @throws JSONObjectAdapterException
 	 */
-	public PaginatedResults<EntityHeader> getEntityTypeBatch(List<String> ids,
+	public BatchResults<EntityHeader> getEntityTypeBatch(List<String> ids,
 			String username) throws ServletException, IOException, NotFoundException, DatastoreException, JSONException, JSONObjectAdapterException {
 		MockHttpServletRequest request = new MockHttpServletRequest();
 		MockHttpServletResponse response = new MockHttpServletResponse();
@@ -363,7 +362,7 @@ public class EntityServletTestHelper {
 		}
 		// Read in the value.
 		JSONObjectAdapter adapter = new JSONObjectAdapterImpl(new JSONObject(response.getContentAsString()));
-		PaginatedResults<EntityHeader> results = new PaginatedResults<EntityHeader>(EntityHeader.class);
+		BatchResults<EntityHeader> results = new BatchResults<EntityHeader>(EntityHeader.class);
 		results.initializeFromJSONObject(adapter);
 		return results;
 	}

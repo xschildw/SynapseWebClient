@@ -114,7 +114,7 @@ public class UrlHelpers {
 	 * All of the base URLs for Synapse object batch requests
 	 */
 	public static final String ENTITY_TYPE = ENTITY+TYPE;
-	
+
 	/**
 	 * All of the base URLs for Synapse objects with ID.
 	 */
@@ -135,7 +135,7 @@ public class UrlHelpers {
 	 * The base URL for Synapse objects's type (a.k.a. EntityHeader)
 	 */
 	public static final String ENTITY_ID_TYPE = ENTITY_ID+TYPE;
-	
+
 	/**
 	 * All of the base URLs for Synapse objects's Annotations.
 	 */

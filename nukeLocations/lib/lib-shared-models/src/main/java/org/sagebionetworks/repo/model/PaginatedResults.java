@@ -6,12 +6,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.sagebionetworks.repo.web.ServiceConstants;
+import org.sagebionetworks.repo.ServiceConstants;
 import org.sagebionetworks.schema.adapter.JSONArrayAdapter;
 import org.sagebionetworks.schema.adapter.JSONEntity;
 import org.sagebionetworks.schema.adapter.JSONObjectAdapter;
 import org.sagebionetworks.schema.adapter.JSONObjectAdapterException;
-import org.sagebionetworks.schema.adapter.org.json.JSONArrayAdapterImpl;
 
 /**
  * Generic class used to encapsulate a paginated list of results of objects of
@@ -25,6 +24,8 @@ import org.sagebionetworks.schema.adapter.org.json.JSONArrayAdapterImpl;
  *            the type of result to paginate
  */
 public class PaginatedResults<T extends JSONEntity> implements JSONEntity {
+	
+	private static final AutoGenFactory factory = new AutoGenFactory();
 	
     public final static String EFFECTIVE_SCHEMA = "{\"id\":\"org.sagebionetworks.repo.model.PaginatedResultsTemp\",\"description\":\"JSON schema for Row POJO\",\"name\":\"PaginatedResultsTemp\",\"properties\":{\"totalNumberOfResults\":{\"description\":\"The total number of results for this query\",\"type\":\"integer\"},\"results\":{\"items\":{\"id\":\"org.sagebionetworks.repo.model.Entity\",\"description\":\"This is the base interface that all Entities should implement\",\"name\":\"Entity\",\"properties\":{\"id\":{\"description\":\"The unique immutable ID for this entity.  A new ID will be generated for new Entities.  Once issued, this ID is guaranteed to never change or be re-issued\",\"type\":\"string\"},\"createdOn\":{\"description\":\"The date this entity was created.\",\"format\":\"date-time\",\"type\":\"string\"},\"modifiedOn\":{\"description\":\"The date this entity was last modified.\",\"format\":\"date-time\",\"type\":\"string\"},\"parentId\":{\"description\":\"The ID of the parent of this entity\",\"type\":\"string\"},\"etag\":{\"description\":\"Synapse employs an Optimistic Concurrency Control (OCC) scheme to handle concurrent updates. Since the E-Tag changes every time an entity is updated it is used to detect when a client's current representation of an entity is out-of-date.\",\"type\":\"string\"},\"createdBy\":{\"description\":\"The user that created this entity.\",\"type\":\"string\"},\"accessControlList\":{\"description\":\"The URI to get to this entity's access control list\",\"transient\":true,\"type\":\"string\"},\"description\":{\"description\":\"The description of this entity.\",\"type\":\"string\"},\"modifiedBy\":{\"description\":\"The user that last modified this entity.\",\"type\":\"string\"},\"name\":{\"description\":\"The name of this entity\",\"type\":\"string\"},\"annotations\":{\"description\":\"The URI to get to this entity's annotations\",\"transient\":true,\"type\":\"string\"},\"uri\":{\"description\":\"The Uniform Resource Identifier (URI) for this entity.\",\"transient\":true,\"type\":\"string\"}},\"type\":\"interface\"},\"description\":\"The the id of the entity to which this reference refers\",\"type\":\"array\"}},\"type\":\"object\"}";
 
@@ -181,7 +182,7 @@ public class PaginatedResults<T extends JSONEntity> implements JSONEntity {
 			for(int i=0; i<array.length(); i++){
 				JSONObjectAdapter childAdapter = array.getJSONObject(i);
 				try {
-					T newInstance = clazz.newInstance();
+					T newInstance = (T) factory.newInstance(clazz.getName());
 					newInstance.initializeFromJSONObject(childAdapter);
 					this.results.add(newInstance);
 				} catch (Exception e) {
@@ -207,7 +208,7 @@ public class PaginatedResults<T extends JSONEntity> implements JSONEntity {
 		if(adapter == null) throw new IllegalArgumentException("Adapter cannot be null");
 		adapter.put("totalNumberOfResults", totalNumberOfResults);
 		if(this.results != null){
-			JSONArrayAdapterImpl array = new JSONArrayAdapterImpl();
+			JSONArrayAdapter array = adapter.createNewArray();
 			adapter.put("results", array);
 			int index = 0;
 			for(JSONEntity entity: results){
