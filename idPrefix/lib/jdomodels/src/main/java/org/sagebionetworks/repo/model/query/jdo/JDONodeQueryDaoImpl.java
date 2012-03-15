@@ -500,8 +500,9 @@ public class JDONodeQueryDaoImpl implements NodeQueryDao {
 	 * @param builder
 	 * @param from
 	 * @throws AttributeDoesNotExist 
+	 * @throws DatastoreException 
 	 */
-	protected void buildWhere(StringBuilder whereBuilder, Map<String, FieldType> aliasMap, Map parameters, BasicQuery in) throws AttributeDoesNotExist {
+	protected void buildWhere(StringBuilder whereBuilder, Map<String, FieldType> aliasMap, Map parameters, BasicQuery in) throws AttributeDoesNotExist, DatastoreException {
 		// We need a where clause if there is more than one table in this query or if there are any filters.
 		int conditionCount = 0;
 		// Add the join from node to node to node revision
@@ -592,7 +593,12 @@ public class JDONodeQueryDaoImpl implements NodeQueryDao {
 						String bindKey = "expKey" + i;
 						whereBuilder.append(bindKey);
 						// Bind the value to the parameters
-						parameters.put(bindKey, exp.getValue());
+						if((NodeField.PARENT_ID == nodeField) || (NodeField.ID == nodeField)) {
+							parameters.put(bindKey, KeyFactory.stringToKey(exp.getValue().toString()));
+						}
+						else {
+							parameters.put(bindKey, exp.getValue());
+						}
 					}
 				} else {
 					// This is not a primary field

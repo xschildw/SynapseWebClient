@@ -33,6 +33,7 @@ import org.sagebionetworks.repo.model.User;
 import org.sagebionetworks.repo.model.UserGroup;
 import org.sagebionetworks.repo.model.UserInfo;
 import org.sagebionetworks.repo.model.AuthorizationConstants.ACCESS_TYPE;
+import org.sagebionetworks.repo.model.jdo.KeyFactory;
 import org.sagebionetworks.repo.model.query.BasicQuery;
 import org.sagebionetworks.repo.model.query.Compartor;
 import org.sagebionetworks.repo.model.query.CompoundId;
@@ -144,7 +145,7 @@ public class LocationableMetadataProvider implements
 				 * for that user.
 				 */
 
-				String s3KeyPrefixPattern = "^/" + locationable.getId()
+				String s3KeyPrefixPattern = "^/" + KeyFactory.stringToKey(locationable.getId())
 						+ "/\\d+/.*$";
 				if (!location.getPath().matches(s3KeyPrefixPattern)) {
 					throw new InvalidModelException(
