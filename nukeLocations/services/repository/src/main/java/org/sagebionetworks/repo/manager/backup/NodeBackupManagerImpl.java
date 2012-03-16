@@ -139,7 +139,6 @@ public class NodeBackupManagerImpl implements NodeBackupManager {
 		} catch (Exception e) {
 			// Convert all exceptions to runtimes to force a rollback on this
 			// node.
-			System.out.println("!!!!!!!! " + nodeId + " " + backup.getBenefactor());
 			throw new RuntimeException(e);
 		}
 	}
