@@ -96,7 +96,7 @@ public class IT500SynapseJavaClient {
 		JSONArray datasets = results.getJSONArray("results");
 
 		if (0 < datasets.length()) {
-			int datasetId = datasets.getJSONObject(0).getInt("dataset.id");
+			String datasetId = datasets.getJSONObject(0).getString("dataset.id");
 
 			JSONObject aStoredDataset = synapse.getEntity("/dataset/"
 					+ datasetId);

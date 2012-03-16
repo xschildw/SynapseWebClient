@@ -188,13 +188,13 @@ public class NodeDAOImpl implements NodeDAO, NodeBackupDAO, InitializingBean {
 		if(node.getETag() == null) throw new IllegalArgumentException("The backup node must have an etag");
 		if(node.getId() == null) throw new IllegalArgumentException("The backup node must have an id");
 		// The ID must not change
-		String startingId = node.getId();
+		Long startingId = KeyFactory.stringToKey(node.getId());
 		// Create the node.
 		// We want to force the use of the current eTag. See PLFM-845
 		boolean forceUseEtag = true;
 		String id = this.createNodePrivate(node, forceUseEtag);
 		// validate that the ID is unchanged.
-		if(!startingId.equals(id)) throw new DatastoreException("Creating a node from a backup changed the ID.");
+		if(!startingId.equals(KeyFactory.stringToKey(id))) throw new DatastoreException("Creating a node from a backup changed the ID.");
 	}
 
 	/**
