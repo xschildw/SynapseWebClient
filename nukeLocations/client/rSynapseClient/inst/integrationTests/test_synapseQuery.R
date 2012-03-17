@@ -53,7 +53,7 @@ integrationTestLotsOQueries <-
   datasetsOrderBy <- synapseQuery(query='select * from dataset order by Number_of_Samples DESC limit 3')
   checkTrue(3 == nrow(datasetsOrderBy))
 
-  datasetsMultiWhere <- synapseQuery(query='select * from dataset where dataset.species == "Human" and dataset.Number_of_Samples > 100 limit 3 offset 1')
+  datasetsMultiWhere <- synapseQuery(query='select * from dataset where dataset.species == "Homo sapiens" and dataset.Number_of_Samples > 100 limit 3 offset 1')
   checkTrue(3 == nrow(datasetsMultiWhere))
 
   datasetsSingleWhere <- synapseQuery(query='select * from dataset where name == "MSKCC Prostate Cancer"')
