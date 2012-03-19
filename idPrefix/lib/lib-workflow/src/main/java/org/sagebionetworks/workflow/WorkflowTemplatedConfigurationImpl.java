@@ -55,7 +55,7 @@ public class WorkflowTemplatedConfigurationImpl extends
 	 * In general, only tests in lib-workflow use this
 	 */
 	public WorkflowTemplatedConfigurationImpl() {
-		super(DEFAULT_PROPERTIES_FILENAME, TEMPLATE_PROPERTIES);
+		WorkflowTemplatedConfigurationImpl(DEFAULT_PROPERTIES_FILENAME, TEMPLATE_PROPERTIES);
 	}
 
 	/**
@@ -68,6 +68,9 @@ public class WorkflowTemplatedConfigurationImpl extends
 	public WorkflowTemplatedConfigurationImpl(String defaultPropertiesFilename,
 			String templatePropertiesFilename) {
 		super(defaultPropertiesFilename, templatePropertiesFilename);
+		
+		
+		
 	}
 
 	@Override
