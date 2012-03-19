@@ -676,7 +676,13 @@ public class JDONodeQueryDaoImpl implements NodeQueryDao {
 				row.put(NodeField.ID.getFieldName(), id);
 				idList.add(id);
 			}
-//			System.out.println(row);
+			// Replace the parentID with a string if needed
+			Long parentIdLong = (Long) row.get(NodeField.PARENT_ID.getFieldName());
+			if(parentIdLong != null){
+				String parentId = KeyFactory.keyToString(parentIdLong);
+				row.put(NodeField.PARENT_ID.getFieldName(), parentId);
+			}
+			//			System.out.println(row);
 		}
 		// Return the results.
 		return new NodeQueryResults(idList, fromDB, totalCount);

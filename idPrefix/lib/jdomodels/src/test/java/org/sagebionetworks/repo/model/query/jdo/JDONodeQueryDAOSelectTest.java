@@ -136,7 +136,7 @@ public class JDONodeQueryDAOSelectTest {
 		Map<String, Object> row = results.getAllSelectedData().get(0);
 		// The map should contain all primary fields.
 		for(NodeField field: NodeField.values()){
-			assertTrue(row.containsKey(field.getFieldName()));
+			assertTrue(field.name(), row.containsKey(field.getFieldName()));
 		}
 		// The map should also have all of the annotations.
 		assertTrue(row.containsKey(STRING_KEY_SECONDARY));
