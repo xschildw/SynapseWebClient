@@ -7,7 +7,7 @@ import org.sagebionetworks.repo.model.NodeConstants;
 import org.sagebionetworks.repo.model.EntityType;
 import org.sagebionetworks.repo.model.jdo.KeyFactory;
 import org.sagebionetworks.repo.model.query.BasicQuery;
-import org.sagebionetworks.repo.model.query.Compartor;
+import org.sagebionetworks.repo.model.query.Comparator;
 import org.sagebionetworks.repo.model.query.CompoundId;
 import org.sagebionetworks.repo.model.query.Expression;
 import org.sagebionetworks.repo.model.query.jdo.NodeField;
@@ -39,7 +39,7 @@ public class QueryUtils {
 		query.setSort(paging.getSortBy());
 		query.setAscending(paging.getAscending());
 		query.setFrom(type);
-		query.addExpression(new Expression(new CompoundId(null, NodeConstants.COL_PARENT_ID), Compartor.EQUALS, KeyFactory.stringToKey(parentId)));
+		query.addExpression(new Expression(new CompoundId(null, NodeConstants.COL_PARENT_ID), Comparator.EQUALS, KeyFactory.stringToKey(parentId)));
 		return query;
 	}
 	

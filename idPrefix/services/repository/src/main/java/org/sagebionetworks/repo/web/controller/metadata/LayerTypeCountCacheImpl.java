@@ -16,7 +16,7 @@ import org.sagebionetworks.repo.model.EntityType;
 import org.sagebionetworks.repo.model.UserInfo;
 import org.sagebionetworks.repo.model.jdo.KeyFactory;
 import org.sagebionetworks.repo.model.query.BasicQuery;
-import org.sagebionetworks.repo.model.query.Compartor;
+import org.sagebionetworks.repo.model.query.Comparator;
 import org.sagebionetworks.repo.model.query.CompoundId;
 import org.sagebionetworks.repo.model.query.Expression;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -85,7 +85,7 @@ public class LayerTypeCountCacheImpl implements LayerTypeCountCache {
 		BasicQuery query = new BasicQuery();
 		// We want all children
 		query.setFrom(EntityType.layer);
-		query.addExpression(new Expression(new CompoundId(null, NodeConstants.COL_PARENT_ID), Compartor.EQUALS, KeyFactory.stringToKey(parentId)));
+		query.addExpression(new Expression(new CompoundId(null, NodeConstants.COL_PARENT_ID), Comparator.EQUALS, KeyFactory.stringToKey(parentId)));
 		return query;
 	}
 	
@@ -99,7 +99,7 @@ public class LayerTypeCountCacheImpl implements LayerTypeCountCache {
 		// Start with the children query
 		BasicQuery query = createChildrenLayerQuery(datasetId);
 		// Now add a filter for the clinical layer type.
-		query.addExpression(new Expression(new CompoundId(null, NodeConstants.COLUMN_LAYER_TYPE), Compartor.EQUALS, type.name()));
+		query.addExpression(new Expression(new CompoundId(null, NodeConstants.COLUMN_LAYER_TYPE), Comparator.EQUALS, type.name()));
 		return query;
 	}
 

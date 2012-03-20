@@ -34,7 +34,7 @@ import org.sagebionetworks.repo.model.UserInfo;
 import org.sagebionetworks.repo.model.jdo.KeyFactory;
 import org.sagebionetworks.repo.model.jdo.NodeTestUtils;
 import org.sagebionetworks.repo.model.query.BasicQuery;
-import org.sagebionetworks.repo.model.query.Compartor;
+import org.sagebionetworks.repo.model.query.Comparator;
 import org.sagebionetworks.repo.model.query.CompoundId;
 import org.sagebionetworks.repo.model.query.Expression;
 import org.sagebionetworks.repo.model.query.FieldType;
@@ -477,7 +477,7 @@ public class JDONodeQueryDAOImplTest {
 		// query.setSort(attString);
 		// query.setAscending(false);
 		Expression expression = new Expression(new CompoundId("dataset",
-				"createdBy"), Compartor.EQUALS, "magic");
+				"createdBy"), Comparator.EQUALS, "magic");
 		List<Expression> filters = new ArrayList<Expression>();
 		filters.add(expression);
 		query.setFilters(filters);
@@ -498,7 +498,7 @@ public class JDONodeQueryDAOImplTest {
 		// query.setSort(attString);
 		// query.setAscending(false);
 		Expression expression = new Expression(new CompoundId("dataset",
-				"createdOn"), Compartor.GREATER_THAN, "1");
+				"createdOn"), Comparator.GREATER_THAN, "1");
 		List<Expression> filters = new ArrayList<Expression>();
 		filters.add(expression);
 		query.setFilters(filters);
@@ -520,9 +520,9 @@ public class JDONodeQueryDAOImplTest {
 		String filterCreator = "magic";
 		String filterName = "dsName0";
 		Expression expression = new Expression(new CompoundId("dataset",
-				"createdBy"), Compartor.EQUALS, filterCreator);
+				"createdBy"), Comparator.EQUALS, filterCreator);
 		Expression expression2 = new Expression(new CompoundId("dataset",
-				"name"), Compartor.EQUALS, filterName);
+				"name"), Comparator.EQUALS, filterName);
 		filters.add(expression);
 		filters.add(expression2);
 		query.setFilters(filters);
@@ -548,7 +548,7 @@ public class JDONodeQueryDAOImplTest {
 		// Filter on an annotation using does not equal with a bogus value to
 		// get all datasets.
 		Expression expression = new Expression(new CompoundId("dataset",
-				attOnall), Compartor.NOT_EQUALS, "I do not exist");
+				attOnall), Comparator.NOT_EQUALS, "I do not exist");
 		List<Expression> filters = new ArrayList<Expression>();
 		filters.add(expression);
 		query.setFilters(filters);
@@ -575,9 +575,9 @@ public class JDONodeQueryDAOImplTest {
 		String onAllValue = "someNumber2";
 		String creator = "magic";
 		Expression expression = new Expression(new CompoundId("dataset",
-				attOnall), Compartor.EQUALS, onAllValue);
+				attOnall), Comparator.EQUALS, onAllValue);
 		Expression expression2 = new Expression(new CompoundId("dataset",
-				"createdBy"), Compartor.EQUALS, creator);
+				"createdBy"), Comparator.EQUALS, creator);
 		filters.add(expression);
 		filters.add(expression2);
 		query.setFilters(filters);
@@ -616,13 +616,13 @@ public class JDONodeQueryDAOImplTest {
 		String creator = "magic";
 		Long longValue = new Long(2);
 		Expression expression = new Expression(new CompoundId("dataset",
-				attOnall), Compartor.EQUALS, onAllValue);
+				attOnall), Comparator.EQUALS, onAllValue);
 		Expression expression2 = new Expression(new CompoundId("dataset",
-				"createdBy"), Compartor.EQUALS, creator);
+				"createdBy"), Comparator.EQUALS, creator);
 		Expression expression3 = new Expression(new CompoundId("dataset",
-				attOnEven), Compartor.EQUALS, longValue);
+				attOnEven), Comparator.EQUALS, longValue);
 		Expression expression4 = new Expression(new CompoundId("dataset",
-				"name"), Compartor.EQUALS, "dsName2");
+				"name"), Comparator.EQUALS, "dsName2");
 		filters.add(expression);
 		filters.add(expression2);
 		filters.add(expression3);
@@ -657,7 +657,7 @@ public class JDONodeQueryDAOImplTest {
 		query.setLimit(3);
 		query.setOffset(0);
 		List<Expression> filters = new ArrayList<Expression>();
-		Expression expression = new Expression(new CompoundId(null, NodeConstants.COL_PARENT_ID), Compartor.EQUALS, KeyFactory.stringToKey(nodeIds.get(1)));
+		Expression expression = new Expression(new CompoundId(null, NodeConstants.COL_PARENT_ID), Comparator.EQUALS, KeyFactory.stringToKey(nodeIds.get(1)));
 		filters.add(expression);
 		query.setFilters(filters);
 		// Execute the query.
@@ -684,7 +684,7 @@ public class JDONodeQueryDAOImplTest {
 		query.setOffset(0);
 		List<Expression> filters = new ArrayList<Expression>();
 		Long id = KeyFactory.stringToKey(nodeIds.get(1));
-		Expression expression = new Expression(new CompoundId(null, NodeConstants.COL_PARENT_ID), Compartor.EQUALS, id);
+		Expression expression = new Expression(new CompoundId(null, NodeConstants.COL_PARENT_ID), Comparator.EQUALS, id);
 		filters.add(expression);
 		query.setFilters(filters);
 		// Execute the query.
@@ -711,7 +711,7 @@ public class JDONodeQueryDAOImplTest {
 		query.setLimit(3);
 		query.setOffset(0);
 		List<Expression> filters = new ArrayList<Expression>();
-		Expression expression = new Expression(new CompoundId("dataset", "invalid name"), Compartor.EQUALS, nodeIds.get(1));
+		Expression expression = new Expression(new CompoundId("dataset", "invalid name"), Comparator.EQUALS, nodeIds.get(1));
 		filters.add(expression);
 		query.setFilters(filters);
 		// Execute the query.
@@ -730,7 +730,7 @@ public class JDONodeQueryDAOImplTest {
 		BasicQuery query = new BasicQuery();
 		query.setFrom(EntityType.layer);
 		List<Expression> filters = new ArrayList<Expression>();
-		Expression expression = new Expression(new CompoundId("layer", attLayerType), Compartor.EQUALS, LayerTypeNames.C.name());
+		Expression expression = new Expression(new CompoundId("layer", attLayerType), Comparator.EQUALS, LayerTypeNames.C.name());
 		filters.add(expression);
 		query.setFilters(filters);
 		long count = nodeQueryDao.executeCountQuery(query, mockUserInfo);
@@ -739,7 +739,7 @@ public class JDONodeQueryDAOImplTest {
 		query = new BasicQuery();
 		query.setFrom(EntityType.layer);
 		filters = new ArrayList<Expression>();
-		expression = new Expression(new CompoundId("layer", attLayerType), Compartor.EQUALS, LayerTypeNames.G.name());
+		expression = new Expression(new CompoundId("layer", attLayerType), Comparator.EQUALS, LayerTypeNames.G.name());
 		filters.add(expression);
 		query.setFilters(filters);
 		count = nodeQueryDao.executeCountQuery(query, mockUserInfo);
@@ -748,7 +748,7 @@ public class JDONodeQueryDAOImplTest {
 		query = new BasicQuery();
 		query.setFrom(EntityType.layer);
 		filters = new ArrayList<Expression>();
-		expression = new Expression(new CompoundId("layer", attLayerType), Compartor.EQUALS, LayerTypeNames.E.name());
+		expression = new Expression(new CompoundId("layer", attLayerType), Comparator.EQUALS, LayerTypeNames.E.name());
 		filters.add(expression);
 		query.setFilters(filters);
 		count = nodeQueryDao.executeCountQuery(query, mockUserInfo);
@@ -760,7 +760,7 @@ public class JDONodeQueryDAOImplTest {
 		BasicQuery query = new BasicQuery();
 		query.setFrom(EntityType.layer);
 		List<Expression> filters = new ArrayList<Expression>();
-		Expression expression = new Expression(new CompoundId("layer", attLayerType), Compartor.EQUALS, "i do not exists");
+		Expression expression = new Expression(new CompoundId("layer", attLayerType), Comparator.EQUALS, "i do not exists");
 		filters.add(expression);
 		query.setFilters(filters);
 		long count = nodeQueryDao.executeCountQuery(query, mockUserInfo);
@@ -770,7 +770,7 @@ public class JDONodeQueryDAOImplTest {
 		query = new BasicQuery();
 		query.setFrom(EntityType.layer);
 		filters = new ArrayList<Expression>();
-		expression = new Expression(new CompoundId("layer", "someFakeKeyThatDoesNotExist"), Compartor.EQUALS, LayerTypeNames.E.name());
+		expression = new Expression(new CompoundId("layer", "someFakeKeyThatDoesNotExist"), Comparator.EQUALS, LayerTypeNames.E.name());
 		filters.add(expression);
 		query.setFilters(filters);
 		count = nodeQueryDao.executeCountQuery(query, mockUserInfo);

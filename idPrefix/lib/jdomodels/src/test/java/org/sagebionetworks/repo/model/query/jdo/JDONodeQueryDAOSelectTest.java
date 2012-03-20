@@ -25,7 +25,7 @@ import org.sagebionetworks.repo.model.UserInfo;
 import org.sagebionetworks.repo.model.jdo.KeyFactory;
 import org.sagebionetworks.repo.model.jdo.NodeTestUtils;
 import org.sagebionetworks.repo.model.query.BasicQuery;
-import org.sagebionetworks.repo.model.query.Compartor;
+import org.sagebionetworks.repo.model.query.Comparator;
 import org.sagebionetworks.repo.model.query.CompoundId;
 import org.sagebionetworks.repo.model.query.Expression;
 import org.sagebionetworks.repo.web.NotFoundException;
@@ -126,7 +126,7 @@ public class JDONodeQueryDAOSelectTest {
 		query.setFrom(null);
 		// A null select should be treated as a select *
 		query.setSelect(null);
-		query.addExpression(new Expression(new CompoundId(null, "id"), Compartor.EQUALS, KeyFactory.stringToKey(id)));
+		query.addExpression(new Expression(new CompoundId(null, "id"), Comparator.EQUALS, KeyFactory.stringToKey(id)));
 		NodeQueryResults results = nodeQueryDao.executeQuery(query, mockUserInfo);
 		assertNotNull(results);
 		assertEquals(1, results.getTotalNumberOfResults());
@@ -156,7 +156,7 @@ public class JDONodeQueryDAOSelectTest {
 		// A null select should be treated as a select *
 		query.setSelect(new ArrayList<String>());
 		query.getSelect().add(NodeField.ID.getFieldName());
-		query.addExpression(new Expression(new CompoundId(null, "id"), Compartor.EQUALS, KeyFactory.stringToKey(id)));
+		query.addExpression(new Expression(new CompoundId(null, "id"), Comparator.EQUALS, KeyFactory.stringToKey(id)));
 		NodeQueryResults results = nodeQueryDao.executeQuery(query, mockUserInfo);
 		assertNotNull(results);
 		assertEquals(1, results.getTotalNumberOfResults());
@@ -184,7 +184,7 @@ public class JDONodeQueryDAOSelectTest {
 		// A null select should be treated as a select *
 		query.setSelect(new ArrayList<String>());
 		query.getSelect().add(STRING_KEY_PRIMARY);
-		query.addExpression(new Expression(new CompoundId(null, "id"), Compartor.EQUALS, KeyFactory.stringToKey(id)));
+		query.addExpression(new Expression(new CompoundId(null, "id"), Comparator.EQUALS, KeyFactory.stringToKey(id)));
 		NodeQueryResults results = nodeQueryDao.executeQuery(query, mockUserInfo);
 		assertNotNull(results);
 		assertEquals(1, results.getTotalNumberOfResults());
@@ -215,7 +215,7 @@ public class JDONodeQueryDAOSelectTest {
 			select.add(value.getFieldName());
 		}
 		query.setSelect(select);
-		query.addExpression(new Expression(new CompoundId(null, "id"), Compartor.EQUALS, KeyFactory.stringToKey(id)));
+		query.addExpression(new Expression(new CompoundId(null, "id"), Comparator.EQUALS, KeyFactory.stringToKey(id)));
 		NodeQueryResults results = nodeQueryDao.executeQuery(query, mockUserInfo);
 		assertNotNull(results);
 		assertEquals(1, results.getTotalNumberOfResults());
@@ -234,7 +234,7 @@ public class JDONodeQueryDAOSelectTest {
 		BasicQuery query = new BasicQuery();
 		query.setFrom(null);
 		List<Expression> filters = new ArrayList<Expression>();
-		Expression expression = new Expression(new CompoundId(null, NodeField.PARENT_ID.getFieldName()), Compartor.EQUALS, null);
+		Expression expression = new Expression(new CompoundId(null, NodeField.PARENT_ID.getFieldName()), Comparator.EQUALS, null);
 		filters.add(expression);
 		query.setFilters(filters);
 		long count = nodeQueryDao.executeCountQuery(query, mockUserInfo);
