@@ -236,7 +236,8 @@ public class LocationHelpersImpl implements LocationHelper {
 				: READ_ACCESS_EXPIRY_HOURS) * 3600;
 		String policy = (HttpMethod.PUT == method) ? READWRITE_DATA_POLICY
 				: READONLY_DATA_POLICY;
-		policy = policy.replace(ENTITY_ID_PLACEHOLDER, entityId);
+		// To avoid having to move all of our s3 data, use the entity id without the prefix
+		policy = policy.replace(ENTITY_ID_PLACEHOLDER, KeyFactory.stringToKey(entityId).toString());
 		if(MAX_POLICY_LENGTH < policy.length()) {
 			throw new IllegalArgumentException("Security token policy too long: " + policy);
 		}
@@ -267,6 +268,7 @@ public class LocationHelpersImpl implements LocationHelper {
 		if(!matcher.matches()) {
 			throw new IllegalArgumentException("s3 url or key is malformed " + s3Url);
 		}
+		// To avoid having to move all of our s3 data, use the entity id without the prefix
 		return KeyFactory.keyToString(Long.parseLong(matcher.group(3)));
 	}
 	

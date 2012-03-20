@@ -1,11 +1,19 @@
 package org.sagebionetworks.repo.model.dbo.dao;
 
-import static org.sagebionetworks.repo.model.query.jdo.SqlConstants.*;
+import static org.sagebionetworks.repo.model.query.jdo.SqlConstants.COL_NODE_BENEFACTOR_ID;
+import static org.sagebionetworks.repo.model.query.jdo.SqlConstants.COL_NODE_ID;
+import static org.sagebionetworks.repo.model.query.jdo.SqlConstants.COL_NODE_NAME;
+import static org.sagebionetworks.repo.model.query.jdo.SqlConstants.COL_NODE_TYPE;
+import static org.sagebionetworks.repo.model.query.jdo.SqlConstants.COL_REFERENCE_GROUP_NAME;
+import static org.sagebionetworks.repo.model.query.jdo.SqlConstants.COL_REFERENCE_OWNER_NODE;
+import static org.sagebionetworks.repo.model.query.jdo.SqlConstants.COL_REFERENCE_TARGET_NODE;
+import static org.sagebionetworks.repo.model.query.jdo.SqlConstants.COL_REFERENCE_TARGET_REVISION_NUMBER;
+import static org.sagebionetworks.repo.model.query.jdo.SqlConstants.TABLE_NODE;
+import static org.sagebionetworks.repo.model.query.jdo.SqlConstants.TABLE_REFERENCE;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -21,7 +29,6 @@ import org.sagebionetworks.repo.model.UserInfo;
 import org.sagebionetworks.repo.model.dbo.DBOBasicDao;
 import org.sagebionetworks.repo.model.dbo.persistence.DBOReference;
 import org.sagebionetworks.repo.model.jdo.KeyFactory;
-import org.sagebionetworks.repo.model.query.jdo.JDONodeQueryDaoImpl;
 import org.sagebionetworks.repo.model.query.jdo.QueryUtils;
 import org.sagebionetworks.repo.model.query.jdo.SqlConstants;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,8 +36,6 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.SimpleJdbcTemplate;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-
-import com.sun.org.apache.xalan.internal.xsltc.compiler.util.NodeType;
 
 /**
  * Implementation of the DBOReferenceDao.

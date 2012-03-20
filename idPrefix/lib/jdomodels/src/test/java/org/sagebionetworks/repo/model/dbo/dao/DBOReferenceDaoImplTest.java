@@ -146,6 +146,11 @@ public class DBOReferenceDaoImplTest {
 		// Now fetch them back
 		Map<String, Set<Reference>> clone = dboReferenceDao.getReferences(node.getId());
 		assertEquals(references, clone);
+		
+		// Make sure our returned ids have the syn prefix
+		assertEquals(KeyFactory.keyToString(123L), clone.get("groupOne").iterator().next().getTargetId());
+		assertEquals(KeyFactory.keyToString(456L), clone.get("groupTwo").iterator().next().getTargetId());
+		
 		// Now change the values and make sure we can replace them.
 		clone.remove("groupOne");
 		Set<Reference> three = new HashSet<Reference>();
@@ -159,6 +164,10 @@ public class DBOReferenceDaoImplTest {
 		dboReferenceDao.replaceReferences(node.getId(), clone);
 		Map<String, Set<Reference>> clone2 = dboReferenceDao.getReferences(node.getId());
 		assertEquals(clone, clone2);
+		
+		// Make sure our returned ids have the syn prefix
+		assertEquals(KeyFactory.keyToString(456L), clone2.get("groupTwo").iterator().next().getTargetId());
+		assertEquals(KeyFactory.keyToString(789L), clone2.get("groupThree").iterator().next().getTargetId());
 	}
 	
 	@Test
@@ -260,9 +269,9 @@ public class DBOReferenceDaoImplTest {
 		assertEquals(references, clone);
 	}
 	
-	private static Set<Long> justIds(Collection<EntityHeader> ehs) throws DatastoreException {
-		Set<Long> ans = new HashSet<Long>();
-		for (EntityHeader eh : ehs) ans.add(KeyFactory.stringToKey(eh.getId()));
+	private static Set<String> justIds(Collection<EntityHeader> ehs) throws DatastoreException {
+		Set<String> ans = new HashSet<String>();
+		for (EntityHeader eh : ehs) ans.add(eh.getId());
 		return ans;
 	}
 	
@@ -314,16 +323,17 @@ public class DBOReferenceDaoImplTest {
 		EntityHeaderQueryResults ehqr = dboReferenceDao.getReferrers(123L, null, userInfo, null, null);
 		long count = ehqr.getTotalNumberOfResults();
 		Collection<EntityHeader> referrers = ehqr.getEntityHeaders();
-		Set<Long> expected = new HashSet<Long>(); 
-		expected.add(node0.getId()); expected.add(node1.getId());
+		Set<String> expected = new HashSet<String>(); 
+		// Make sure our referrers have the syn prefix
+		expected.add(KeyFactory.keyToString(node0.getId())); expected.add(KeyFactory.keyToString(node1.getId()));
 		assertEquals(2, count);
 		assertEquals(expected, justIds(referrers));
 		// but just one refers to id=456
 		ehqr = dboReferenceDao.getReferrers(456L, null, userInfo, null, null);
 		count = ehqr.getTotalNumberOfResults();
 		referrers = ehqr.getEntityHeaders();
-		expected = new HashSet<Long>(); 
-		expected.add(node0.getId());
+		expected = new HashSet<String>(); 
+		expected.add(KeyFactory.keyToString(node0.getId()));
 		assertEquals(1, count);
 		assertEquals(expected, justIds(referrers));
 		EntityHeader eh = referrers.iterator().next();
@@ -349,8 +359,8 @@ public class DBOReferenceDaoImplTest {
 		ehqr = dboReferenceDao.getReferrers(123L, 1, userInfo, null, null);
 		count = ehqr.getTotalNumberOfResults();
 		referrers = ehqr.getEntityHeaders();
-		expected = new HashSet<Long>(); 
-		expected.add(node0.getId());
+		expected = new HashSet<String>(); 
+		expected.add(KeyFactory.keyToString(node0.getId()));
 		assertEquals(1, count);
 		assertEquals(expected, justIds(referrers));
 		
@@ -358,8 +368,8 @@ public class DBOReferenceDaoImplTest {
 		ehqr = dboReferenceDao.getReferrers(123L, 2, userInfo, null, null);
 		count = ehqr.getTotalNumberOfResults();
 		referrers = ehqr.getEntityHeaders();
-		expected = new HashSet<Long>(); 
-		expected.add(node1.getId());
+		expected = new HashSet<String>(); 
+		expected.add(KeyFactory.keyToString(node1.getId()));
 		assertEquals(1, count);
 		assertEquals(expected, justIds(referrers));
 		
@@ -367,8 +377,8 @@ public class DBOReferenceDaoImplTest {
 		ehqr = dboReferenceDao.getReferrers(123L, null, userInfo, null, null);
 		count = ehqr.getTotalNumberOfResults();
 		referrers = ehqr.getEntityHeaders();
-		expected = new HashSet<Long>(); 
-		expected.add(node0.getId()); expected.add(node1.getId());
+		expected = new HashSet<String>(); 
+		expected.add(KeyFactory.keyToString(node0.getId())); expected.add(KeyFactory.keyToString(node1.getId()));
 		assertEquals(2, count);
 		assertEquals(expected, justIds(referrers));
 		
@@ -391,8 +401,8 @@ public class DBOReferenceDaoImplTest {
 		ehqr = dboReferenceDao.getReferrers(123L, 1, userInfo, null, null);
 		count = ehqr.getTotalNumberOfResults();
 		referrers = ehqr.getEntityHeaders();
-		expected = new HashSet<Long>(); 
-		expected.add(node0.getId());
+		expected = new HashSet<String>(); 
+		expected.add(KeyFactory.keyToString(node0.getId()));
 		assertEquals(1, count);
 		assertEquals(expected, justIds(referrers));
 
@@ -450,8 +460,8 @@ public class DBOReferenceDaoImplTest {
 		ehqr = dboReferenceDao.getReferrers(123L, null, userInfo, null, null);
 		count = ehqr.getTotalNumberOfResults();
 		referrers = ehqr.getEntityHeaders();
-		expected = new HashSet<Long>(); 
-		expected.add(node0.getId());
+		expected = new HashSet<String>(); 
+		expected.add(KeyFactory.keyToString(node0.getId()));
 		assertEquals(expected, justIds(referrers));
 		
 		
@@ -477,7 +487,7 @@ public class DBOReferenceDaoImplTest {
 		ehqr = dboReferenceDao.getReferrers(123L, 99, userInfo, null, null);
 		count = ehqr.getTotalNumberOfResults();
 		referrers = ehqr.getEntityHeaders();
-		expected = new HashSet<Long>(); 
+		expected = new HashSet<String>(); 
 		assertEquals(expected, justIds(referrers));
 	}
 	

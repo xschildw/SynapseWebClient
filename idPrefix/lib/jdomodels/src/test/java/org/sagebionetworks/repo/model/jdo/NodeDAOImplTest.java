@@ -842,6 +842,7 @@ public class NodeDAOImplTest {
 		}
 		// Now get the list of children
 		List<String> fromDao =  nodeDao.getChildrenIdsAsList(parentId);
+		// Check that the ids returned have the syn prefix
 		assertEquals(childIds, fromDao);
 	}
 	
@@ -955,6 +956,7 @@ public class NodeDAOImplTest {
 			Node node = NodeTestUtils.createNew("referee"+i);
 			String id = nodeDao.createNew(node);
 			toDelete.add(id);
+
 			Reference ref = new Reference();
 			ref.setTargetId(id);
 			referees.add(ref);
@@ -962,6 +964,7 @@ public class NodeDAOImplTest {
 			ref = new Reference();
 			ref.setTargetId(id);
 			copyReferees.add(ref);
+			
 			deleteMeNode = id;
 		}
 
@@ -984,6 +987,11 @@ public class NodeDAOImplTest {
 		assertEquals(10, storedNode.getReferences().get("referees").size());
 		Object[] storedRefs = storedNode.getReferences().get("referees").toArray();
 		assertEquals(null, ((Reference)storedRefs[0]).getTargetVersionNumber());
+		
+		// Make sure our reference Ids have the syn prefix
+		for(Reference ref : storedNode.getReferences().get("referees")) {
+			assertTrue(toDelete.contains(ref.getTargetId()));
+		}
 		
 		// Now delete one of those nodes, such that one of our references has become 
 		// invalid after we've created it.  This is okay and does not cause an error 
@@ -1073,6 +1081,15 @@ public class NodeDAOImplTest {
 		assertTrue(storedNode.getReferences().get("odd").contains(inOddFirstBatch));
 		assertTrue(storedNode.getReferences().get("even").contains(inEvenSecondBatch));
 		assertTrue(storedNode.getReferences().get("odd").contains(inOddSecondBatch));
+		
+		// Make sure our reference Ids have the syn prefix
+		for(Reference ref : storedNode.getReferences().get("even")) {
+			assertTrue(toDelete.contains(ref.getTargetId()));
+		}
+		for(Reference ref : storedNode.getReferences().get("odd")) {
+			assertTrue(toDelete.contains(ref.getTargetId()));
+		}
+
 		
 		// Now nuke all the references
 		storedNode.getReferences().clear();

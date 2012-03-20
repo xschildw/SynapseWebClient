@@ -140,6 +140,7 @@ public class LocationableMetadataProvider implements
 				 * for that user.
 				 */
 
+				// To avoid having to move all of our s3 data, use the entity id without the prefix
 				String s3KeyPrefixPattern = "^/" + KeyFactory.stringToKey(locationable.getId())
 						+ "/\\d+/.*$";
 				if (!location.getPath().matches(s3KeyPrefixPattern)) {
