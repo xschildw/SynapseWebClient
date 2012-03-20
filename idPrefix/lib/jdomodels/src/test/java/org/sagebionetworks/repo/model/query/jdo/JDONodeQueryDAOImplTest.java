@@ -258,6 +258,33 @@ public class JDONodeQueryDAOImplTest {
 		}
 	}
 
+	@Test
+	public void testBasicQueryOnChildren() throws Exception {
+		// This query is basically "select * from datasets"
+		BasicQuery query = new BasicQuery();
+		query.setFrom(EntityType.layer);
+		NodeQueryResults results = nodeQueryDao.executeQuery(query, mockUserInfo);
+		assertNotNull(results);
+		assertEquals(totalNumberOfDatasets, results.getTotalNumberOfResults());
+		// Validate all of the data is there
+		int numRows = results.getResultIds().size();
+		assertTrue(0 < numRows);
+		// Each row should have each primary field
+		for (int i = 0 ; i < numRows; i++) {
+			String id = results.getResultIds().get(i);
+			Map<String, Object> row = results.getAllSelectedData().get(i);
+			
+			assertNotNull(id);
+			// Get the node with this id
+			Node node = nodeDao.getNode(id);
+			assertNotNull(node);
+			assertEquals(EntityType.layer.name(), node.getNodeType());
+			
+			// Make sure ids in query results have the syn prefix too
+			assertEquals(node.getId(), row.get(NodeField.ID.name()));
+			assertEquals(node.getParentId(), row.get(NodeField.PARENT_ID.getFieldName()));
+		}
+	}
 
 	@Test
 	public void testPagingFromZero() throws DatastoreException {
