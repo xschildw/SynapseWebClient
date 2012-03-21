@@ -1,5 +1,8 @@
 package org.sagebionetworks.auth;
 
+import static org.sagebionetworks.repo.model.AuthorizationConstants.ACCEPTS_TERMS_OF_USE_ATTRIBUTE;
+
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.Collection;
@@ -27,6 +30,7 @@ import org.sagebionetworks.authutil.SendMail;
 import org.sagebionetworks.authutil.Session;
 import org.sagebionetworks.authutil.User;
 import org.sagebionetworks.repo.model.AuthorizationConstants;
+import org.sagebionetworks.repo.web.ForbiddenException;
 import org.sagebionetworks.repo.web.NotFoundException;
 import org.sagebionetworks.securitytools.HMACUtils;
 import org.springframework.http.HttpStatus;
@@ -41,7 +45,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 
 @Controller
-public class AuthenticationController {
+public class AuthenticationController extends BaseController {
 	private static final Logger log = Logger.getLogger(AuthenticationController.class
 			.getName());
 	
@@ -97,6 +101,37 @@ public class AuthenticationController {
         setIntegrationTestUser(StackConfiguration.getIntegrationTestUserThreeName());
 	}
 	
+	public static boolean getAcceptsTermsOfUse(String userId) throws NotFoundException, IOException {
+		Map<String,Collection<String>> attributes = CrowdAuthUtil.getUserAttributes(userId);
+		Collection<String> values = attributes.get(ACCEPTS_TERMS_OF_USE_ATTRIBUTE);
+		return values!=null && values.size()>0 && Boolean.parseBoolean(values.iterator().next());
+	}
+	
+	public static void setAcceptsTermsOfUse(String userId, boolean accepts) throws IOException {
+		Map<String,Collection<String>> attributes = new HashMap<String,Collection<String>>();
+		attributes.put(ACCEPTS_TERMS_OF_USE_ATTRIBUTE, Arrays.asList(new String[]{""+accepts}));
+		CrowdAuthUtil.setUserAttributes(userId, attributes);
+	}
+	
+	/**
+	 * 
+	 * @param userId -- the ID/email address of the user
+	 * @param acceptsTermsOfUse -- says whether the request explicitly accepts the terms (false=acceptance is omitted in request, may have been given previously)
+	 * @throws NotFoundException
+	 * @throws IOException
+	 * @throws ForbiddenException thrown if user doesn't accept terms in this request or previously
+	 */
+	public static void checkTermsOfUse(String userId, Boolean acceptsTermsOfUse) throws NotFoundException, IOException, ForbiddenException {
+		if (CrowdAuthUtil.isAdmin(userId)) return; // administrator need not sign terms of use
+		if (!getAcceptsTermsOfUse(userId)) {
+			if (acceptsTermsOfUse!=null && acceptsTermsOfUse==true) {
+				setAcceptsTermsOfUse(userId, true);
+			} else {
+				throw new ForbiddenException("You must sign the Synapse terms of use.");
+			}
+		}		
+	}
+	
 	
 	@ResponseStatus(HttpStatus.CREATED)
 	@RequestMapping(value = "/session", method = RequestMethod.POST)
@@ -111,6 +146,7 @@ public class AuthenticationController {
 			}
 			if (session==null) { // not using cache or not found in cache
 				session = CrowdAuthUtil.authenticate(credentials, true);
+				checkTermsOfUse(credentials.getEmail(), credentials.isAcceptsTermsOfUse());
 				if (cacheTimeout>0) {
 					sessionCache.put(credentials, session);
 				}
@@ -127,6 +163,8 @@ public class AuthenticationController {
 	
 	private static final String OPENID_CALLBACK_URI = "/openidcallback";
 	
+	private static final String ACCEPTS_TERMS_OF_USE_PARAM = "acceptsTermsOfUse";
+	
 	private static final String OPEN_ID_PROVIDER = "OPEN_ID_PROVIDER";
 	// 		e.g. https://www.google.com/accounts/o8/id
 	
@@ -136,12 +174,16 @@ public class AuthenticationController {
 	private static final String OPEN_ID_ATTRIBUTE = "OPENID";
 	
 	private static final String RETURN_TO_URL_COOKIE_NAME = "org.sagebionetworks.auth.returnToUrl";
+	private static final String ACCEPTS_TERMS_OF_USE_COOKIE_NAME = "org.sagebionetworks.auth.acceptsTermsOfUse";
 	private static final int RETURN_TO_URL_COOKIE_MAX_AGE_SECONDS = 60; // seconds
+	
+	private static final String authenticationServicePublicEndpoint = StackConfiguration.getAuthenticationServicePublicEndpoint();
 	
 	@ResponseStatus(HttpStatus.CREATED)
 	@RequestMapping(value = OPEN_ID_URI, method = RequestMethod.POST)
 	public void openID(
 			@RequestParam(value = OPEN_ID_PROVIDER, required = true) String openIdProvider,
+			@RequestParam(value = ACCEPTS_TERMS_OF_USE_PARAM, required = false) Boolean acceptsTermsOfUse,
 			@RequestParam(value = RETURN_TO_URL_PARAM, required = true) String returnToURL,
               HttpServletRequest request,
               HttpServletResponse response) throws Exception {
@@ -154,11 +196,15 @@ public class AuthenticationController {
 		String thisUrl = request.getRequestURL().toString();
 		int i = thisUrl.indexOf(OPEN_ID_URI);
 		if (i<0) throw new RuntimeException("Current URI, "+OPEN_ID_URI+", not found in "+thisUrl);
-		String openIDCallbackURL = StackConfiguration.getAuthenticationServicePublicEndpoint()+OPENID_CALLBACK_URI;
+		String openIDCallbackURL = authenticationServicePublicEndpoint+OPENID_CALLBACK_URI;
 //	    Here is an alternate way to do it which makes sure that the domain of the call back URL matches
 //		that of the incoming request:
 //		String openIDCallbackURL = thisUrl.substring(0, i)+OPENID_CALLBACK_URI;
 		Cookie cookie = new Cookie(RETURN_TO_URL_COOKIE_NAME, returnToURL);
+		cookie.setMaxAge(RETURN_TO_URL_COOKIE_MAX_AGE_SECONDS);
+		response.addCookie(cookie);
+		
+		cookie = new Cookie(ACCEPTS_TERMS_OF_USE_COOKIE_NAME, ""+acceptsTermsOfUse);
 		cookie.setMaxAge(RETURN_TO_URL_COOKIE_MAX_AGE_SECONDS);
 		response.addCookie(cookie);
 		
@@ -220,13 +266,17 @@ public class AuthenticationController {
 
 
 			String returnToURL = null;
+			Boolean acceptsTermsOfUse = null;
 			Cookie[] cookies = request.getCookies();
 			for (Cookie c : cookies) {
 				if (RETURN_TO_URL_COOKIE_NAME.equals(c.getName())) {
 					returnToURL = c.getValue();
-					break;
+				}
+				if (ACCEPTS_TERMS_OF_USE_COOKIE_NAME.equals(c.getName())) {
+					acceptsTermsOfUse = Boolean.parseBoolean(c.getValue());
 				}
 			}
+			checkTermsOfUse(email, acceptsTermsOfUse);
 			if (returnToURL==null) throw new RuntimeException("Missing required return-to URL.");
 			String redirectUrl = returnToURL+":"+
 				crowdSession.getSessionToken()/*+":"+crowdSession.getDisplayName() Per PLFM-319*/;
@@ -253,9 +303,9 @@ public class AuthenticationController {
 
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	@RequestMapping(value = "/session", method = RequestMethod.PUT)
-	public @ResponseBody
-	void revalidate(@RequestBody Session session) throws Exception {
-		CrowdAuthUtil.revalidate(session.getSessionToken());
+	public void revalidate(@RequestBody Session session) throws Exception {
+		String userId = CrowdAuthUtil.revalidate(session.getSessionToken());
+		checkTermsOfUse(userId, false /*i.e. may have accepted TOU previously, but acceptance is not given in this request*/);
 	}
 
 	@ResponseStatus(HttpStatus.NO_CONTENT)
@@ -428,68 +478,6 @@ public class AuthenticationController {
 	}
 	
 	
-	/**
-	 * This is thrown when there are problems authenticating the user
-	 * 
-	 * @param ex
-	 *            the exception to be handled
-	 * @param request
-	 *            the client request
-	 * @return an ErrorResponse object containing the exception reason or some
-	 *         other human-readable response
-	 */
-	@ExceptionHandler(AuthenticationException.class)
-	public @ResponseBody
-	ErrorResponse handleAuthenticationException(AuthenticationException ex,
-			HttpServletRequest request,
-			HttpServletResponse response) {
-		if (null!=ex.getAuthURL()) response.setHeader("AuthenticationURL", ex.getAuthURL());
-		response.setStatus(ex.getRespStatus());
-		return handleException(ex, request);
-	}
-
-
-	/**
-	 * Handle any exceptions not handled by specific handlers. Log an additional
-	 * message with higher severity because we really do want to know what sorts
-	 * of new exceptions are occurring.
-	 * 
-	 * @param ex
-	 *            the exception to be handled
-	 * @param request
-	 *            the client request
-	 * @return an ErrorResponse object containing the exception reason or some
-	 *         other human-readable response
-	 */
-	@ExceptionHandler(Exception.class)
-	@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-	public @ResponseBody
-	ErrorResponse handleAllOtherExceptions(Exception ex,
-			HttpServletRequest request) {
-		log.log(Level.SEVERE,
-				"Consider specifically handling exceptions of type "
-						+ ex.getClass().getName());
-		return handleException(ex, request);
-	}
-	
-	/**
-	 * Log the exception at the warning level and return an ErrorResponse
-	 * object. Child classes should override this method if they want to change
-	 * the behavior for all exceptions.
-	 * 
-	 * @param ex
-	 *            the exception to be handled
-	 * @param request
-	 *            the client request
-	 * @return an ErrorResponse object containing the exception reason or some
-	 *         other human-readable response
-	 */
-	protected ErrorResponse handleException(Throwable ex,
-			HttpServletRequest request) {
-		log.log(Level.WARNING, "Handling " + request.toString(), ex);
-		return new ErrorResponse(ex.getMessage());
-	}
-
 
 }
 
