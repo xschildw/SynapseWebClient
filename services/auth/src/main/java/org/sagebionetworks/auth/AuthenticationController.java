@@ -3,10 +3,7 @@ package org.sagebionetworks.auth;
 import static org.sagebionetworks.repo.model.AuthorizationConstants.ACCEPTS_TERMS_OF_USE_ATTRIBUTE;
 import static org.sagebionetworks.repo.model.AuthorizationConstants.ACCEPTS_TERMS_OF_USE_PARAM;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.Collection;
@@ -29,7 +26,6 @@ import org.openid4java.consumer.ConsumerManager;
 import org.sagebionetworks.StackConfiguration;
 import org.sagebionetworks.authutil.AuthenticationException;
 import org.sagebionetworks.authutil.CrowdAuthUtil;
-import org.sagebionetworks.authutil.ReadFileUtil;
 import org.sagebionetworks.authutil.SendMail;
 import org.sagebionetworks.authutil.Session;
 import org.sagebionetworks.authutil.User;
@@ -45,8 +41,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
-
-import org.sagebionetworks.repo.model.TermsOfUse;
 
 
 @Controller
