@@ -81,17 +81,6 @@ public class IT960TermsOfUse {
 	}
 
 	@Test
-	public void testGetTermsOfUse() throws Exception {
-		HttpClientProvider clientProvider = new HttpClientProviderImpl();
-		String requestUrl = authEndpoint+"/termsOfUse";
-		String requestMethod = "GET";
-		HttpResponse response = clientProvider.performRequest(requestUrl, requestMethod, null, null);
-		String responseBody = (null != response.getEntity()) ? EntityUtils
-				.toString(response.getEntity()) : null;
-		assertTrue(responseBody.length()>100);
-	}
-	
-	@Test
 	public void testRepoSvcWithTermsOfUse() throws Exception {
 		// should not be able to see locations
 		Dataset ds = synapse.getEntity(dataset);

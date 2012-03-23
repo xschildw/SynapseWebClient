@@ -78,7 +78,15 @@ public class AuthorizationConstants {
 	public static final String TERMS_OF_USE_URI = "/termsOfUse";
 	public static final String TERMS_OF_USE_AGREEMENT_URI = "/termsOfUseAgreement";
 	
+	/**
+	 * Http request parameter used with OpenID authentication request
+	 * 
+	 */
+	public static final String ACCEPTS_TERMS_OF_USE_PARAM = "acceptsTermsOfUse";
+	
 	public static final String ACCEPTS_TERMS_OF_USE_ATTRIBUTE = "org.sagebionetworks.termsOfUseAgreement.AcceptsTermsOfUse";
+	
+	public static final String ACCEPTS_TERMS_OF_USE_REQUIRED_TOKEN = "TermsOfUseAcceptanceRequired";
 	/**
 	 * Request parameter for the authenticated user id or anonymous. Note that
 	 * callers of the service do not actually use this parameter. Instead they

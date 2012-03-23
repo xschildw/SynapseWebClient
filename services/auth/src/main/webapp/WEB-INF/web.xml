@@ -59,18 +59,7 @@
     <welcome-file>index.htm</welcome-file>
   </welcome-file-list>
   
-  
-  
-  <servlet>
-    <servlet-name>authentication</servlet-name>
-    <servlet-class>
-      org.springframework.web.servlet.DispatcherServlet
-    </servlet-class>
-    <load-on-startup>1</load-on-startup>
-  </servlet>
-  
-  
-	<servlet>
+ 	<servlet>
 	  <servlet-name>tomcatDefaultServlet</servlet-name>
 	  <servlet-class>org.apache.catalina.servlets.DefaultServlet</servlet-class>
 	</servlet>
@@ -78,9 +67,15 @@
 
 	<servlet-mapping>
 	  <servlet-name>tomcatDefaultServlet</servlet-name>
-	  <url-pattern>/auth/v1/termsOfUse</url-pattern>
+	  <url-pattern>/auth/v1/termsOfUse.html</url-pattern>
 	</servlet-mapping> 
+  
+	<servlet>
+		<servlet-name>authentication</servlet-name>
+		<servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
 
+		<load-on-startup>1</load-on-startup>
+	</servlet>
 
   <servlet-mapping>
     <servlet-name>authentication</servlet-name>
