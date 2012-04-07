@@ -1,0 +1,43 @@
+{
+    "title":"Study",
+    "description":"JSON schema for Study POJO",
+    "implements":[
+        {
+            "$ref":"org.sagebionetworks.repo.model.Locationable"
+        },
+        {
+            "$ref":"org.sagebionetworks.repo.model.HasLayers"
+        }        
+    ],
+    "properties":{
+        "species":{
+            "type":"string",
+            "description":"The species associated with this Study",
+            "title":"Species"
+        },
+		"disease":{
+            "type":"string",
+            "description":"The disease associated with this Study",
+            "title":"Disease"
+		},
+		"numSamples": {
+			"type":"integer",
+			"description":"Approximate number of samples in this Study",
+			"title":"Number of samples"
+		},
+        "platform":{
+            "type":"string",
+            "description":"Chip platform for the samples in this Data",
+            "links":[
+                {
+                    "rel":"describedby",
+                    "href":"http://synapse.sagebase.org/ontology#6501",
+                    
+                },
+                
+            ],
+            "title":"Platform",
+            
+        },
+    }
+}

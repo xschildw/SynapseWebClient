@@ -1,0 +1,9 @@
+{
+    "toRename":[
+        {
+            "entityTypeName":"preview",
+            "oldFieldName":"previewBlob",
+            "newFieldName":"previewString"
+        },
+    ]
+}
