@@ -30,7 +30,7 @@ public class SageCommonsActivityService {
         }
 
         // Create activity implementations
-        SageCommonsActivities tcgaActivitiesImpl = new SageCommonsActivitiesImpl();
+        SageCommonsActivities tcgaActivitiesImpl = new SageCommonsActivitiesImpl(new SageCommonsChildWorkflowDispatcherImpl());
         worker.addActivitiesImplementation(tcgaActivitiesImpl);
 
         worker.start();

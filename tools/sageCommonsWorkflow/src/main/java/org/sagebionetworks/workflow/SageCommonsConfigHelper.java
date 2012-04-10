@@ -98,14 +98,37 @@ public class SageCommonsConfigHelper {
 	}
 	
 	/**
+	 * @return whether debug mode is on or off
+	 */
+	public static boolean debugMode() {
+		return configuration.debugMode();
+	}
+	
+	/**
 	 * @return the absolute path for the script that this workflow should run
 	 */
 	public static String getWorkflowScript() {
 		return configuration.getProperty("org.sagebionetworks.workflow.script");
 	}
+
 	
 	public static Integer getTaskExecutorThreadPoolSize() {
 		return configuration.getTaskExecutorThreadPoolSize();
 	}
 	
+	
+	/**
+	 * @return the Synapse username for this workflow
+	 */
+	public static String getSynapseUsername() {
+		return configuration.getSynapseUsername();
+	}
+	
+	/**
+	 * @return the Synapse password for this workflow
+	 */
+	public static String getSynapsePassword() {
+		return configuration.getSynapsePassword();
+	}
+
 }

@@ -126,6 +126,7 @@ public interface WorkflowTemplatedConfiguration extends TemplatedConfiguration {
 	 * @return the path to the rscript executable
 	 */
 	public String getRScriptPath();
+
 	
 	/**
 	* 
@@ -134,5 +135,14 @@ public interface WorkflowTemplatedConfiguration extends TemplatedConfiguration {
 	* @return
 	*/
 	public Integer getTaskExecutorThreadPoolSize();
+
+
+	
+	/**
+	 * Use this to make workflow run in debug mode, whatever that might mean for each workflow
+	 * 
+	 * @return true if debugMode enabled, false otherwise
+	 */
+	public boolean debugMode();
 
 }
