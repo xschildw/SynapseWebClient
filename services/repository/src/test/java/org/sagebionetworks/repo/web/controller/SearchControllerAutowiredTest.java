@@ -50,6 +50,10 @@ public class SearchControllerAutowiredTest {
 	public void tearDown() throws Exception {
 	}
 	
+	@Test
+	public void fakeTest() {
+		// do nothing
+	}
 // 	/**
 // 	 * @throws Exception
 // 	 */
