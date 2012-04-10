@@ -126,4 +126,13 @@ public interface WorkflowTemplatedConfiguration extends TemplatedConfiguration {
 	 * @return the path to the rscript executable
 	 */
 	public String getRScriptPath();
+	
+	/**
+	* 
+	* return the thread pool size to be used by activity workers
+	* 
+	* @return
+	*/
+	public Integer getTaskExecutorThreadPoolSize();
+
 }

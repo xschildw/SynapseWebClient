@@ -103,4 +103,9 @@ public class SageCommonsConfigHelper {
 	public static String getWorkflowScript() {
 		return configuration.getProperty("org.sagebionetworks.workflow.script");
 	}
+	
+	public static Integer getTaskExecutorThreadPoolSize() {
+		return configuration.getTaskExecutorThreadPoolSize();
+	}
+	
 }

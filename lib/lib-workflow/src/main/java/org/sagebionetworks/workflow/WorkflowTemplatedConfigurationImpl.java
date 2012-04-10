@@ -202,4 +202,11 @@ public class WorkflowTemplatedConfigurationImpl extends
 		return getProperty("org.sagebionetworks.rScript.path");
 	}
 
+	@Override
+	public Integer getTaskExecutorThreadPoolSize() {
+	       String s = getProperty("org.sagebionetworks.taskExecutorThreadPoolSize");
+	         if (s==null || s.length()==0) return null;
+	         return Integer.parseInt(s);
+	}
+	
 }
