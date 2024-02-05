@@ -1,49 +1,32 @@
-
 <!DOCTYPE ui:UiBinder SYSTEM "http://dl.google.com/gwt/DTD/xhtml.ent">
-<ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"
-	xmlns:g="urn:import:com.google.gwt.user.client.ui"
-	xmlns:c="urn:import:com.google.gwt.user.cellview.client"
-	xmlns:s="urn:import:org.sagebionetworks.web.client.view"
-	xmlns:t="urn:import:org.sagebionetworks.web.client.view.bootstrap.table"
-	xmlns:bb="urn:import:org.gwtbootstrap3.client.ui">
-
-	<g:HTMLPanel>
-		<div
-			class="row margin-top-left-10 margin-right-15 margin-bottom-20">
-			<div
-				class="well col-md-offset-1 col-md-10 col-sm-offset-2 col-sm-8">
-				<h2 style="display: inline;">Trash Can</h2>
-				<g:SimplePanel ui:field="synAlertPanel"
-					addStyleNames="clearright clearfix" />
-				<div class="panel panel-body margin-top-10"
-					style="margin-bottom: 5;">
-					<g:FlowPanel ui:field="trashTableAndPaginationPanel">
-						<t:Table ui:field="trashTable"
-							styleName="table trashTable-striped trashTable-bordered trashTable-condensed">
-							<t:THead>
-								<t:TableRow>
-									<t:TableHeader width="10%">
-										<bb:CheckBox ui:field="selectAllCheckBox" />
-									</t:TableHeader>
-									<t:TableHeader width="35%" text="Name" />
-									<t:TableHeader width="41%" text="Deleted On" />
-									<t:TableHeader width="14%" />
-								</t:TableRow>
-							</t:THead>
-							<t:TBody ui:field="tableBody" />
-						</t:Table>
-						<g:SimplePanel ui:field="paginationPanel"
-							styleName="center" />
-					</g:FlowPanel>
-					<g:SimplePanel ui:field="emptyTrashDisplay">
-						<g:Label>Your trash is empty.</g:Label>
-					</g:SimplePanel>
-				</div>
-				<bb:Button ui:field="deleteSelectedButton"
-					styleName="btn left">Delete Selected</bb:Button>
-			</div>
-		</div>
-	</g:HTMLPanel>
-
+<ui:UiBinder
+  xmlns:ui="urn:ui:com.google.gwt.uibinder"
+  xmlns:g="urn:import:com.google.gwt.user.client.ui"
+  xmlns:c="urn:import:com.google.gwt.user.cellview.client"
+  xmlns:s="urn:import:org.sagebionetworks.web.client.view"
+  xmlns:t="urn:import:org.sagebionetworks.web.client.view.bootstrap.table"
+  xmlns:w="urn:import:org.sagebionetworks.web.client.widget"
+  xmlns:bb="urn:import:org.gwtbootstrap3.client.ui"
+>
+  <g:HTMLPanel>
+    <div>
+      <div class="pageHeader">
+        <h3 class="pageHeaderTitle">Trash Can</h3>
+        <g:SimplePanel
+          ui:field="synAlertPanel"
+          addStyleNames="clearright clearfix"
+        />
+      </div>
+      <w:OrientationBanner
+        name="TrashCan"
+        title="Getting Started With Trash Can"
+        text="The trash can contains items that were recently deleted. You can recover deleted items in the trash can by clicking &ldquo;Restore&rdquo;. Items will remain in the trash can for 30 days before being automatically purged."
+      />
+      <div>
+        <div class="pageContent margin-top-60">
+          <g:SimplePanel ui:field="componentContainer" />
+        </div>
+      </div>
+    </div>
+  </g:HTMLPanel>
 </ui:UiBinder>
-

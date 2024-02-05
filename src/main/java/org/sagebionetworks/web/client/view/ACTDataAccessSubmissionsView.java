@@ -1,64 +1,63 @@
 package org.sagebionetworks.web.client.view;
 
-import java.util.Date;
+import com.google.gwt.user.client.ui.IsWidget;
 import java.util.List;
 import org.sagebionetworks.web.client.SynapseView;
-import com.google.gwt.user.client.ui.IsWidget;
 
 public interface ACTDataAccessSubmissionsView extends IsWidget, SynapseView {
-	void setPresenter(Presenter presenter);
+  void setPresenter(Presenter presenter);
 
-	void setLoadMoreContainer(IsWidget w);
+  void setLoadMoreContainer(IsWidget w);
 
-	void setStates(List<String> states);
+  void setStates(List<String> states);
 
-	void setSynAlert(IsWidget w);
+  void setSynAlert(IsWidget w);
 
-	void setSelectedStateText(String state);
+  void setSelectedStateText(String state);
 
-	void setSelectedMinDate(Date date);
+  void setShowHideButton(IsWidget button);
 
-	void setSelectedMaxDate(Date date);
+  void setAccessRequirementWidget(IsWidget w);
 
-	void setShowHideButton(IsWidget button);
+  void setAreOtherAttachmentsRequired(boolean value);
 
-	void setAccessRequirementWidget(IsWidget w);
+  void setExpirationPeriod(Long value);
 
-	void setAreOtherAttachmentsRequired(boolean value);
+  void setIsCertifiedUserRequired(boolean value);
 
-	void setExpirationPeriod(Long value);
+  void setIsDUCRequired(boolean value);
 
-	void setIsCertifiedUserRequired(boolean value);
+  void setIsIDURequired(boolean value);
 
-	void setIsDUCRequired(boolean value);
-	
-	void setIsIDURequired(boolean value);
+  void setIsIDUPublic(boolean value);
 
-	void setIsIDUPublic(boolean value);
+  void setIsIRBApprovalRequired(boolean value);
 
-	void setIsIRBApprovalRequired(boolean value);
+  void setIsValidatedProfileRequired(boolean value);
 
-	void setIsValidatedProfileRequired(boolean value);
+  void setTeamSubjectsWidget(IsWidget w);
 
-	void setSubjectsWidget(IsWidget w);
+  void setAccessRequirementUIVisible(boolean visible);
 
-	void setAccessRequirementUIVisible(boolean visible);
+  void setProjectedExpirationDateVisible(boolean visible);
 
-	void setProjectedExpirationDateVisible(boolean visible);
+  void setProjectedExpirationDate(String date);
 
-	void setProjectedExpirationDate(String date);
+  void setAccessorPickerWidget(IsWidget accessorSuggestWidget);
 
-	public interface Presenter {
-		void onClearDateFilter();
+  void setSelectedAccessorUserBadge(IsWidget selectedAccessorUserBadge);
 
-		void onClearStateFilter();
+  void setSelectedAccessorUserBadgeVisible(boolean b);
 
-		void onStateSelected(String state);
+  public interface Presenter {
+    void onClearStateFilter();
 
-		void onMinDateSelected(Date date);
+    void onStateSelected(String state);
 
-		void onMaxDateSelected(Date date);
+    void onCreatedOnClick();
 
-		void onCreatedOnClick();
-	}
+    void onClearAccessorFilter();
+  }
+
+  void setEntitySubjectsWidget(IsWidget w);
 }

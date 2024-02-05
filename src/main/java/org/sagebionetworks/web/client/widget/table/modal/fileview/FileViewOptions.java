@@ -1,62 +1,79 @@
 package org.sagebionetworks.web.client.widget.table.modal.fileview;
 
-import org.gwtbootstrap3.client.ui.CheckBox;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.client.ui.IsWidget;
 import com.google.gwt.user.client.ui.Widget;
 import com.google.inject.Inject;
+import org.gwtbootstrap3.client.ui.CheckBox;
+import org.sagebionetworks.web.client.DisplayUtils;
+import org.sagebionetworks.web.client.cookie.CookieProvider;
 
 public class FileViewOptions implements IsWidget {
-	public interface Binder extends UiBinder<Widget, FileViewOptions> {
-	}
 
-	Widget widget;
-	@UiField
-	CheckBox includeFilesCb;
-	@UiField
-	CheckBox includeFoldersCb;
-	@UiField
-	CheckBox includeTablesCb;
+  public interface Binder extends UiBinder<Widget, FileViewOptions> {}
 
-	@Inject
-	public FileViewOptions(Binder binder) {
-		widget = binder.createAndBindUi(this);
-	}
+  Widget widget;
 
-	@Override
-	public Widget asWidget() {
-		return widget;
-	}
+  @UiField
+  CheckBox includeFilesCb;
 
-	public boolean isIncludeFiles() {
-		return includeFilesCb.getValue();
-	}
+  @UiField
+  CheckBox includeFoldersCb;
 
-	public void setIsIncludeFiles(boolean value) {
-		includeFilesCb.setValue(value);
-	}
+  @UiField
+  CheckBox includeTablesCb;
 
-	public boolean isIncludeFolders() {
-		return includeFoldersCb.getValue();
-	}
+  @UiField
+  CheckBox includeDatasetsCb;
 
-	public void setIsIncludeFolders(boolean value) {
-		includeFoldersCb.setValue(value);
-	}
+  @Inject
+  public FileViewOptions(Binder binder) {
+    widget = binder.createAndBindUi(this);
+  }
 
-	public boolean isIncludeTables() {
-		return includeTablesCb.getValue();
-	}
+  @Override
+  public Widget asWidget() {
+    return widget;
+  }
 
-	public void setIsIncludeTables(boolean value) {
-		includeTablesCb.setValue(value);
-	}
+  public boolean isIncludeFiles() {
+    return includeFilesCb.getValue();
+  }
 
-	public void addClickHandler(ClickHandler handler) {
-		includeFilesCb.addClickHandler(handler);
-		includeFoldersCb.addClickHandler(handler);
-		includeTablesCb.addClickHandler(handler);
-	}
+  public void setIsIncludeFiles(boolean value) {
+    includeFilesCb.setValue(value);
+  }
+
+  public boolean isIncludeFolders() {
+    return includeFoldersCb.getValue();
+  }
+
+  public void setIsIncludeFolders(boolean value) {
+    includeFoldersCb.setValue(value);
+  }
+
+  public boolean isIncludeTables() {
+    return includeTablesCb.getValue();
+  }
+
+  public void setIsIncludeTables(boolean value) {
+    includeTablesCb.setValue(value);
+  }
+
+  public boolean isIncludeDatasets() {
+    return includeDatasetsCb.getValue();
+  }
+
+  public void setIsIncludeDatasets(boolean value) {
+    includeDatasetsCb.setValue(value);
+  }
+
+  public void addClickHandler(ClickHandler handler) {
+    includeFilesCb.addClickHandler(handler);
+    includeFoldersCb.addClickHandler(handler);
+    includeTablesCb.addClickHandler(handler);
+    includeDatasetsCb.addClickHandler(handler);
+  }
 }

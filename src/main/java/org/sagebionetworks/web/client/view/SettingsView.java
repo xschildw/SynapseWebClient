@@ -1,117 +1,116 @@
 package org.sagebionetworks.web.client.view;
 
-import org.sagebionetworks.repo.model.UserProfile;
-import org.sagebionetworks.web.client.SynapseView;
-import org.sagebionetworks.web.client.utils.Callback;
 import com.google.gwt.place.shared.Place;
 import com.google.gwt.user.client.ui.IsWidget;
 import com.google.gwt.user.client.ui.Widget;
+import org.sagebionetworks.repo.model.UserProfile;
+import org.sagebionetworks.web.client.SynapseView;
+import org.sagebionetworks.web.client.utils.Callback;
 
 public interface SettingsView extends IsWidget, SynapseView {
+  /**
+   * Set this view's presenter
+   *
+   * @param presenter
+   */
+  public void setPresenter(Presenter presenter);
 
-	/**
-	 * Set this view's presenter
-	 * 
-	 * @param presenter
-	 */
-	public void setPresenter(Presenter presenter);
+  /**
+   * Renders the view for a given presenter
+   */
+  public void render();
 
-	/**
-	 * Renders the view for a given presenter
-	 */
-	public void render();
+  /**
+   * Shows the user that their password change succeeded
+   */
+  public void showPasswordChangeSuccess();
 
-	/**
-	 * Shows the user that their password change succeeded
-	 */
-	public void showPasswordChangeSuccess();
+  public void updateNotificationCheckbox(UserProfile profile);
 
-	public void updateNotificationCheckbox(UserProfile profile);
+  void setEmailAddressesWidget(IsWidget w);
 
-	void setSubscriptionsListWidget(Widget w);
+  public interface Presenter {
+    void resetPassword(String existingPassword, String newPassword);
 
-	void setSubscriptionsVisible(boolean visible);
+    void goTo(Place place);
 
-	void setEmailAddressesWidget(IsWidget w);
+    void updateMyNotificationSettings(
+      boolean sendEmailNotifications,
+      boolean markEmailedMessagesAsRead
+    );
 
-	public interface Presenter {
+    void changeApiKey();
 
-		void resetPassword(String existingPassword, String newPassword);
+    void onEditProfile();
 
-		void goTo(Place place);
+    void getAPIKey();
 
-		void updateMyNotificationSettings(boolean sendEmailNotifications, boolean markEmailedMessagesAsRead);
+    void changePassword();
 
-		void changeApiKey();
+    void setShowUTCTime(boolean isUTC);
 
-		void onEditProfile();
+    void newVerificationSubmissionClicked();
 
-		void getAPIKey();
+    void editVerificationSubmissionClicked();
 
-		void changePassword();
+    void linkOrcIdClicked();
 
-		void setShowUTCTime(boolean isUTC);
+    void unbindOrcId();
+  }
 
-		void newVerificationSubmissionClicked();
+  public void setApiKeySettingsVisible(boolean visible);
 
-		void editVerificationSubmissionClicked();
+  public void setApiKey(String apiKey);
 
-		void linkOrcIdClicked();
+  public void setNotificationSynAlertWidget(IsWidget asWidget);
 
-		void unbindOrcId();
-	}
+  public void setAPISynAlertWidget(IsWidget synAlert);
 
-	public void setApiKey(String apiKey);
+  public void setPasswordSynAlertWidget(IsWidget synAlert);
 
-	public void setNotificationSynAlertWidget(IsWidget asWidget);
+  void hideAPIKey();
 
-	public void setAPISynAlertWidget(IsWidget synAlert);
+  void showConfirm(String message, Callback callback);
 
-	public void setPasswordSynAlertWidget(IsWidget synAlert);
+  String getPassword1Field();
 
-	void hideAPIKey();
+  String getCurrentPasswordField();
 
-	void showConfirm(String message, Callback callback);
+  String getPassword2Field();
 
-	String getPassword1Field();
+  void setCurrentPasswordInError(boolean inError);
 
-	String getCurrentPasswordField();
+  void setPassword1InError(boolean inError);
 
-	String getPassword2Field();
+  void setPassword2InError(boolean inError);
 
-	void setCurrentPasswordInError(boolean inError);
+  void setChangePasswordEnabled(boolean isEnabled);
 
-	void setPassword1InError(boolean inError);
+  void resetChangePasswordUI();
 
-	void setPassword2InError(boolean inError);
+  void setShowingUTCTime();
 
-	void setChangePasswordEnabled(boolean isEnabled);
+  void setShowingLocalTime();
 
-	void resetChangePasswordUI();
+  void setOrcIdVisible(boolean isVisible);
 
-	void setShowingUTCTime();
+  void setOrcIDLinkButtonVisible(boolean isVisible);
 
-	void setShowingLocalTime();
+  void setUnbindOrcIdVisible(boolean isVisible);
 
-	void setOrcIdVisible(boolean isVisible);
+  void setOrcId(String href);
 
-	void setOrcIDLinkButtonVisible(boolean isVisible);
+  void showNotVerified();
 
-	void setUnbindOrcIdVisible(boolean isVisible);
+  void setResubmitVerificationButtonVisible(boolean isVisible);
 
-	void setOrcId(String href);
+  void setVerificationSuspendedButtonVisible(boolean isVisible);
 
-	void showNotVerified();
+  void setVerificationRejectedButtonVisible(boolean isVisible);
 
-	void setResubmitVerificationButtonVisible(boolean isVisible);
+  void setVerificationSubmittedButtonVisible(boolean isVisible);
 
-	void setVerificationSuspendedButtonVisible(boolean isVisible);
+  void setVerificationDetailsButtonVisible(boolean isVisible);
 
-	void setVerificationRejectedButtonVisible(boolean isVisible);
-
-	void setVerificationSubmittedButtonVisible(boolean isVisible);
-
-	void setVerificationDetailsButtonVisible(boolean isVisible);
-
-	void setIsCertified(boolean isCertified);
+  void setIsCertified(boolean isCertified);
 }

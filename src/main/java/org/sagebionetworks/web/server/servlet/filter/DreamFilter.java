@@ -1,14 +1,9 @@
 package org.sagebionetworks.web.server.servlet.filter;
 
-public class DreamFilter extends RedirectFilter {
+public class DreamFilter extends ExternalRedirectFilter {
 
-	@Override
-	protected String getTargetPage() {
-		return "#!Challenges:DREAM";
-	}
-
-	@Override
-	protected String getUrlPath() {
-		return "dream";
-	}
+  @Override
+  protected String getTargetURL() {
+    return "http://dreamchallenges.org/";
+  }
 }

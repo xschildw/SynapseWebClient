@@ -1,63 +1,73 @@
 package org.sagebionetworks.web.client.widget.table.modal.fileview;
 
-import org.gwtbootstrap3.client.ui.ModalSize;
-import org.sagebionetworks.web.client.widget.entity.tabs.TablesTab;
-import org.sagebionetworks.web.client.widget.table.modal.wizard.ModalWizardWidget;
-import org.sagebionetworks.web.client.widget.table.modal.wizard.ModalWizardWidget.WizardCallback;
-import org.sagebionetworks.web.shared.WebConstants;
+import com.google.gwt.user.client.ui.IsWidget;
 import com.google.gwt.user.client.ui.Widget;
 import com.google.inject.Inject;
+import org.sagebionetworks.web.client.context.SynapseReactClientFullContextPropsProvider;
+import org.sagebionetworks.web.client.jsinterop.CreateTableViewWizardProps;
+import org.sagebionetworks.web.client.jsinterop.React;
+import org.sagebionetworks.web.client.jsinterop.ReactNode;
+import org.sagebionetworks.web.client.jsinterop.SRC;
+import org.sagebionetworks.web.client.widget.ReactComponentDiv;
 
-/**
- * Wizard used to create a new Table or View
- * 
- * @author Jay
- *
- */
-public class CreateTableViewWizard {
+public class CreateTableViewWizard implements IsWidget {
 
-	ModalWizardWidget modalWizardWidget;
-	CreateTableViewWizardStep1 step1;
-	private String parentId;
-	private TableType type;
-	public static final String VIEW_HELP = "Synapse File Views are views of all files within one or more Projects or Folders.";
-	public static final String VIEW_URL = WebConstants.DOCS_URL + "views.html";
-	public static final String PROJECT_VIEW_HELP = "A Synapse Project View represents a logical collection of Projects.";
+  private final SynapseReactClientFullContextPropsProvider propsProvider;
 
-	@Inject
-	public CreateTableViewWizard(ModalWizardWidget modalWizardWidget, CreateTableViewWizardStep1 step1) {
-		this.modalWizardWidget = modalWizardWidget;
-		this.modalWizardWidget.setModalSize(ModalSize.LARGE);
-		this.step1 = step1;
-	}
+  private final ReactComponentDiv reactComponentDiv;
+  private String parentId;
+  private CreateTableViewWizardProps.OnComplete onComplete;
+  private CreateTableViewWizardProps.OnCancel onCancel;
 
-	public void configure(String parentId, TableType type) {
-		this.parentId = parentId;
-		this.type = type;
-		if (TableType.projects.equals(type)) {
-			this.modalWizardWidget.setTitle("Create Project View");
-			this.modalWizardWidget.setHelp(PROJECT_VIEW_HELP, VIEW_URL);
-		} else if (TableType.table.equals(type)) {
-			this.modalWizardWidget.setTitle("Create Table");
-			this.modalWizardWidget.setHelp(TablesTab.TABLES_HELP, TablesTab.TABLES_HELP_URL);
-		} else if (TableType.submission_view.equals(type)) {
-			this.modalWizardWidget.setTitle("Create Submission View");
-			// TODO: send to submission view docs page (https://github.com/Sage-Bionetworks/synapseDocs/issues/787)
-			// this.modalWizardWidget.setHelp(TablesTab.SUBMISSION_VIEW_HELP, TablesTab.SUBMISSION_VIEW_HELP_URL);
-		} else {
-			this.modalWizardWidget.setTitle("Create View");
-			this.modalWizardWidget.setHelp(VIEW_HELP, VIEW_URL);
-		}
-	}
+  @Inject
+  public CreateTableViewWizard(
+    SynapseReactClientFullContextPropsProvider propsProvider
+  ) {
+    super();
+    this.propsProvider = propsProvider;
+    reactComponentDiv = new ReactComponentDiv();
+  }
 
-	public Widget asWidget() {
-		return modalWizardWidget.asWidget();
-	}
+  private void renderComponent(CreateTableViewWizardProps props) {
+    ReactNode reactNode = React.createElementWithSynapseContext(
+      SRC.SynapseComponents.CreateTableViewWizard,
+      props,
+      propsProvider.getJsInteropContextProps()
+    );
+    reactComponentDiv.render(reactNode);
+  }
 
-	public void showModal(WizardCallback wizardCallback) {
-		this.step1.configure(parentId, type);
-		this.modalWizardWidget.configure(this.step1);
-		this.modalWizardWidget.showModal(wizardCallback);
-	}
+  public void configure(
+    String parentId,
+    CreateTableViewWizardProps.OnComplete onComplete,
+    CreateTableViewWizardProps.OnCancel onCancel
+  ) {
+    reactComponentDiv.clear();
+    this.parentId = parentId;
+    this.onComplete = onComplete;
+    this.onCancel = onCancel;
+    CreateTableViewWizardProps props = CreateTableViewWizardProps.create(
+      false,
+      parentId,
+      onComplete,
+      onCancel
+    );
 
+    renderComponent(props);
+  }
+
+  public void setOpen(boolean open) {
+    CreateTableViewWizardProps props = CreateTableViewWizardProps.create(
+      open,
+      parentId,
+      onComplete,
+      onCancel
+    );
+    renderComponent(props);
+  }
+
+  @Override
+  public Widget asWidget() {
+    return reactComponentDiv.asWidget();
+  }
 }

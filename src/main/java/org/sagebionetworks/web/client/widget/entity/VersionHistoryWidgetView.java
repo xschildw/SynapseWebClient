@@ -1,45 +1,57 @@
 package org.sagebionetworks.web.client.widget.entity;
 
+import com.google.gwt.user.client.ui.IsWidget;
 import org.sagebionetworks.repo.model.Entity;
 import org.sagebionetworks.repo.model.VersionInfo;
 import org.sagebionetworks.web.client.SynapseView;
-import com.google.gwt.user.client.ui.IsWidget;
 
 /**
  * @author jayhodgson
  *
  */
 public interface VersionHistoryWidgetView extends IsWidget, SynapseView {
+  interface Presenter {
+    void updateVersionInfo(String newLabel, String newComment);
 
-	interface Presenter {
-		void updateVersionInfo(String newLabel, String newComment);
+    void deleteVersion(Long versionNumber);
 
-		void deleteVersion(Long versionNumber);
+    void onEditVersionInfoClicked();
 
-		void onEditVersionInfoClicked();
+    void onMore();
 
-		void onMore();
-	}
+    void setVisible(boolean visible);
 
-	void setEntityBundle(Entity entity, boolean autoShowFileHistory);
+    void gotoCurrentVersion();
+  }
 
-	void setPresenter(Presenter presenter);
+  void setEntityBundle(Entity entity, boolean autoShowFileHistory);
 
-	void clearVersions();
+  void setPresenter(Presenter presenter);
 
-	void addVersion(String entityId, VersionInfo version, boolean canEdit, boolean isVersionSelected);
+  void clearVersions();
 
-	void setEditVersionInfoButtonVisible(boolean isVisible);
+  void addVersion(
+    String entityId,
+    VersionInfo version,
+    boolean canEdit,
+    boolean isVersionSelected
+  );
 
-	void showEditVersionInfo(String oldLabel, String oldComment);
+  void setEditVersionInfoButtonVisible(boolean isVisible);
 
-	void showEditVersionInfoError(String error);
+  void showEditVersionInfo(String oldLabel, String oldComment);
 
-	void hideEditVersionInfo();
+  void showEditVersionInfoError(String error);
 
-	void setMoreButtonVisible(boolean visible);
+  void hideEditVersionInfo();
 
-	void setSynAlert(IsWidget w);
+  void setMoreButtonVisible(boolean visible);
 
-	void showNoResults();
+  void setSynAlert(IsWidget w);
+
+  void showNoResults();
+
+  boolean isVisible();
+
+  void setVisible(boolean visible);
 }

@@ -1,85 +1,69 @@
 package org.sagebionetworks.web.client.widget.entity.file;
 
-import org.gwtbootstrap3.client.ui.Icon;
-import org.gwtbootstrap3.client.ui.constants.IconType;
-import org.gwtbootstrap3.client.ui.html.Div;
-import org.gwtbootstrap3.client.ui.html.Span;
-import org.sagebionetworks.web.client.DisplayUtils;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
-import com.google.gwt.user.client.ui.IsWidget;
-import com.google.gwt.user.client.ui.SimplePanel;
 import com.google.gwt.user.client.ui.Widget;
 import com.google.inject.Inject;
+import org.sagebionetworks.web.client.DisplayUtils;
+import org.sagebionetworks.web.client.context.SynapseReactClientFullContextPropsProvider;
+import org.sagebionetworks.web.client.jsinterop.EntityPageTitleBarProps;
+import org.sagebionetworks.web.client.jsinterop.React;
+import org.sagebionetworks.web.client.jsinterop.ReactNode;
+import org.sagebionetworks.web.client.jsinterop.SRC;
+import org.sagebionetworks.web.client.widget.ReactComponentDiv;
 
 public class BasicTitleBarViewImpl implements BasicTitleBarView {
 
-	@UiField
-	Span fileName;
-	@UiField
-	SimplePanel favoritePanel;
-	@UiField
-	Icon entityIcon;
-	@UiField
-	Div actionMenuContainer;
+  private final SynapseReactClientFullContextPropsProvider propsProvider;
 
-	interface BasicTitleBarViewImplUiBinder extends UiBinder<Widget, BasicTitleBarViewImpl> {
-	}
+  @UiField
+  ReactComponentDiv reactComponentContainer;
 
-	private static BasicTitleBarViewImplUiBinder uiBinder = GWT.create(BasicTitleBarViewImplUiBinder.class);
-	Widget widget;
+  @Override
+  public void setProps(EntityPageTitleBarProps props) {
+    ReactNode reactNode = React.createElementWithSynapseContext(
+      SRC.SynapseComponents.EntityPageTitleBar,
+      props,
+      propsProvider.getJsInteropContextProps()
+    );
+    reactComponentContainer.render(reactNode);
+  }
 
-	@Inject
-	public BasicTitleBarViewImpl() {
-		widget = uiBinder.createAndBindUi(this);
-	}
+  interface BasicTitleBarViewImplUiBinder
+    extends UiBinder<Widget, BasicTitleBarViewImpl> {}
 
-	public void setFavoritesWidget(Widget favoritesWidget) {
-		favoritePanel.addStyleName("inline-block");
-		favoritePanel.setWidget(favoritesWidget);
-	};
+  private static BasicTitleBarViewImplUiBinder uiBinder = GWT.create(
+    BasicTitleBarViewImplUiBinder.class
+  );
+  Widget widget;
 
-	@Override
-	public void setFavoritesWidgetVisible(boolean visible) {
-		favoritePanel.setVisible(visible);
-	}
+  @Inject
+  public BasicTitleBarViewImpl(
+    SynapseReactClientFullContextPropsProvider propsProvider
+  ) {
+    widget = uiBinder.createAndBindUi(this);
+    this.propsProvider = propsProvider;
+  }
 
-	@Override
-	public void setTitle(String name) {
-		fileName.setText(name);
-	}
+  @Override
+  public Widget asWidget() {
+    return widget;
+  }
 
-	@Override
-	public Widget asWidget() {
-		return widget;
-	}
+  @Override
+  public void showErrorMessage(String message) {
+    DisplayUtils.showErrorMessage(message);
+  }
 
-	@Override
-	public void setIconType(IconType iconType) {
-		entityIcon.setType(iconType);
-	}
+  @Override
+  public void showLoading() {}
 
-	@Override
-	public void showErrorMessage(String message) {
-		DisplayUtils.showErrorMessage(message);
-	}
+  @Override
+  public void showInfo(String message) {
+    DisplayUtils.showInfo(message);
+  }
 
-	@Override
-	public void showLoading() {}
-
-	@Override
-	public void showInfo(String message) {
-		DisplayUtils.showInfo(message);
-	}
-
-	@Override
-	public void setActionMenu(IsWidget w) {
-		w.asWidget().removeFromParent();
-		actionMenuContainer.clear();
-		actionMenuContainer.add(w);
-	}
-
-	@Override
-	public void clear() {}
+  @Override
+  public void clear() {}
 }

@@ -2,14 +2,22 @@ package org.sagebionetworks.web.client.widget.entity.tabs;
 
 import com.google.gwt.user.client.ui.IsWidget;
 import com.google.gwt.user.client.ui.Widget;
+import org.sagebionetworks.web.client.widget.evaluation.EvaluationEditorReactComponentPage;
 
 public interface ChallengeTabView extends IsWidget {
-	public interface Presenter {
-	}
+  void hideAdminTabContents();
 
-	void setChallengeWidget(Widget w);
+  void showAdminTabContents();
 
-	void setEvaluationList(Widget w);
+  void addEvaluationEditor(EvaluationEditorReactComponentPage evaluationEditor);
 
-	void setActionMenu(IsWidget w);
+  public interface Presenter {
+    void showCreateNewEvaluationEditor(String entityId);
+  }
+
+  void setChallengeWidget(Widget w);
+
+  void setEvaluationList(Widget w);
+
+  void setActionMenu(IsWidget w);
 }

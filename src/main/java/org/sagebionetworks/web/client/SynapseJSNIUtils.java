@@ -1,124 +1,146 @@
 package org.sagebionetworks.web.client;
 
+import com.google.gwt.core.client.JavaScriptObject;
+import com.google.gwt.dom.client.Element;
+import com.google.gwt.xhr.client.XMLHttpRequest;
 import org.sagebionetworks.repo.model.file.FileHandleAssociateType;
 import org.sagebionetworks.web.client.callback.MD5Callback;
 import org.sagebionetworks.web.client.widget.provenance.nchart.LayoutResult;
 import org.sagebionetworks.web.client.widget.provenance.nchart.NChartCharacters;
 import org.sagebionetworks.web.client.widget.provenance.nchart.NChartLayersArray;
-import com.google.gwt.core.client.JavaScriptObject;
-import com.google.gwt.dom.client.Element;
-import com.google.gwt.xhr.client.XMLHttpRequest;
 
 public interface SynapseJSNIUtils {
+  public String getCurrentHistoryToken();
 
-	public void recordPageVisit(String token);
+  public void highlightCodeBlocks();
 
-	void setAnalyticsUserId(String userId);
+  void loadSummaryDetailsShim();
 
-	void sendAnalyticsEvent(String eventCategory, String eventAction);
+  public void loadTableSorters();
 
-	void sendAnalyticsEvent(String eventCategory, String eventAction, String eventLabelValue);
+  public String getBaseFileHandleUrl();
 
-	public String getCurrentHistoryToken();
+  public String getFileHandleAssociationUrl(
+    String objectId,
+    FileHandleAssociateType objectType,
+    String fileHandleId
+  );
 
-	public void highlightCodeBlocks();
+  public String getRawFileHandleUrl(String fileHandleId);
 
-	void loadSummaryDetailsShim();
+  public int randomNextInt();
 
-	public void loadTableSorters();
+  public String getLocationPath();
 
-	public String getBaseFileHandleUrl();
+  public String getLocationQueryString();
 
-	public String getFileHandleAssociationUrl(String objectId, FileHandleAssociateType objectType, String fileHandleId);
+  public LayoutResult nChartlayout(
+    NChartLayersArray layers,
+    NChartCharacters characters
+  );
 
-	public String getRawFileHandleUrl(String fileHandleId);
+  public void setPageTitle(String newTitle);
 
-	public int randomNextInt();
+  public void setPageDescription(String newDescription);
 
-	public String getLocationPath();
+  public JavaScriptObject getFileList(String fileFieldId);
 
-	public String getLocationQueryString();
+  public JavaScriptObject getFileBlob(int index, JavaScriptObject fileList);
 
-	public LayoutResult nChartlayout(NChartLayersArray layers, NChartCharacters characters);
+  public void uploadFileChunk(
+    String contentType,
+    JavaScriptObject blob,
+    Long startByte,
+    Long endByte,
+    String url,
+    XMLHttpRequest xhr,
+    ProgressCallback callback
+  );
 
-	public void setPageTitle(String newTitle);
+  public String getContentType(JavaScriptObject fileList, int index);
 
-	public void setPageDescription(String newDescription);
+  public boolean isFileAPISupported();
 
-	public JavaScriptObject getFileList(String fileFieldId);
+  public boolean isElementExists(String elementId);
 
-	public JavaScriptObject getFileBlob(int index, JavaScriptObject fileList);
+  public String getFileUrl(String fileFieldId);
 
-	public void uploadFileChunk(String contentType, JavaScriptObject blob, Long startByte, Long endByte, String url, XMLHttpRequest xhr, ProgressCallback callback);
+  public void getFileMd5(JavaScriptObject blob, MD5Callback callback);
 
-	public String getContentType(JavaScriptObject fileList, int index);
+  public void getFilePartMd5(
+    JavaScriptObject blob,
+    int currentChunk,
+    Long chunkSize,
+    MD5Callback md5Callback
+  );
 
-	public boolean isFileAPISupported();
+  public double getFileSize(JavaScriptObject blob);
 
-	public boolean isElementExists(String elementId);
+  String[] getMultipleUploadFileNames(JavaScriptObject fileList);
 
-	public String getFileUrl(String fileFieldId);
+  String getWebkitRelativePath(JavaScriptObject fileList, int index);
 
-	public void getFileMd5(JavaScriptObject blob, MD5Callback callback);
+  public void consoleLog(String message);
 
-	public void getFilePartMd5(JavaScriptObject blob, int currentChunk, Long chunkSize, MD5Callback md5Callback);
+  public void consoleError(String message);
 
-	public double getFileSize(JavaScriptObject blob);
+  public void consoleError(Throwable t);
 
-	String[] getMultipleUploadFileNames(JavaScriptObject fileList);
+  public void processMath(Element element);
 
-	String getWebkitRelativePath(JavaScriptObject fileList, int index);
+  public void loadCss(String url);
 
-	public void consoleLog(String message);
+  public String[] getSrcPersistentLocalStorageKeys();
 
-	public void consoleError(String message);
+  /**
+   * initialize the behavior for on pop state
+   */
+  public void initOnPopStateHandler();
 
-	public void consoleError(Throwable t);
+  public String getCurrentURL();
 
-	public void processMath(Element element);
+  public String getCurrentHostName();
 
-	public void loadCss(String url);
+  String getProtocol(String url);
 
-	/**
-	 * initialize the behavior for on pop state
-	 */
-	public void initOnPopStateHandler();
+  String getHost(String url);
 
-	public String getCurrentURL();
+  String getHostname(String url);
 
-	public String getCurrentHostName();
+  String getPort(String url);
 
-	String getProtocol(String url);
+  String getPathname(String url);
 
-	String getHost(String url);
+  void copyToClipboard();
 
-	String getHostname(String url);
+  String sanitizeHtml(String html);
 
-	String getPort(String url);
+  boolean elementSupportsAttribute(Element el, String attribute);
 
-	String getPathname(String url);
+  Element getElementById(String elementId);
 
-	void copyToClipboard();
+  String getCdnEndpoint();
 
-	String sanitizeHtml(String html);
+  String getAccessTokenCookieUrl();
 
-	boolean elementSupportsAttribute(Element el, String attribute);
+  void scrollIntoView(Element el);
 
-	Element getElementById(String elementId);
+  void showJiraIssueCollector(
+    String issueSummary,
+    String issueDescription,
+    String jiraIssueCollectorURL,
+    String principalId,
+    String userDisplayName,
+    String userEmailAddress,
+    String synapseDataObjectId,
+    String componentID,
+    String accessRequirementId,
+    String issuePriority
+  );
 
-	String getCdnEndpoint();
+  String getVersionsServletUrl();
 
-	String getSessionCookieUrl();
+  long getLastModified(JavaScriptObject blob);
 
-	void scrollIntoView(Element el);
-
-	void unmountComponentAtNode(Element el);
-
-	void showJiraIssueCollector(String issueSummary, String issueDescription, String jiraIssueCollectorURL, String principalId, String userDisplayName, String userEmailAddress, String synapseDataObjectId, String componentID, String accessRequirementId, String issuePriority);
-
-	String getVersionsServletUrl();
-
-	long getLastModified(JavaScriptObject blob);
-
-	void setIsInnerProgrammaticHistoryChange();
+  void setIsInnerProgrammaticHistoryChange();
 }

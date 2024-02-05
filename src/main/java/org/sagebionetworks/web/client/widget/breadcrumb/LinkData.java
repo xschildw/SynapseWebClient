@@ -1,46 +1,45 @@
 package org.sagebionetworks.web.client.widget.breadcrumb;
 
-import org.gwtbootstrap3.client.ui.constants.IconType;
 import com.google.gwt.place.shared.Place;
+import org.sagebionetworks.repo.model.EntityType;
 
 public class LinkData {
 
-	private String text;
-	private IconType icon;
-	private Place place;
+  private String text;
+  private EntityType entityType;
+  private Place place;
 
-	public LinkData(String text, Place place) {
-		this(text, null, place);
-	}
+  public LinkData(String text, Place place) {
+    this(text, null, place);
+  }
 
-	public LinkData(String text, IconType icon, Place place) {
-		this.text = text;
-		this.icon = icon;
-		this.place = place;
-	}
+  public LinkData(String text, EntityType entityType, Place place) {
+    this.text = text;
+    this.entityType = entityType;
+    this.place = place;
+  }
 
-	public String getText() {
-		return text;
-	}
+  public String getText() {
+    return text;
+  }
 
-	public void setText(String text) {
-		this.text = text;
-	}
+  public void setText(String text) {
+    this.text = text;
+  }
 
-	public IconType getIconType() {
-		return icon;
-	}
+  public EntityType getEntityType() {
+    return entityType;
+  }
 
-	public void setIconType(IconType icon) {
-		this.icon = icon;
-	}
+  public void setEntityType(EntityType entityType) {
+    this.entityType = entityType;
+  }
 
-	public Place getPlace() {
-		return place;
-	}
+  public Place getPlace() {
+    return place;
+  }
 
-	public void setPlace(Place place) {
-		this.place = place;
-	}
-
+  public void setPlace(Place place) {
+    this.place = place;
+  }
 }

@@ -1,9 +1,17 @@
 package org.sagebionetworks.web.client.presenter;
 
 import static org.sagebionetworks.web.client.ServiceEntryPointUtils.fixServiceEntryPoint;
+import static org.sagebionetworks.web.client.place.ACTAccessApprovalsPlace.ACCESSOR_ID_PARAM;
 import static org.sagebionetworks.web.client.place.ACTAccessApprovalsPlace.ACCESS_REQUIREMENT_ID_PARAM;
 import static org.sagebionetworks.web.client.place.ACTAccessApprovalsPlace.EXPIRES_BEFORE_PARAM;
 import static org.sagebionetworks.web.client.place.ACTAccessApprovalsPlace.SUBMITTER_ID_PARAM;
+
+import com.google.gwt.activity.shared.AbstractActivity;
+import com.google.gwt.core.client.GWT;
+import com.google.gwt.event.shared.EventBus;
+import com.google.gwt.user.client.rpc.AsyncCallback;
+import com.google.gwt.user.client.ui.AcceptsOneWidget;
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.Date;
 import org.gwtbootstrap3.client.ui.constants.IconType;
@@ -17,7 +25,6 @@ import org.sagebionetworks.web.client.GlobalApplicationState;
 import org.sagebionetworks.web.client.PortalGinInjector;
 import org.sagebionetworks.web.client.place.ACTAccessApprovalsPlace;
 import org.sagebionetworks.web.client.utils.Callback;
-import org.sagebionetworks.web.client.utils.CallbackP;
 import org.sagebionetworks.web.client.view.ACTAccessApprovalsView;
 import org.sagebionetworks.web.client.widget.Button;
 import org.sagebionetworks.web.client.widget.LoadMoreWidgetContainer;
@@ -28,226 +35,275 @@ import org.sagebionetworks.web.client.widget.search.SynapseSuggestBox;
 import org.sagebionetworks.web.client.widget.search.UserGroupSuggestion;
 import org.sagebionetworks.web.client.widget.search.UserGroupSuggestionProvider;
 import org.sagebionetworks.web.client.widget.user.UserBadge;
-import com.google.gwt.activity.shared.AbstractActivity;
-import com.google.gwt.event.dom.client.ClickEvent;
-import com.google.gwt.event.dom.client.ClickHandler;
-import com.google.gwt.event.shared.EventBus;
-import com.google.gwt.user.client.rpc.AsyncCallback;
-import com.google.gwt.user.client.ui.AcceptsOneWidget;
-import com.google.inject.Inject;
 
-public class ACTAccessApprovalsPresenter extends AbstractActivity implements Presenter<ACTAccessApprovalsPlace>, ACTAccessApprovalsView.Presenter {
-	private ACTAccessApprovalsPlace place;
-	private ACTAccessApprovalsView view;
-	private PortalGinInjector ginInjector;
-	private SynapseAlert synAlert;
-	DataAccessClientAsync dataAccessClient;
-	LoadMoreWidgetContainer loadMoreContainer;
-	boolean isAccessRequirementVisible;
-	public static final String HIDE_AR_TEXT = "Hide Access Requirement";
-	public static final String SHOW_AR_TEXT = "Show Access Requirement";
-	AccessorGroupRequest accessorGroupRequest;
-	SynapseSuggestBox peopleSuggestWidget;
-	private UserBadge selectedUserBadge;
-	Button showHideAccessRequirementButton;
-	AccessRequirementWidget accessRequirementWidget;
-	Callback refreshCallback;
-	GlobalApplicationState globalAppState;
-	String accessRequirementId;
-	ArrayList<AccessorGroup> allExportData;
-	boolean isLoadingAllData;
-	
-	@Inject
-	public ACTAccessApprovalsPresenter(final ACTAccessApprovalsView view, SynapseAlert synAlert, PortalGinInjector ginInjector, LoadMoreWidgetContainer loadMoreContainer, final Button showHideAccessRequirementButton, DataAccessClientAsync dataAccessClient, SynapseSuggestBox peopleSuggestWidget, UserGroupSuggestionProvider provider, UserBadge selectedUserBadge, AccessRequirementWidget accessRequirementWidget, GlobalApplicationState globalAppState) {
-		this.view = view;
-		this.synAlert = synAlert;
-		this.ginInjector = ginInjector;
-		this.dataAccessClient = dataAccessClient;
-		fixServiceEntryPoint(dataAccessClient);
-		this.loadMoreContainer = loadMoreContainer;
-		this.selectedUserBadge = selectedUserBadge;
-		this.showHideAccessRequirementButton = showHideAccessRequirementButton;
-		this.accessRequirementWidget = accessRequirementWidget;
-		this.globalAppState = globalAppState;
-		this.peopleSuggestWidget = peopleSuggestWidget;
-		peopleSuggestWidget.setSuggestionProvider(provider);
-		peopleSuggestWidget.setTypeFilter(TypeFilter.USERS_ONLY);
-		isAccessRequirementVisible = false;
-		showHideAccessRequirementButton.setText(SHOW_AR_TEXT);
-		showHideAccessRequirementButton.setIcon(IconType.TOGGLE_RIGHT);
-		view.setAccessRequirementUIVisible(false);
-		showHideAccessRequirementButton.addClickHandler(new ClickHandler() {
-			@Override
-			public void onClick(ClickEvent event) {
-				isAccessRequirementVisible = !isAccessRequirementVisible;
-				String buttonText = isAccessRequirementVisible ? HIDE_AR_TEXT : SHOW_AR_TEXT;
-				showHideAccessRequirementButton.setText(buttonText);
-				showHideAccessRequirementButton.setIcon(isAccessRequirementVisible ? IconType.TOGGLE_DOWN : IconType.TOGGLE_RIGHT);
-				view.setAccessRequirementUIVisible(isAccessRequirementVisible);
-			}
-		});
-		view.setSynAlert(synAlert);
-		view.setLoadMoreContainer(loadMoreContainer);
-		view.setShowHideButton(showHideAccessRequirementButton);
-		view.setAccessRequirementWidget(accessRequirementWidget);
-		view.setUserPickerWidget(peopleSuggestWidget.asWidget());
-		view.setSelectedUserBadge(selectedUserBadge.asWidget());
-		view.setPresenter(this);
-		peopleSuggestWidget.addItemSelectedHandler(new CallbackP<UserGroupSuggestion>() {
-			@Override
-			public void invoke(UserGroupSuggestion suggestion) {
-				onUserSelected(suggestion);
-			}
-		});
-		loadMoreContainer.configure(new Callback() {
-			@Override
-			public void invoke() {
-				loadMore();
-			}
-		});
-		refreshCallback = new Callback() {
-			@Override
-			public void invoke() {
-				loadData();
-			}
-		};
-	}
+public class ACTAccessApprovalsPresenter
+  extends AbstractActivity
+  implements
+    Presenter<ACTAccessApprovalsPlace>, ACTAccessApprovalsView.Presenter {
 
-	@Override
-	public void start(AcceptsOneWidget panel, EventBus eventBus) {
-		// Install the view
-		panel.setWidget(view);
-	}
+  private ACTAccessApprovalsPlace place;
+  private ACTAccessApprovalsView view;
+  private PortalGinInjector ginInjector;
+  private SynapseAlert synAlert;
+  DataAccessClientAsync dataAccessClient;
+  LoadMoreWidgetContainer loadMoreContainer;
+  boolean isAccessRequirementVisible;
+  public static final String HIDE_AR_TEXT = "Hide Access Requirement";
+  public static final String SHOW_AR_TEXT = "Show Access Requirement";
+  AccessorGroupRequest accessorGroupRequest;
+  SynapseSuggestBox submitterSuggestWidget;
+  UserBadge selectedSubmitterUserBadge;
+  SynapseSuggestBox accessorSuggestWidget;
+  UserBadge selectedAccessorUserBadge;
 
-	@Override
-	public void setPlace(ACTAccessApprovalsPlace place) {
-		this.place = place;
-		accessorGroupRequest = new AccessorGroupRequest();
-		accessRequirementId = place.getParam(ACCESS_REQUIREMENT_ID_PARAM);
-		String expireTime = place.getParam(EXPIRES_BEFORE_PARAM);
-		String submitterId = place.getParam(SUBMITTER_ID_PARAM);
-		if (expireTime != null) {
-			Date expiresBeforeDate = new Date(Long.parseLong(expireTime));
-			view.setExpiresBeforeDate(expiresBeforeDate);
-			accessorGroupRequest.setExpireBefore(expiresBeforeDate);
-		}
+  Button showHideAccessRequirementButton;
+  AccessRequirementWidget accessRequirementWidget;
+  Callback refreshCallback;
+  GlobalApplicationState globalAppState;
+  String accessRequirementId;
+  ArrayList<AccessorGroup> allExportData;
+  boolean isLoadingAllData;
 
-		synAlert.clear();
-		boolean isAccessRequirementId = accessRequirementId != null;
+  @Inject
+  public ACTAccessApprovalsPresenter(
+    final ACTAccessApprovalsView view,
+    SynapseAlert synAlert,
+    PortalGinInjector ginInjector,
+    LoadMoreWidgetContainer loadMoreContainer,
+    final Button showHideAccessRequirementButton,
+    DataAccessClientAsync dataAccessClient,
+    SynapseSuggestBox accessorSuggestWidget,
+    SynapseSuggestBox submitterSuggestWidget,
+    UserGroupSuggestionProvider provider,
+    UserBadge selectedSubmitterUserBadge,
+    UserBadge selectedAccessorUserBadge,
+    AccessRequirementWidget accessRequirementWidget,
+    GlobalApplicationState globalAppState
+  ) {
+    this.view = view;
+    this.synAlert = synAlert;
+    this.ginInjector = ginInjector;
+    this.dataAccessClient = dataAccessClient;
+    fixServiceEntryPoint(dataAccessClient);
+    this.loadMoreContainer = loadMoreContainer;
+    this.selectedSubmitterUserBadge = selectedSubmitterUserBadge;
+    this.showHideAccessRequirementButton = showHideAccessRequirementButton;
+    this.accessRequirementWidget = accessRequirementWidget;
+    this.globalAppState = globalAppState;
+    this.submitterSuggestWidget = submitterSuggestWidget;
+    this.selectedAccessorUserBadge = selectedAccessorUserBadge;
+    this.accessorSuggestWidget = accessorSuggestWidget;
+    submitterSuggestWidget.setSuggestionProvider(provider);
+    submitterSuggestWidget.setTypeFilter(TypeFilter.USERS_ONLY);
+    accessorSuggestWidget.setSuggestionProvider(provider);
+    accessorSuggestWidget.setTypeFilter(TypeFilter.USERS_ONLY);
 
-		showHideAccessRequirementButton.setVisible(isAccessRequirementId);
-		view.setClearAccessRequirementFilterButtonVisible(isAccessRequirementId);
-		if (isAccessRequirementId) {
-			accessorGroupRequest.setAccessRequirementId(accessRequirementId);
-			accessRequirementWidget.configure(accessRequirementId, null);
-		}
-		accessorGroupRequest.setSubmitterId(submitterId);
-		loadData();
-	}
+    isAccessRequirementVisible = false;
+    showHideAccessRequirementButton.setText(SHOW_AR_TEXT);
+    showHideAccessRequirementButton.setIcon(IconType.TOGGLE_RIGHT);
+    view.setAccessRequirementUIVisible(false);
+    showHideAccessRequirementButton.addClickHandler(event -> {
+      isAccessRequirementVisible = !isAccessRequirementVisible;
+      String buttonText = isAccessRequirementVisible
+        ? HIDE_AR_TEXT
+        : SHOW_AR_TEXT;
+      showHideAccessRequirementButton.setText(buttonText);
+      showHideAccessRequirementButton.setIcon(
+        isAccessRequirementVisible
+          ? IconType.TOGGLE_DOWN
+          : IconType.TOGGLE_RIGHT
+      );
+      view.setAccessRequirementUIVisible(isAccessRequirementVisible);
+    });
+    view.setSynAlert(synAlert);
+    view.setLoadMoreContainer(loadMoreContainer);
+    view.setShowHideButton(showHideAccessRequirementButton);
+    view.setAccessRequirementWidget(accessRequirementWidget);
+    view.setSubmitterPickerWidget(submitterSuggestWidget.asWidget());
+    view.setAccessorPickerWidget(accessorSuggestWidget);
+    view.setSelectedSubmitterUserBadge(selectedSubmitterUserBadge.asWidget());
+    view.setSelectedAccessorUserBadge(selectedAccessorUserBadge);
 
-	public void loadData() {
-		globalAppState.pushCurrentPlace(place);
-		allExportData = new ArrayList<>();
-		loadMoreContainer.clear();
-		accessorGroupRequest.setNextPageToken(null);
-		isLoadingAllData = false;
-		view.resetExportButton();
-		loadMore();
-	}
+    view.setPresenter(this);
+    submitterSuggestWidget.addItemSelectedHandler(suggestion -> {
+      onSubmitterSelected(suggestion);
+    });
 
-	public void loadMore() {
-		synAlert.clear();
-		dataAccessClient.listAccessorGroup(accessorGroupRequest, new AsyncCallback<AccessorGroupResponse>() {
-			@Override
-			public void onFailure(Throwable caught) {
-				synAlert.handleException(caught);
-				loadMoreContainer.setIsMore(false);
-			}
+    accessorSuggestWidget.addItemSelectedHandler(suggestion -> {
+      onAccessorSelected(suggestion);
+    });
 
-			public void onSuccess(AccessorGroupResponse response) {
-				accessorGroupRequest.setNextPageToken(response.getNextPageToken());
-				for (AccessorGroup group : response.getResults()) {
-					AccessorGroupWidget w = ginInjector.getAccessorGroupWidget();
-					w.configure(group);
-					w.setOnRevokeCallback(refreshCallback);
-					loadMoreContainer.add(w.asWidget());
-				}
-				boolean isMore = response.getNextPageToken() != null;
-				loadMoreContainer.setIsMore(isMore);
-				allExportData.addAll(response.getResults());
-				// as soon as we reach the end of the results, automatically set up the export file
-				if (!isMore) {
-					view.export(allExportData);
-				}
-				if (isMore && isLoadingAllData) {
-					loadMore();
-				}
-			};
-		});
-	}
+    loadMoreContainer.configure(() -> {
+      loadMore();
+    });
+    refreshCallback =
+      () -> {
+        loadData();
+      };
+  }
 
-	@Override
-	public void onClearExpireBeforeFilter() {
-		accessorGroupRequest.setExpireBefore(null);
-		view.setExpiresBeforeDate(null);
-		place.removeParam(EXPIRES_BEFORE_PARAM);
-		loadData();
-	}
+  @Override
+  public void start(AcceptsOneWidget panel, EventBus eventBus) {
+    // Install the view
+    panel.setWidget(view);
+  }
 
-	@Override
-	public void onClearUserFilter() {
-		accessorGroupRequest.setSubmitterId(null);
-		place.removeParam(SUBMITTER_ID_PARAM);
-		view.setSelectedUserBadgeVisible(false);
-		peopleSuggestWidget.clear();
-		loadData();
-	}
+  @Override
+  public void setPlace(ACTAccessApprovalsPlace place) {
+    this.place = place;
+    accessorGroupRequest = new AccessorGroupRequest();
+    accessRequirementId = place.getParam(ACCESS_REQUIREMENT_ID_PARAM);
+    String expireTime = place.getParam(EXPIRES_BEFORE_PARAM);
+    String submitterId = place.getParam(SUBMITTER_ID_PARAM);
+    String accessorId = place.getParam(ACCESSOR_ID_PARAM);
+    if (expireTime != null) {
+      Date expiresBeforeDate = new Date(Long.parseLong(expireTime));
+      view.setExpiresBeforeDate(expiresBeforeDate);
+      accessorGroupRequest.setExpireBefore(expiresBeforeDate);
+    }
 
+    synAlert.clear();
+    boolean isAccessRequirementId = accessRequirementId != null;
 
-	@Override
-	public void onClearAccessRequirementFilter() {
-		accessorGroupRequest.setAccessRequirementId(null);
-		place.removeParam(ACCESS_REQUIREMENT_ID_PARAM);
-		view.setAccessRequirementUIVisible(false);
-		showHideAccessRequirementButton.setVisible(false);
-		view.setClearAccessRequirementFilterButtonVisible(false);
-		loadData();
-	}
+    showHideAccessRequirementButton.setVisible(isAccessRequirementId);
+    view.setClearAccessRequirementFilterButtonVisible(isAccessRequirementId);
+    if (isAccessRequirementId) {
+      accessorGroupRequest.setAccessRequirementId(accessRequirementId);
+      accessRequirementWidget.configure(accessRequirementId, null);
+    }
+    accessorGroupRequest.setSubmitterId(submitterId);
+    accessorGroupRequest.setAccessorId(accessorId);
+    loadData();
+  }
 
-	@Override
-	public void onExpiresBeforeDateSelected(Date date) {
-		accessorGroupRequest.setExpireBefore(date);
-		place.putParam(EXPIRES_BEFORE_PARAM, Long.toString(date.getTime()));
-		loadData();
-	}
+  public void loadData() {
+    globalAppState.pushCurrentPlace(place);
+    allExportData = new ArrayList<>();
+    loadMoreContainer.clear();
+    accessorGroupRequest.setNextPageToken(null);
+    isLoadingAllData = false;
+    view.resetExportButton();
+    loadMore();
+  }
 
-	public void onUserSelected(UserGroupSuggestion suggestion) {
-		if (suggestion != null) {
-			UserGroupHeader header = suggestion.getHeader();
-			accessorGroupRequest.setSubmitterId(header.getOwnerId());
-			place.putParam(SUBMITTER_ID_PARAM, header.getOwnerId());
-			selectedUserBadge.configure(header.getOwnerId());
-			peopleSuggestWidget.clear();
-			view.setSelectedUserBadgeVisible(true);
-			loadData();
-		} else {
-			onClearUserFilter();
-		}
-	}
+  public void loadMore() {
+    synAlert.clear();
+    dataAccessClient.listAccessorGroup(
+      accessorGroupRequest,
+      new AsyncCallback<AccessorGroupResponse>() {
+        @Override
+        public void onFailure(Throwable caught) {
+          synAlert.handleException(caught);
+          loadMoreContainer.setIsMore(false);
+        }
 
-	public ACTAccessApprovalsPlace getPlace() {
-		return place;
-	}
+        public void onSuccess(AccessorGroupResponse response) {
+          accessorGroupRequest.setNextPageToken(response.getNextPageToken());
+          for (AccessorGroup group : response.getResults()) {
+            AccessorGroupWidget w = ginInjector.getAccessorGroupWidget();
+            w.configure(group);
+            w.setOnRevokeCallback(refreshCallback);
+            loadMoreContainer.add(w.asWidget());
+          }
+          boolean isMore = response.getNextPageToken() != null;
+          loadMoreContainer.setIsMore(isMore);
+          allExportData.addAll(response.getResults());
+          // as soon as we reach the end of the results, automatically set up the export file
+          if (!isMore) {
+            view.export(allExportData);
+          }
+          if (isMore && isLoadingAllData) {
+            loadMore();
+          }
+        }
+      }
+    );
+  }
 
-	@Override
-	public String mayStop() {
-		return null;
-	}
+  @Override
+  public void onClearExpireBeforeFilter() {
+    accessorGroupRequest.setExpireBefore(null);
+    view.setExpiresBeforeDate(null);
+    place.removeParam(EXPIRES_BEFORE_PARAM);
+    loadData();
+  }
 
-	@Override
-	public void onExportData() {
-		// gather all pages of data to set up export
-		isLoadingAllData = true;
-		loadMore();
-	}
+  @Override
+  public void onClearSubmitterFilter() {
+    accessorGroupRequest.setSubmitterId(null);
+    place.removeParam(SUBMITTER_ID_PARAM);
+    view.setSelectedSubmitterUserBadgeVisible(false);
+    submitterSuggestWidget.clear();
+    loadData();
+  }
+
+  @Override
+  public void onClearAccessorFilter() {
+    accessorGroupRequest.setAccessorId(null);
+    place.removeParam(ACCESSOR_ID_PARAM);
+    view.setSelectedAccessorUserBadgeVisible(false);
+    accessorSuggestWidget.clear();
+    loadData();
+  }
+
+  @Override
+  public void onClearAccessRequirementFilter() {
+    accessorGroupRequest.setAccessRequirementId(null);
+    place.removeParam(ACCESS_REQUIREMENT_ID_PARAM);
+    view.setAccessRequirementUIVisible(false);
+    showHideAccessRequirementButton.setVisible(false);
+    view.setClearAccessRequirementFilterButtonVisible(false);
+    loadData();
+  }
+
+  @Override
+  public void onExpiresBeforeDateSelected(Date date) {
+    accessorGroupRequest.setExpireBefore(date);
+    place.putParam(EXPIRES_BEFORE_PARAM, Long.toString(date.getTime()));
+    loadData();
+  }
+
+  public void onSubmitterSelected(UserGroupSuggestion suggestion) {
+    if (suggestion != null) {
+      UserGroupHeader header = suggestion.getHeader();
+      accessorGroupRequest.setSubmitterId(header.getOwnerId());
+      place.putParam(SUBMITTER_ID_PARAM, header.getOwnerId());
+      selectedSubmitterUserBadge.configure(header.getOwnerId());
+      submitterSuggestWidget.clear();
+      view.setSelectedSubmitterUserBadgeVisible(true);
+      loadData();
+    } else {
+      onClearSubmitterFilter();
+    }
+  }
+
+  public void onAccessorSelected(UserGroupSuggestion suggestion) {
+    if (suggestion != null) {
+      UserGroupHeader header = suggestion.getHeader();
+      accessorGroupRequest.setAccessorId(header.getOwnerId());
+      place.putParam(ACCESSOR_ID_PARAM, header.getOwnerId());
+      selectedAccessorUserBadge.configure(header.getOwnerId());
+      accessorSuggestWidget.clear();
+      view.setSelectedAccessorUserBadgeVisible(true);
+      loadData();
+    } else {
+      onClearAccessorFilter();
+    }
+  }
+
+  public ACTAccessApprovalsPlace getPlace() {
+    return place;
+  }
+
+  @Override
+  public String mayStop() {
+    return null;
+  }
+
+  @Override
+  public void onExportData() {
+    // gather all pages of data to set up export
+    isLoadingAllData = true;
+    loadMore();
+  }
 }

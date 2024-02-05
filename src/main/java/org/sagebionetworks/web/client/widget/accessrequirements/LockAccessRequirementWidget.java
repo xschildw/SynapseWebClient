@@ -1,38 +1,66 @@
 package org.sagebionetworks.web.client.widget.accessrequirements;
 
-import org.sagebionetworks.repo.model.LockAccessRequirement;
-import org.sagebionetworks.web.client.utils.Callback;
 import com.google.gwt.user.client.ui.IsWidget;
 import com.google.gwt.user.client.ui.Widget;
 import com.google.inject.Inject;
+import org.sagebionetworks.repo.model.LockAccessRequirement;
+import org.sagebionetworks.web.client.utils.Callback;
+import org.sagebionetworks.web.client.widget.asynch.IsACTMemberAsyncHandler;
 
 public class LockAccessRequirementWidget implements IsWidget {
-	private LockAccessRequirementWidgetView view;
-	LockAccessRequirement ar;
-	DeleteAccessRequirementButton deleteAccessRequirementButton;
-	SubjectsWidget subjectsWidget;
 
-	@Inject
-	public LockAccessRequirementWidget(LockAccessRequirementWidgetView view, SubjectsWidget subjectsWidget, DeleteAccessRequirementButton deleteAccessRequirementButton) {
-		this.view = view;
-		this.subjectsWidget = subjectsWidget;
-		this.deleteAccessRequirementButton = deleteAccessRequirementButton;
-		view.setDeleteAccessRequirementWidget(deleteAccessRequirementButton);
-		view.setSubjectsWidget(subjectsWidget);
-	}
+  private LockAccessRequirementWidgetView view;
+  LockAccessRequirement ar;
+  DeleteAccessRequirementButton deleteAccessRequirementButton;
+  TeamSubjectsWidget teamSubjectsWidget;
+  EntitySubjectsWidget entitySubjectsWidget;
+  AccessRequirementRelatedProjectsList accessRequirementRelatedProjectsList;
 
-	public void setRequirement(LockAccessRequirement ar, Callback refreshCallback) {
-		this.ar = ar;
-		deleteAccessRequirementButton.configure(ar, refreshCallback);
-		subjectsWidget.configure(ar.getSubjectIds());
-	}
+  @Inject
+  public LockAccessRequirementWidget(
+    LockAccessRequirementWidgetView view,
+    TeamSubjectsWidget teamSubjectsWidget,
+    EntitySubjectsWidget entitySubjectsWidget,
+    AccessRequirementRelatedProjectsList accessRequirementRelatedProjectsList,
+    DeleteAccessRequirementButton deleteAccessRequirementButton,
+    IsACTMemberAsyncHandler isACTMemberAsyncHandler
+  ) {
+    this.view = view;
+    this.teamSubjectsWidget = teamSubjectsWidget;
+    this.entitySubjectsWidget = entitySubjectsWidget;
+    this.deleteAccessRequirementButton = deleteAccessRequirementButton;
+    this.accessRequirementRelatedProjectsList =
+      accessRequirementRelatedProjectsList;
+    view.setDeleteAccessRequirementWidget(deleteAccessRequirementButton);
+    view.setTeamSubjectsWidget(teamSubjectsWidget);
+    view.setEntitySubjectsWidget(entitySubjectsWidget);
+    view.setAccessRequirementRelatedProjectsList(
+      accessRequirementRelatedProjectsList
+    );
+    isACTMemberAsyncHandler.isACTActionAvailable(isACT -> {
+      view.setAccessRequirementIDVisible(isACT);
+      view.setCoveredEntitiesHeadingVisible(isACT);
+    });
+  }
 
-	public void addStyleNames(String styleNames) {
-		view.addStyleNames(styleNames);
-	}
+  public void setRequirement(
+    LockAccessRequirement ar,
+    Callback refreshCallback
+  ) {
+    this.ar = ar;
+    deleteAccessRequirementButton.configure(ar, refreshCallback);
+    teamSubjectsWidget.configure(ar.getSubjectIds());
+    entitySubjectsWidget.configure(ar.getSubjectIds());
+    accessRequirementRelatedProjectsList.configure(ar.getId().toString());
+    view.setAccessRequirementID(ar.getId().toString());
+  }
 
-	@Override
-	public Widget asWidget() {
-		return view.asWidget();
-	}
+  public void addStyleNames(String styleNames) {
+    view.addStyleNames(styleNames);
+  }
+
+  @Override
+  public Widget asWidget() {
+    return view.asWidget();
+  }
 }

@@ -11,6 +11,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.sagebionetworks.web.client.widget.accessrequirements.SelfSignAccessRequirementWidget.GET_CERTIFIED_PAGE;
 import static org.sagebionetworks.web.client.widget.accessrequirements.SelfSignAccessRequirementWidget.GET_VALIDATED_PROFILE_PAGE;
+
+import com.google.gwt.user.client.rpc.AsyncCallback;
+import com.google.gwt.user.client.ui.Widget;
 import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
@@ -29,240 +32,338 @@ import org.sagebionetworks.web.client.SynapseClientAsync;
 import org.sagebionetworks.web.client.SynapseJavascriptClient;
 import org.sagebionetworks.web.client.security.AuthenticationController;
 import org.sagebionetworks.web.client.utils.Callback;
+import org.sagebionetworks.web.client.widget.accessrequirements.AccessRequirementRelatedProjectsList;
 import org.sagebionetworks.web.client.widget.accessrequirements.CreateAccessRequirementButton;
 import org.sagebionetworks.web.client.widget.accessrequirements.DeleteAccessRequirementButton;
+import org.sagebionetworks.web.client.widget.accessrequirements.EntitySubjectsWidget;
 import org.sagebionetworks.web.client.widget.accessrequirements.ReviewAccessorsButton;
 import org.sagebionetworks.web.client.widget.accessrequirements.SelfSignAccessRequirementWidget;
 import org.sagebionetworks.web.client.widget.accessrequirements.SelfSignAccessRequirementWidgetView;
-import org.sagebionetworks.web.client.widget.accessrequirements.SubjectsWidget;
+import org.sagebionetworks.web.client.widget.accessrequirements.TeamSubjectsWidget;
+import org.sagebionetworks.web.client.widget.asynch.IsACTMemberAsyncHandler;
 import org.sagebionetworks.web.client.widget.entity.WikiPageWidget;
 import org.sagebionetworks.web.client.widget.entity.controller.SynapseAlert;
 import org.sagebionetworks.web.client.widget.lazyload.LazyLoadHelper;
 import org.sagebionetworks.web.shared.WebConstants;
 import org.sagebionetworks.web.shared.WikiPageKey;
 import org.sagebionetworks.web.test.helper.AsyncMockStubber;
-import com.google.gwt.user.client.rpc.AsyncCallback;
-import com.google.gwt.user.client.ui.Widget;
 
 public class SelfSignAccessRequirementWidgetTest {
-	SelfSignAccessRequirementWidget widget;
 
-	@Mock
-	SelfSignAccessRequirementWidgetView mockView;
-	@Mock
-	AuthenticationController mockAuthController;
-	@Mock
-	SynapseClientAsync mockSynapseClient;
-	@Mock
-	DataAccessClientAsync mockDataAccessClient;
-	@Mock
-	WikiPageWidget mockWikiPageWidget;
-	@Mock
-	SynapseAlert mockSynAlert;
-	@Mock
-	SelfSignAccessRequirement mockAccessRequirement;
-	@Mock
-	CreateAccessRequirementButton mockCreateAccessRequirementButton;
-	@Mock
-	DeleteAccessRequirementButton mockDeleteAccessRequirementButton;
-	@Mock
-	SubjectsWidget mockSubjectsWidget;
-	@Mock
-	List<RestrictableObjectDescriptor> mockSubjectIds;
-	@Mock
-	LazyLoadHelper mockLazyLoadHelper;
-	@Captor
-	ArgumentCaptor<Callback> callbackCaptor;
-	@Mock
-	BasicAccessRequirementStatus mockDataAccessSubmissionStatus;
-	@Mock
-	ReviewAccessorsButton mockManageAccessButton;
-	@Mock
-	PopupUtilsView mockPopupUtils;
-	@Mock
-	SynapseJavascriptClient mockSynapseJavascriptClient;
-	@Mock
-	UserBundle mockUserBundle;
-	@Mock
-	AccessApproval mockAccessApproval;
-	@Captor
-	ArgumentCaptor<AccessApproval> accessApprovalCaptor;
-	@Mock
-	Callback mockRefreshCallback;
-	Callback lazyLoadDataCallback;
+  SelfSignAccessRequirementWidget widget;
 
-	public final static String ROOT_WIKI_ID = "777";
-	public final static String CURRENT_USER_ID = "6823";
-	public final static Long AR_ID = 8999L;
-	public final static Long AR_VERSION = 2L;
+  @Mock
+  SelfSignAccessRequirementWidgetView mockView;
 
-	@Before
-	public void setUp() throws Exception {
-		MockitoAnnotations.initMocks(this);
-		widget = new SelfSignAccessRequirementWidget(mockView, mockAuthController, mockDataAccessClient, mockSynapseClient, mockWikiPageWidget, mockSynAlert, mockSubjectsWidget, mockCreateAccessRequirementButton, mockDeleteAccessRequirementButton, mockLazyLoadHelper, mockManageAccessButton, mockPopupUtils, mockSynapseJavascriptClient);
-		when(mockAccessRequirement.getId()).thenReturn(AR_ID);
-		when(mockAccessRequirement.getVersionNumber()).thenReturn(AR_VERSION);
-		when(mockAccessRequirement.getSubjectIds()).thenReturn(mockSubjectIds);
-		AsyncMockStubber.callSuccessWith(ROOT_WIKI_ID).when(mockSynapseJavascriptClient).getRootWikiPageKey(anyString(), anyString(), any(AsyncCallback.class));
-		verify(mockLazyLoadHelper).configure(callbackCaptor.capture(), eq(mockView));
-		lazyLoadDataCallback = callbackCaptor.getValue();
-		when(mockAuthController.getCurrentUserPrincipalId()).thenReturn(CURRENT_USER_ID);
-		AsyncMockStubber.callSuccessWith(mockUserBundle).when(mockSynapseJavascriptClient).getUserBundle(anyLong(), anyInt(), any(AsyncCallback.class));
-		AsyncMockStubber.callSuccessWith(mockDataAccessSubmissionStatus).when(mockDataAccessClient).getAccessRequirementStatus(anyString(), any(AsyncCallback.class));
-		when(mockAuthController.isLoggedIn()).thenReturn(true);
-	}
+  @Mock
+  AuthenticationController mockAuthController;
 
-	@Test
-	public void testConstruction() {
-		verify(mockView).setPresenter(widget);
-		verify(mockView).setWikiTermsWidget(any(Widget.class));
-		verify(mockView).setEditAccessRequirementWidget(any(Widget.class));
-		verify(mockWikiPageWidget).setModifiedCreatedByHistoryVisible(false);
-	}
+  @Mock
+  SynapseClientAsync mockSynapseClient;
 
-	@Test
-	public void testSetRequirementWithWikiTerms() {
-		widget.setRequirement(mockAccessRequirement, mockRefreshCallback);
-		verify(mockWikiPageWidget).configure(any(WikiPageKey.class), eq(false), any(WikiPageWidget.Callback.class));
-	}
+  @Mock
+  DataAccessClientAsync mockDataAccessClient;
 
-	@Test
-	public void testApprovedState() {
-		widget.setRequirement(mockAccessRequirement, mockRefreshCallback);
-		when(mockDataAccessSubmissionStatus.getIsApproved()).thenReturn(true);
-		lazyLoadDataCallback.invoke();
-		verify(mockView).showApprovedHeading();
-	}
+  @Mock
+  WikiPageWidget mockWikiPageWidget;
 
-	@Test
-	public void testAnonymous() {
-		when(mockAuthController.isLoggedIn()).thenReturn(false);
-		widget.setRequirement(mockAccessRequirement, mockRefreshCallback);
-		lazyLoadDataCallback.invoke();
-		verify(mockView).showUnapprovedHeading();
-		verify(mockView).showLoginButton();
-	}
+  @Mock
+  SynapseAlert mockSynAlert;
 
-	@Test
-	public void testUnapprovedState() {
-		widget.setRequirement(mockAccessRequirement, mockRefreshCallback);
-		when(mockDataAccessSubmissionStatus.getIsApproved()).thenReturn(false);
-		lazyLoadDataCallback.invoke();
-		verify(mockView).showUnapprovedHeading();
-		verify(mockView).showSignTermsButton();
-	}
+  @Mock
+  SelfSignAccessRequirement mockAccessRequirement;
 
-	@Test
-	public void testUnapprovedStateCertificationRequiredNotCertified() {
-		when(mockUserBundle.getIsCertified()).thenReturn(false);
-		when(mockAccessRequirement.getIsCertifiedUserRequired()).thenReturn(true);
-		widget.setRequirement(mockAccessRequirement, mockRefreshCallback);
-		when(mockDataAccessSubmissionStatus.getIsApproved()).thenReturn(false);
-		lazyLoadDataCallback.invoke();
-		verify(mockView).showUnapprovedHeading();
-		verify(mockView).showGetCertifiedUI();
-		verify(mockView, never()).showSignTermsButton();
-	}
+  @Mock
+  CreateAccessRequirementButton mockCreateAccessRequirementButton;
 
-	@Test
-	public void testUnapprovedStateCertificationRequiredIsCertified() {
-		when(mockUserBundle.getIsCertified()).thenReturn(true);
-		when(mockAccessRequirement.getIsCertifiedUserRequired()).thenReturn(true);
-		widget.setRequirement(mockAccessRequirement, mockRefreshCallback);
-		when(mockDataAccessSubmissionStatus.getIsApproved()).thenReturn(false);
-		lazyLoadDataCallback.invoke();
-		verify(mockView).showUnapprovedHeading();
-		verify(mockView).showSignTermsButton();
-	}
+  @Mock
+  DeleteAccessRequirementButton mockDeleteAccessRequirementButton;
 
-	@Test
-	public void testUnapprovedStateValidationRequiredNotValidated() {
-		when(mockUserBundle.getIsVerified()).thenReturn(false);
-		when(mockAccessRequirement.getIsValidatedProfileRequired()).thenReturn(true);
-		widget.setRequirement(mockAccessRequirement, mockRefreshCallback);
-		when(mockDataAccessSubmissionStatus.getIsApproved()).thenReturn(false);
-		lazyLoadDataCallback.invoke();
-		verify(mockView).showUnapprovedHeading();
-		verify(mockView).showGetProfileValidatedUI();
-		verify(mockView, never()).showSignTermsButton();
-	}
+  @Mock
+  TeamSubjectsWidget mockTeamSubjectsWidget;
 
-	@Test
-	public void testUnapprovedStateValidationRequiredIsValidated() {
-		when(mockUserBundle.getIsVerified()).thenReturn(true);
-		when(mockAccessRequirement.getIsValidatedProfileRequired()).thenReturn(true);
-		widget.setRequirement(mockAccessRequirement, mockRefreshCallback);
-		when(mockDataAccessSubmissionStatus.getIsApproved()).thenReturn(false);
-		lazyLoadDataCallback.invoke();
-		verify(mockView).showUnapprovedHeading();
-		verify(mockView).showSignTermsButton();
-	}
+  @Mock
+  EntitySubjectsWidget mockEntitySubjectsWidget;
 
-	@Test
-	public void testUnapprovedStateCertificationValidationRequiredNotEither() {
-		when(mockUserBundle.getIsCertified()).thenReturn(false);
-		when(mockUserBundle.getIsVerified()).thenReturn(false);
-		when(mockAccessRequirement.getIsCertifiedUserRequired()).thenReturn(true);
-		when(mockAccessRequirement.getIsValidatedProfileRequired()).thenReturn(true);
-		widget.setRequirement(mockAccessRequirement, mockRefreshCallback);
-		when(mockDataAccessSubmissionStatus.getIsApproved()).thenReturn(false);
-		lazyLoadDataCallback.invoke();
-		verify(mockView).showUnapprovedHeading();
-		verify(mockView).showGetCertifiedUI();
-		verify(mockView, never()).showGetProfileValidatedUI();
-		verify(mockView, never()).showSignTermsButton();
-	}
+  @Mock
+  AccessRequirementRelatedProjectsList mockAccessRequirementRelatedProjectsList;
 
-	@Test
-	public void testGetUserBundleFailure() {
-		Exception ex = new Exception("error getting user bundle");
-		AsyncMockStubber.callFailureWith(ex).when(mockSynapseJavascriptClient).getUserBundle(anyLong(), anyInt(), any(AsyncCallback.class));
-		when(mockAccessRequirement.getIsValidatedProfileRequired()).thenReturn(true);
-		widget.setRequirement(mockAccessRequirement, mockRefreshCallback);
-		when(mockDataAccessSubmissionStatus.getIsApproved()).thenReturn(false);
+  @Mock
+  List<RestrictableObjectDescriptor> mockSubjectIds;
 
-		lazyLoadDataCallback.invoke();
+  @Mock
+  LazyLoadHelper mockLazyLoadHelper;
 
-		verify(mockSynAlert).handleException(ex);
-	}
+  @Captor
+  ArgumentCaptor<Callback> callbackCaptor;
 
-	@Test
-	public void testOnSignTerms() {
-		AsyncMockStubber.callSuccessWith(mockAccessApproval).when(mockSynapseClient).createAccessApproval(any(AccessApproval.class), any(AsyncCallback.class));
-		when(mockAccessRequirement.getIsValidatedProfileRequired()).thenReturn(true);
-		widget.setRequirement(mockAccessRequirement, mockRefreshCallback);
+  @Mock
+  BasicAccessRequirementStatus mockDataAccessSubmissionStatus;
 
-		widget.onSignTerms();
+  @Mock
+  ReviewAccessorsButton mockManageAccessButton;
 
-		verify(mockSynapseClient).createAccessApproval(accessApprovalCaptor.capture(), any(AsyncCallback.class));
-		verify(mockRefreshCallback).invoke();
-		AccessApproval capturedAccessApproval = accessApprovalCaptor.getValue();
-		assertEquals(AR_ID, capturedAccessApproval.getRequirementId());
-		assertEquals(AR_VERSION, capturedAccessApproval.getRequirementVersion());
-		assertEquals(CURRENT_USER_ID, capturedAccessApproval.getAccessorId());
-	}
+  @Mock
+  PopupUtilsView mockPopupUtils;
 
-	@Test
-	public void testOnSignTermsFailure() {
-		Exception ex = new Exception("error signing terms");
-		AsyncMockStubber.callFailureWith(ex).when(mockSynapseClient).createAccessApproval(any(AccessApproval.class), any(AsyncCallback.class));
-		widget.setRequirement(mockAccessRequirement, mockRefreshCallback);
+  @Mock
+  SynapseJavascriptClient mockSynapseJavascriptClient;
 
-		widget.onSignTerms();
+  @Mock
+  UserBundle mockUserBundle;
 
-		verify(mockSynapseClient).createAccessApproval(any(AccessApproval.class), any(AsyncCallback.class));
-		verify(mockSynAlert).handleException(ex);
-	}
+  @Mock
+  AccessApproval mockAccessApproval;
 
-	@Test
-	public void testOnCertify() {
-		widget.onCertify();
-		verify(mockPopupUtils).openInNewWindow(WebConstants.DOCS_URL + GET_CERTIFIED_PAGE);
-	}
+  @Captor
+  ArgumentCaptor<AccessApproval> accessApprovalCaptor;
 
-	@Test
-	public void testOnValidateProfile() {
-		widget.onValidateProfile();
-		verify(mockPopupUtils).openInNewWindow(WebConstants.DOCS_URL + GET_VALIDATED_PROFILE_PAGE);
-	}
+  @Mock
+  Callback mockRefreshCallback;
+
+  Callback lazyLoadDataCallback;
+
+  @Mock
+  IsACTMemberAsyncHandler mockIsACTMemberAsyncHandler;
+
+  public static final String ROOT_WIKI_ID = "777";
+  public static final String CURRENT_USER_ID = "6823";
+  public static final Long AR_ID = 8999L;
+  public static final Long AR_VERSION = 2L;
+
+  @Before
+  public void setUp() throws Exception {
+    MockitoAnnotations.initMocks(this);
+    widget =
+      new SelfSignAccessRequirementWidget(
+        mockView,
+        mockAuthController,
+        mockDataAccessClient,
+        mockSynapseClient,
+        mockWikiPageWidget,
+        mockSynAlert,
+        mockTeamSubjectsWidget,
+        mockEntitySubjectsWidget,
+        mockAccessRequirementRelatedProjectsList,
+        mockCreateAccessRequirementButton,
+        mockDeleteAccessRequirementButton,
+        mockLazyLoadHelper,
+        mockManageAccessButton,
+        mockPopupUtils,
+        mockSynapseJavascriptClient,
+        mockIsACTMemberAsyncHandler
+      );
+    when(mockAccessRequirement.getId()).thenReturn(AR_ID);
+    when(mockAccessRequirement.getVersionNumber()).thenReturn(AR_VERSION);
+    when(mockAccessRequirement.getSubjectIds()).thenReturn(mockSubjectIds);
+    AsyncMockStubber
+      .callSuccessWith(ROOT_WIKI_ID)
+      .when(mockSynapseJavascriptClient)
+      .getRootWikiPageKey(anyString(), anyString(), any(AsyncCallback.class));
+    verify(mockLazyLoadHelper)
+      .configure(callbackCaptor.capture(), eq(mockView));
+    lazyLoadDataCallback = callbackCaptor.getValue();
+    when(mockAuthController.getCurrentUserPrincipalId())
+      .thenReturn(CURRENT_USER_ID);
+    AsyncMockStubber
+      .callSuccessWith(mockUserBundle)
+      .when(mockSynapseJavascriptClient)
+      .getUserBundle(anyLong(), anyInt(), any(AsyncCallback.class));
+    AsyncMockStubber
+      .callSuccessWith(mockDataAccessSubmissionStatus)
+      .when(mockDataAccessClient)
+      .getAccessRequirementStatus(anyString(), any(AsyncCallback.class));
+    when(mockAuthController.isLoggedIn()).thenReturn(true);
+  }
+
+  @Test
+  public void testConstruction() {
+    verify(mockView).setPresenter(widget);
+    verify(mockView).setWikiTermsWidget(any(Widget.class));
+    verify(mockView).setEditAccessRequirementWidget(any(Widget.class));
+    verify(mockWikiPageWidget).setModifiedCreatedByHistoryVisible(false);
+  }
+
+  @Test
+  public void testSetRequirementWithWikiTerms() {
+    widget.setRequirement(mockAccessRequirement, mockRefreshCallback);
+    verify(mockWikiPageWidget)
+      .configure(
+        any(WikiPageKey.class),
+        eq(false),
+        any(WikiPageWidget.Callback.class)
+      );
+    verify(mockTeamSubjectsWidget).configure(mockSubjectIds);
+    verify(mockEntitySubjectsWidget).configure(mockSubjectIds);
+  }
+
+  @Test
+  public void testApprovedState() {
+    widget.setRequirement(mockAccessRequirement, mockRefreshCallback);
+    when(mockDataAccessSubmissionStatus.getIsApproved()).thenReturn(true);
+    lazyLoadDataCallback.invoke();
+    verify(mockView).showApprovedHeading();
+  }
+
+  @Test
+  public void testAnonymous() {
+    when(mockAuthController.isLoggedIn()).thenReturn(false);
+    widget.setRequirement(mockAccessRequirement, mockRefreshCallback);
+    lazyLoadDataCallback.invoke();
+    verify(mockView).showUnapprovedHeading();
+    verify(mockView).showLoginButton();
+  }
+
+  @Test
+  public void testUnapprovedState() {
+    widget.setRequirement(mockAccessRequirement, mockRefreshCallback);
+    when(mockDataAccessSubmissionStatus.getIsApproved()).thenReturn(false);
+    lazyLoadDataCallback.invoke();
+    verify(mockView).showUnapprovedHeading();
+    verify(mockView).showSignTermsButton();
+  }
+
+  @Test
+  public void testUnapprovedStateCertificationRequiredNotCertified() {
+    when(mockUserBundle.getIsCertified()).thenReturn(false);
+    when(mockAccessRequirement.getIsCertifiedUserRequired()).thenReturn(true);
+    widget.setRequirement(mockAccessRequirement, mockRefreshCallback);
+    when(mockDataAccessSubmissionStatus.getIsApproved()).thenReturn(false);
+    lazyLoadDataCallback.invoke();
+    verify(mockView).showUnapprovedHeading();
+    verify(mockView).showGetCertifiedUI();
+    verify(mockView, never()).showSignTermsButton();
+  }
+
+  @Test
+  public void testUnapprovedStateCertificationRequiredIsCertified() {
+    when(mockUserBundle.getIsCertified()).thenReturn(true);
+    when(mockAccessRequirement.getIsCertifiedUserRequired()).thenReturn(true);
+    widget.setRequirement(mockAccessRequirement, mockRefreshCallback);
+    when(mockDataAccessSubmissionStatus.getIsApproved()).thenReturn(false);
+    lazyLoadDataCallback.invoke();
+    verify(mockView).showUnapprovedHeading();
+    verify(mockView).showSignTermsButton();
+  }
+
+  @Test
+  public void testUnapprovedStateValidationRequiredNotValidated() {
+    when(mockUserBundle.getIsVerified()).thenReturn(false);
+    when(mockAccessRequirement.getIsValidatedProfileRequired())
+      .thenReturn(true);
+    widget.setRequirement(mockAccessRequirement, mockRefreshCallback);
+    when(mockDataAccessSubmissionStatus.getIsApproved()).thenReturn(false);
+    lazyLoadDataCallback.invoke();
+    verify(mockView).showUnapprovedHeading();
+    verify(mockView).showGetProfileValidatedUI();
+    verify(mockView, never()).showSignTermsButton();
+  }
+
+  @Test
+  public void testUnapprovedStateValidationRequiredIsValidated() {
+    when(mockUserBundle.getIsVerified()).thenReturn(true);
+    when(mockAccessRequirement.getIsValidatedProfileRequired())
+      .thenReturn(true);
+    widget.setRequirement(mockAccessRequirement, mockRefreshCallback);
+    when(mockDataAccessSubmissionStatus.getIsApproved()).thenReturn(false);
+    lazyLoadDataCallback.invoke();
+    verify(mockView).showUnapprovedHeading();
+    verify(mockView).showSignTermsButton();
+  }
+
+  @Test
+  public void testUnapprovedStateCertificationValidationRequiredNotEither() {
+    when(mockUserBundle.getIsCertified()).thenReturn(false);
+    when(mockUserBundle.getIsVerified()).thenReturn(false);
+    when(mockAccessRequirement.getIsCertifiedUserRequired()).thenReturn(true);
+    when(mockAccessRequirement.getIsValidatedProfileRequired())
+      .thenReturn(true);
+    widget.setRequirement(mockAccessRequirement, mockRefreshCallback);
+    when(mockDataAccessSubmissionStatus.getIsApproved()).thenReturn(false);
+    lazyLoadDataCallback.invoke();
+    verify(mockView).showUnapprovedHeading();
+    verify(mockView).showGetCertifiedUI();
+    verify(mockView, never()).showGetProfileValidatedUI();
+    verify(mockView, never()).showSignTermsButton();
+  }
+
+  @Test
+  public void testGetUserBundleFailure() {
+    Exception ex = new Exception("error getting user bundle");
+    AsyncMockStubber
+      .callFailureWith(ex)
+      .when(mockSynapseJavascriptClient)
+      .getUserBundle(anyLong(), anyInt(), any(AsyncCallback.class));
+    when(mockAccessRequirement.getIsValidatedProfileRequired())
+      .thenReturn(true);
+    widget.setRequirement(mockAccessRequirement, mockRefreshCallback);
+    when(mockDataAccessSubmissionStatus.getIsApproved()).thenReturn(false);
+
+    lazyLoadDataCallback.invoke();
+
+    verify(mockSynAlert).handleException(ex);
+  }
+
+  @Test
+  public void testOnSignTerms() {
+    AsyncMockStubber
+      .callSuccessWith(mockAccessApproval)
+      .when(mockSynapseClient)
+      .createAccessApproval(
+        any(AccessApproval.class),
+        any(AsyncCallback.class)
+      );
+    when(mockAccessRequirement.getIsValidatedProfileRequired())
+      .thenReturn(true);
+    widget.setRequirement(mockAccessRequirement, mockRefreshCallback);
+
+    widget.onSignTerms();
+
+    verify(mockSynapseClient)
+      .createAccessApproval(
+        accessApprovalCaptor.capture(),
+        any(AsyncCallback.class)
+      );
+    verify(mockRefreshCallback).invoke();
+    AccessApproval capturedAccessApproval = accessApprovalCaptor.getValue();
+    assertEquals(AR_ID, capturedAccessApproval.getRequirementId());
+    assertEquals(AR_VERSION, capturedAccessApproval.getRequirementVersion());
+    assertEquals(CURRENT_USER_ID, capturedAccessApproval.getAccessorId());
+  }
+
+  @Test
+  public void testOnSignTermsFailure() {
+    Exception ex = new Exception("error signing terms");
+    AsyncMockStubber
+      .callFailureWith(ex)
+      .when(mockSynapseClient)
+      .createAccessApproval(
+        any(AccessApproval.class),
+        any(AsyncCallback.class)
+      );
+    widget.setRequirement(mockAccessRequirement, mockRefreshCallback);
+
+    widget.onSignTerms();
+
+    verify(mockSynapseClient)
+      .createAccessApproval(
+        any(AccessApproval.class),
+        any(AsyncCallback.class)
+      );
+    verify(mockSynAlert).handleException(ex);
+  }
+
+  @Test
+  public void testOnCertify() {
+    widget.onCertify();
+    verify(mockPopupUtils)
+      .openInNewWindow(WebConstants.DOCS_URL + GET_CERTIFIED_PAGE);
+  }
+
+  @Test
+  public void testOnValidateProfile() {
+    widget.onValidateProfile();
+    verify(mockPopupUtils)
+      .openInNewWindow(WebConstants.DOCS_URL + GET_VALIDATED_PROFILE_PAGE);
+  }
 }

@@ -4,47 +4,47 @@ import com.google.gwt.user.client.ui.IsWidget;
 import com.google.gwt.user.client.ui.Widget;
 
 public interface ReplyWidgetView extends IsWidget {
+  public interface Presenter {
+    Widget asWidget();
 
-	public interface Presenter {
+    void onClickDeleteReply();
 
-		Widget asWidget();
+    void onClickEditReply();
 
-		void onClickDeleteReply();
+    void onClickReplyLink();
+  }
 
-		void onClickEditReply();
+  void setPresenter(ReplyWidget presenter);
 
-		void onClickReplyLink();
-	}
+  void setAuthor(Widget widget);
 
-	void setPresenter(ReplyWidget presenter);
+  void setCreatedOn(String createdOn);
 
-	void setAuthor(Widget widget);
+  void setMarkdownWidget(Widget widget);
 
-	void setCreatedOn(String createdOn);
+  void clear();
 
-	void setMarkdownWidget(Widget widget);
+  void setAlert(Widget w);
 
-	void clear();
+  void setDeleteIconVisibility(Boolean visible);
 
-	void setAlert(Widget w);
+  void setEditIconVisible(boolean visible);
 
-	void setDeleteIconVisibility(Boolean visible);
+  void setEditReplyModal(Widget widget);
 
-	void setEditIconVisible(boolean visible);
+  void setEditedVisible(Boolean visible);
 
-	void setEditReplyModal(Widget widget);
+  void setLoadingMessageVisible(Boolean visible);
 
-	void setEditedVisible(Boolean visible);
+  void setMessageVisible(boolean visible);
 
-	void setLoadingMessageVisible(Boolean visible);
+  void showSuccess(String title, String message);
 
-	void setMessageVisible(boolean visible);
+  void setIsAuthorModerator(boolean isModerator);
 
-	void showSuccess(String title, String message);
+  void setCommandsContainerVisible(boolean visible);
 
-	void setIsAuthorModerator(boolean isModerator);
+  void setCopyTextModal(Widget widget);
 
-	void setCommandsContainerVisible(boolean visible);
-
-	void setCopyTextModal(Widget widget);
+  void addStyleName(String style);
 }

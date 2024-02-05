@@ -1,5 +1,8 @@
 package org.sagebionetworks.web.client.view;
 
+import com.google.gwt.place.shared.Place;
+import com.google.gwt.user.client.ui.IsWidget;
+import com.google.gwt.user.client.ui.Widget;
 import org.sagebionetworks.repo.model.ProjectListSortColumn;
 import org.sagebionetworks.repo.model.Team;
 import org.sagebionetworks.repo.model.UserProfile;
@@ -9,109 +12,95 @@ import org.sagebionetworks.web.client.place.Synapse.ProfileArea;
 import org.sagebionetworks.web.client.presenter.ProjectFilterEnum;
 import org.sagebionetworks.web.client.utils.Callback;
 import org.sagebionetworks.web.client.widget.team.OpenTeamInvitationsWidget;
-import com.google.gwt.place.shared.Place;
-import com.google.gwt.user.client.ui.IsWidget;
-import com.google.gwt.user.client.ui.Widget;
 
 public interface ProfileView extends IsWidget, SynapseView {
+  /**
+   * Set this view's presenter
+   *
+   * @param presenter
+   */
+  void setPresenter(Presenter presenter);
 
-	/**
-	 * Set this view's presenter
-	 * 
-	 * @param presenter
-	 */
-	void setPresenter(Presenter presenter);
+  /**
+   * Renders the view for a given presenter
+   */
+  void setProfile(UserProfile profile, boolean isOwner);
 
-	/**
-	 * Renders the view for a given presenter
-	 */
-	void setProfile(UserProfile profile, boolean isOwner);
+  void refreshHeader();
 
-	void refreshHeader();
+  void setProjectContainer(Widget widget);
 
-	void setProjectContainer(Widget widget);
+  void addChallengeWidget(Widget widget);
 
-	void addChallengeWidget(Widget widget);
+  void setTeamsContainer(Widget widget);
 
-	void setTeamsContainer(Widget widget);
+  void clearChallenges();
 
-	void clearChallenges();
+  void showChallengesLoading(boolean isVisible);
 
-	void showChallengesLoading(boolean isVisible);
+  void setIsMoreChallengesVisible(boolean isVisible);
 
-	void setIsMoreChallengesVisible(boolean isVisible);
+  void setTabSelected(ProfileArea areaTab);
 
-	void setTeamNotificationCount(String count);
+  void showConfirmDialog(String title, String message, Callback yesCallback);
 
-	void clearTeamNotificationCount();
+  void showProjectFiltersUI();
 
-	void setTabSelected(ProfileArea areaTab);
+  void hideLoading();
 
-	void showConfirmDialog(String title, String message, Callback yesCallback);
+  void setTeamsFilterVisible(boolean isVisible);
 
-	void showProjectFiltersUI();
+  void setTeamsFilterSelected();
 
-	void hideLoading();
+  void setMyProjectsFilterSelected();
 
-	void setTeamsFilterVisible(boolean isVisible);
+  void setAllProjectsFilterSelected();
 
-	void setTeamsFilterSelected();
+  void setFavoritesFilterSelected();
 
-	void setMyProjectsFilterSelected();
+  void setSharedDirectlyWithMeFilterSelected();
 
-	void setAllProjectsFilterSelected();
+  void setFavoritesHelpPanelVisible(boolean isVisible);
 
-	void setFavoritesFilterSelected();
+  void setUserProfileEditorWidget(IsWidget userProfileEditorWidget);
 
-	void setSharedDirectlyWithMeFilterSelected();
+  void setSettingsWidget(Widget w);
 
-	void setFavoritesHelpPanelVisible(boolean isVisible);
+  void setSortDirection(ProjectListSortColumn column, SortDirection direction);
 
-	void setUserProfileEditorWidget(IsWidget userProfileEditorWidget);
+  public interface Presenter {
+    void createProject();
 
-	void setSettingsWidget(Widget w);
+    void createTeam();
 
-	void setDownloadListWidget(IsWidget w);
+    void goTo(Place place);
 
-	void setSortDirection(ProjectListSortColumn column, SortDirection direction);
+    void refreshTeams();
 
-	public interface Presenter {
-		void createProject();
+    void getMoreChallenges();
 
-		void createTeam();
+    void applyFilterClicked(ProjectFilterEnum filterType, Team team);
 
-		void goTo(Place place);
+    void sort(ProjectListSortColumn column);
+  }
 
-		void refreshTeams();
+  void addMyTeamProjectsFilter();
 
-		void tabClicked(ProfileArea areaTab);
+  void addTeamsFilterTeam(Team team);
 
-		void getMoreChallenges();
+  void addOpenInvitesWidget(OpenTeamInvitationsWidget openInvitesWidget);
 
-		void applyFilterClicked(ProjectFilterEnum filterType, Team team);
+  void setProfileSynAlertWidget(Widget profileSynAlert);
 
-		void sort(ProjectListSortColumn column);
-	}
+  void setProjectSynAlertWidget(Widget profileSynAlert);
 
-	void addMyTeamProjectsFilter();
+  void setTeamSynAlertWidget(Widget profileSynAlert);
 
-	void addTeamsFilterTeam(Team team);
+  void setChallengeSynAlertWidget(Widget challengeSynAlert);
 
-	void addOpenInvitesWidget(OpenTeamInvitationsWidget openInvitesWidget);
+  void open(String url);
 
-	void setProfileSynAlertWidget(Widget profileSynAlert);
+  void setLastActivityOnColumnVisible(boolean visible);
 
-	void setProjectSynAlertWidget(Widget profileSynAlert);
-
-	void setTeamSynAlertWidget(Widget profileSynAlert);
-
-	void setChallengeSynAlertWidget(Widget challengeSynAlert);
-
-	void showTabs(boolean isOwner);
-
-	void open(String url);
-
-	void setLastActivityOnColumnVisible(boolean visible);
-
-	void showLoginAlert();
+  void showLoginAlert();
 }

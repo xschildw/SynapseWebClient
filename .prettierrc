@@ -1,0 +1,9 @@
+{
+  "plugins": ["prettier-plugin-java", "@prettier/plugin-xml"],
+  "semi": false,
+  "trailingComma": "all",
+  "singleQuote": true,
+  "printWidth": 80,
+  "arrowParens": "avoid",
+  "xmlWhitespaceSensitivity": "ignore"
+}

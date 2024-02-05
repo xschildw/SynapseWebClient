@@ -1,86 +1,102 @@
 package org.sagebionetworks.web.client.widget.table.v2;
 
+import com.google.gwt.user.client.ui.IsWidget;
 import org.gwtbootstrap3.client.ui.constants.AlertType;
 import org.sagebionetworks.repo.model.entitybundle.v2.EntityBundle;
+import org.sagebionetworks.web.client.jsinterop.DatasetEditorProps;
+import org.sagebionetworks.web.client.jsinterop.QueryWrapperPlotNavProps.OnQueryCallback;
+import org.sagebionetworks.web.client.jsinterop.QueryWrapperPlotNavProps.OnQueryResultBundleCallback;
+import org.sagebionetworks.web.client.jsinterop.QueryWrapperPlotNavProps.OnViewSharingSettingsHandler;
 import org.sagebionetworks.web.client.utils.Callback;
-import com.google.gwt.user.client.ui.IsWidget;
 
 /**
  * Abstraction for a widget of a TableEntity.
- * 
+ *
  * @author John
  *
  */
 public interface TableEntityWidgetView extends IsWidget {
+  /**
+   * Set the presenter.
+   *
+   * @param presenter
+   */
+  void setPresenter(TableEntityWidgetView.Presenter presenter);
 
-	/**
-	 * Configure the view with the table data.
-	 * 
-	 * @param tableId
-	 * @param tableBundel
-	 * @param isEditable
-	 */
-	void configure(EntityBundle bundle, boolean isEditable);
+  /**
+   * Configure the view with the table data.
+   *
+   * @param bundle
+   * @param isEditable
+   */
+  void configure(EntityBundle bundle, boolean isEditable);
 
-	/**
-	 * 
-	 * @param type
-	 * @param message
-	 */
-	public void showTableMessage(AlertType type, String message);
+  /**
+   *
+   * @param type
+   * @param message
+   */
+  public void showTableMessage(AlertType type, String message);
 
-	/**
-	 * Show or hide the table message.
-	 * 
-	 * @param visible
-	 */
-	public void setTableMessageVisible(boolean visible);
+  /**
+   * Show or hide the table message.
+   *
+   * @param visible
+   */
+  public void setTableMessageVisible(boolean visible);
 
-	/**
-	 * Show or hide the query results
-	 * 
-	 * @param visible
-	 */
-	public void setQueryResultsVisible(boolean visible);
+  /**
+   * Add a modal to the page.
+   *
+   * @param w
+   */
 
-	/**
-	 * Set the query results widget.
-	 * 
-	 * @param queryResultsWidget
-	 */
-	public void setQueryResultsWidget(IsWidget queryResultsWidget);
+  public void addModalWidget(IsWidget w);
 
-	/**
-	 * Set the query input widget.
-	 * 
-	 * @param queryInputWidget
-	 */
-	public void setQueryInputWidget(IsWidget queryInputWidget);
+  void setScopeVisible(boolean visible);
 
-	/**
-	 * Show or hide the query input.
-	 * 
-	 * @param b
-	 */
-	public void setQueryInputVisible(boolean visible);
+  boolean isScopeVisible();
 
-	public void setTableToolbarVisible(boolean visible);
+  void setSchemaVisible(boolean visible);
 
-	/**
-	 * Add a modal to the page.
-	 * 
-	 * @param w
-	 */
+  boolean isSchemaVisible();
 
-	public void addModalWidget(IsWidget w);
+  void showErrorMessage(String message);
 
-	void setScopeVisible(boolean visible);
+  void showConfirmDialog(
+    String title,
+    String confirmationMessage,
+    Callback yesCallback
+  );
 
-	void setSchemaVisible(boolean visible);
+  void setAddToDownloadList(IsWidget w);
 
-	void showErrorMessage(String message);
+  void setItemsEditorVisible(boolean visible);
 
-	void showConfirmDialog(String title, String confirmationMessage, Callback yesCallback);
+  interface Presenter {
+    DatasetEditorProps getItemsEditorProps();
 
-	void setAddToDownloadList(IsWidget w);
+    /**
+     * Allows the view to update the state of the collapsible schema panel and keep the copy text in the action menu in sync
+     */
+    void toggleSchemaCollapse();
+
+    /**
+     * Allows the view to update the state of the collapsible scope panel and keep the copy text in the action menu in sync
+     */
+    void toggleScopeCollapse();
+  }
+
+  void configureQueryWrapperPlotNav(
+    String sql,
+    String initQueryJson,
+    OnQueryCallback onQueryBundleRequestChange,
+    OnQueryResultBundleCallback onQueryResultBundleChange,
+    OnViewSharingSettingsHandler onViewSharingSettingsHandler,
+    boolean hideSqlEditorControl
+  );
+
+  void configureTableOnly(String sql);
+
+  void setQueryWrapperPlotNavVisible(boolean visible);
 }

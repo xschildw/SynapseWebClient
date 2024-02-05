@@ -1,47 +1,55 @@
 package org.sagebionetworks.web.client.view;
 
+import com.google.gwt.user.client.ui.IsWidget;
 import java.util.ArrayList;
 import java.util.Date;
 import org.sagebionetworks.repo.model.dataaccess.AccessorGroup;
 import org.sagebionetworks.web.client.SynapseView;
-import com.google.gwt.user.client.ui.IsWidget;
 
 public interface ACTAccessApprovalsView extends IsWidget, SynapseView {
-	void setPresenter(Presenter presenter);
+  void setPresenter(Presenter presenter);
 
-	void setLoadMoreContainer(IsWidget w);
+  void setLoadMoreContainer(IsWidget w);
 
-	void setSynAlert(IsWidget w);
+  void setSynAlert(IsWidget w);
 
-	void setShowHideButton(IsWidget button);
+  void setShowHideButton(IsWidget button);
 
-	void setAccessRequirementWidget(IsWidget w);
+  void setAccessRequirementWidget(IsWidget w);
 
-	void setAccessRequirementUIVisible(boolean visible);
+  void setAccessRequirementUIVisible(boolean visible);
 
-	void setUserPickerWidget(IsWidget w);
+  void setSubmitterPickerWidget(IsWidget w);
 
-	void setSelectedUserBadge(IsWidget w);
+  void setAccessorPickerWidget(IsWidget w);
 
-	void setSelectedUserBadgeVisible(boolean visible);
+  void setSelectedSubmitterUserBadge(IsWidget w);
 
-	void setExpiresBeforeDate(Date date);
+  void setSelectedSubmitterUserBadgeVisible(boolean visible);
 
-	void setClearAccessRequirementFilterButtonVisible(boolean visible);
+  void setSelectedAccessorUserBadge(IsWidget w);
 
-	void resetExportButton();
-	
-	void export(ArrayList<AccessorGroup> exportData);
+  void setSelectedAccessorUserBadgeVisible(boolean visible);
 
-	public interface Presenter {
-		void onClearUserFilter();
+  void setExpiresBeforeDate(Date date);
 
-		void onClearExpireBeforeFilter();
+  void setClearAccessRequirementFilterButtonVisible(boolean visible);
 
-		void onClearAccessRequirementFilter();
+  void resetExportButton();
 
-		void onExpiresBeforeDateSelected(Date selectedDate);
+  void export(ArrayList<AccessorGroup> exportData);
 
-		void onExportData();
-	}
+  public interface Presenter {
+    void onClearSubmitterFilter();
+
+    void onClearAccessorFilter();
+
+    void onClearExpireBeforeFilter();
+
+    void onClearAccessRequirementFilter();
+
+    void onExpiresBeforeDateSelected(Date selectedDate);
+
+    void onExportData();
+  }
 }

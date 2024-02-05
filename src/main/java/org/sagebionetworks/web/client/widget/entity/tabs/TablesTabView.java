@@ -1,40 +1,66 @@
 package org.sagebionetworks.web.client.widget.entity.tabs;
 
+import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.ui.IsWidget;
 import com.google.gwt.user.client.ui.Widget;
 
 public interface TablesTabView extends IsWidget {
-	public interface Presenter {
-	}
+  void setProjectLevelUIVisible(boolean visible);
 
-	void setTitlebar(Widget w);
+  public interface Presenter {}
 
-	void setTitlebarVisible(boolean visible);
+  void setTitle(String title);
 
-	void setBreadcrumb(Widget w);
+  void setDescription(String s);
 
-	void setBreadcrumbVisible(boolean visible);
+  void setHelpLink(String s);
 
-	void setTableList(Widget w);
+  void setTitlebar(Widget w);
 
-	void setTableListVisible(boolean visible);
+  void setTitlebarVisible(boolean visible);
 
-	void setTableEntityWidget(Widget w);
+  void setBreadcrumb(Widget w);
 
-	void clearTableEntityWidget();
+  void setBreadcrumbVisible(boolean visible);
 
-	void setEntityMetadata(Widget w);
+  void setTableList(Widget w);
 
-	void setEntityMetadataVisible(boolean visible);
+  void setTableListVisible(boolean visible);
 
-	void setSynapseAlert(Widget w);
+  void setTableEntityWidget(Widget w);
 
-	void setModifiedCreatedBy(IsWidget modifiedCreatedBy);
+  void clearTableEntityWidget();
 
-	void setProvenance(IsWidget w);
+  void setEntityMetadata(Widget w);
 
-	void setTableUIVisible(boolean visible);
+  void setEntityMetadataVisible(boolean visible);
 
-	void setActionMenu(IsWidget w);
+  void setSynapseAlert(Widget w);
 
+  void setModifiedCreatedBy(IsWidget modifiedCreatedBy);
+
+  void setProvenance(IsWidget w);
+
+  void setTableUIVisible(boolean visible);
+
+  void setActionMenu(IsWidget w);
+
+  void setWikiPage(Widget w);
+
+  void setWikiPageVisible(boolean visible);
+
+  void setVersionAlertVisible(boolean visible);
+
+  void setVersionAlertCopy(String title, String message);
+
+  void setVersionAlertPrimaryText(String text);
+
+  void setVersionAlertPrimaryAction(ClickHandler handler);
+
+  void setVersionAlertSecondaryAction(
+    String text,
+    ClickHandler handler,
+    boolean enabled,
+    String tooltipText
+  );
 }

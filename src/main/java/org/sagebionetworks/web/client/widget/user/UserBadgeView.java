@@ -1,31 +1,38 @@
 package org.sagebionetworks.web.client.widget.user;
 
+import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.user.client.ui.IsWidget;
 import org.sagebionetworks.repo.model.UserProfile;
 import org.sagebionetworks.web.client.SynapseView;
 import org.sagebionetworks.web.client.utils.Callback;
-import com.google.gwt.event.dom.client.ClickHandler;
-import com.google.gwt.user.client.ui.IsWidget;
 
 public interface UserBadgeView extends IsWidget, SynapseView {
-	void configure(UserProfile profile, String pictureURL, Boolean isCertified, Boolean isValidated);
+  void configure(
+    UserProfile profile,
+    String pictureURL,
+    Boolean isCertified,
+    Boolean isValidated
+  );
 
-	void showLoadError(String error);
+  void showLoadError(String error);
 
-	void setSize(BadgeSize size);
+  void setBadgeType(BadgeType badgeType);
 
-	void addStyleName(String styles);
+  void setShowAvatar(boolean showAvatar);
 
-	void setHeight(String height);
+  void setAvatarSize(AvatarSize avatarSize);
 
-	void setCustomClickHandler(ClickHandler clickHandler);
+  void addStyleName(String styles);
 
-	void doNothingOnClick();
+  void setHeight(String height);
 
-	void setTextHidden(boolean isTextHidden);
+  void setCustomClickHandler(ClickHandler clickHandler);
 
-	void setTooltipHidden(boolean isTooltipHidden);
+  void doNothingOnClick();
 
-	void setOpenInNewWindow();
+  void setShowCardOnHover(boolean isTooltipHidden);
 
-	void addContextCommand(String commandName, Callback callback);
+  void setOpenInNewWindow();
+
+  void addContextCommand(String commandName, Callback callback);
 }

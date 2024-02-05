@@ -4,49 +4,52 @@ import com.google.gwt.user.client.ui.IsWidget;
 
 /**
  * View shows the first step of the wizard
- * 
+ *
  * @author Jay
  *
  */
 public interface EntityViewScopeWidgetView extends IsWidget {
+  void setVisible(boolean visible);
 
-	void setVisible(boolean visible);
+  void setEntityListWidget(IsWidget w);
 
-	void setEntityListWidget(IsWidget w);
+  void setEditableEntityListWidget(IsWidget w);
 
-	void setEditableEntityListWidget(IsWidget w);
+  void setSynAlert(IsWidget w);
 
-	void setSynAlert(IsWidget w);
+  void showModal();
 
-	void showModal();
+  void hideModal();
 
-	void hideModal();
+  void setEditMaskAndScopeButtonVisible(boolean visible);
 
-	void setEditButtonVisible(boolean visible);
+  void setEditMaskVisible(boolean visible);
 
-	void setLoading(boolean loading);
+  void setLoading(boolean loading);
 
-	void setViewTypeOptionsVisible(boolean visible);
+  boolean isFileSelected();
 
-	boolean isFileSelected();
+  void setIsFileSelected(boolean selected);
 
-	void setIsFileSelected(boolean selected);
+  boolean isTableSelected();
 
-	boolean isTableSelected();
+  void setIsTableSelected(boolean selected);
 
-	void setIsTableSelected(boolean selected);
+  boolean isFolderSelected();
 
-	boolean isFolderSelected();
+  void setIsFolderSelected(boolean selected);
 
-	void setIsFolderSelected(boolean selected);
+  boolean isDatasetSelected();
 
-	public interface Presenter {
-		void onSave();
+  void setIsDatasetSelected(boolean selected);
 
-		void onEdit();
+  public interface Presenter {
+    void onSave();
 
-		void updateViewTypeMask();
-	}
+    void onEditScopeAndMask();
 
-	void setPresenter(Presenter presenter);
+    void updateViewTypeMask();
+  }
+
+  void setPresenter(Presenter presenter);
 }

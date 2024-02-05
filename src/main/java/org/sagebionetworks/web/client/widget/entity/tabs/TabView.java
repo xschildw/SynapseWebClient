@@ -1,33 +1,50 @@
 package org.sagebionetworks.web.client.widget.entity.tabs;
 
+import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.user.client.ui.IsWidget;
+import com.google.gwt.user.client.ui.Widget;
 import org.gwtbootstrap3.client.ui.TabPane;
 import org.sagebionetworks.web.client.place.Synapse;
-import com.google.gwt.user.client.ui.Widget;
 
-public interface TabView {
-	void setPresenter(Presenter presenter);
+public interface TabView extends IsWidget {
+  void setPresenter(Presenter presenter);
 
-	void updateHref(Synapse place);
+  void updateHref(Synapse place);
 
-	void configure(String tabTitle, String helpMarkdown, String helpLink);
+  void configure(
+    String tabTitle,
+    String iconName,
+    String helpMarkdown,
+    String helpLink
+  );
 
-	void setContent(Widget content);
+  void configureOrientationBanner(
+    String name,
+    String title,
+    String text,
+    String primaryButtonText,
+    ClickHandler primaryButtonClickHandler,
+    String secondaryButtonText,
+    String secondaryButtonHref
+  );
 
-	Widget getTabListItem();
+  void setContent(Widget content);
 
-	void setTabListItemVisible(boolean visible);
+  Widget getTabListItem();
 
-	boolean isTabListItemVisible();
+  void setTabListItemVisible(boolean visible);
 
-	void addTabListItemStyle(String style);
+  boolean isTabListItemVisible();
 
-	TabPane getTabPane();
+  void addTabListItemStyle(String style);
 
-	void setActive(boolean isActive);
+  TabPane getTabPane();
 
-	boolean isActive();
+  void setActive(boolean isActive);
 
-	public interface Presenter {
-		void onTabClicked();
-	}
+  boolean isActive();
+
+  public interface Presenter {
+    void onTabClicked();
+  }
 }

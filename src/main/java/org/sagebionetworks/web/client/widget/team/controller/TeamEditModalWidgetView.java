@@ -1,56 +1,65 @@
 package org.sagebionetworks.web.client.widget.team.controller;
 
+import com.google.gwt.user.client.ui.Widget;
 import org.sagebionetworks.repo.model.Team;
 import org.sagebionetworks.web.client.utils.Callback;
-import com.google.gwt.user.client.ui.Widget;
 
 public interface TeamEditModalWidgetView {
+  public interface Presenter {
+    public Widget asWidget();
 
-	public interface Presenter {
-		public Widget asWidget();
+    void setRefreshCallback(Callback refreshCallback);
 
-		void setRefreshCallback(Callback refreshCallback);
+    void onConfirm();
 
-		void onConfirm();
+    void hide();
 
-		void hide();
+    void onRemovePicture();
+  }
 
-		void onRemovePicture();
-	}
+  public Widget asWidget();
 
-	public Widget asWidget();
+  public void setAlertWidget(Widget asWidget);
 
-	public void setAlertWidget(Widget asWidget);
+  void setPresenter(Presenter presenter);
 
-	void setPresenter(Presenter presenter);
+  String getName();
 
-	String getName();
+  String getDescription();
 
-	String getDescription();
+  void setUploadWidget(Widget uploader);
 
-	boolean getPublicJoin();
+  void setImageURL(String fileHandleId);
 
-	void setUploadWidget(Widget uploader);
+  void setDefaultIconVisible();
 
-	void setImageURL(String fileHandleId);
+  void setAuthenticatedUsersCanSendMessageToTeam(boolean canSendMessage);
 
-	void setDefaultIconVisible();
+  boolean canAuthenticatedUsersSendMessageToTeam();
 
-	void setAuthenticatedUsersCanSendMessageToTeam(boolean canSendMessage);
+  void showInfo(String message);
 
-	boolean canAuthenticatedUsersSendMessageToTeam();
+  void show();
 
-	void showInfo(String message);
+  void hide();
 
-	void show();
+  void showLoading();
 
-	void hide();
+  void hideLoading();
 
-	void showLoading();
+  void clear();
 
-	void hideLoading();
+  void configure(Team team);
 
-	void clear();
+  void setTeamManagerAuthRequiredOptionActive();
 
-	void configure(Team team);
+  void setNoAuthNeededOptionActive();
+
+  void setLockedDownOptionActive();
+
+  boolean getIsTeamManagerAuthRequired();
+
+  boolean getIsNoAuthRequired();
+
+  boolean getIsLockedDown();
 }

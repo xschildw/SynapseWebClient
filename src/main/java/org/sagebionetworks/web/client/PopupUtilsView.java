@@ -1,28 +1,49 @@
 package org.sagebionetworks.web.client;
 
-import org.gwtbootstrap3.client.ui.constants.IconType;
+import org.sagebionetworks.web.client.jsinterop.ToastMessageOptions;
 import org.sagebionetworks.web.client.utils.Callback;
 
+/**
+ * PopupUtilsView is a simple interface on top of DisplayUtils for pushing notifications. The primary benefit of this is
+ * that unlike DisplayUtils static methods, PopupUtilsView can be mocked in environments without a JavaScript engine, e.g. in JUnit tests.
+ */
 public interface PopupUtilsView {
-	void showInfo(String message);
+  void notify(
+    String message,
+    DisplayUtils.NotificationVariant variant,
+    ToastMessageOptions options
+  );
 
-	void showInfo(String message, Integer timeout);
+  void notify(
+    String title,
+    String message,
+    DisplayUtils.NotificationVariant notificationVariant
+  );
 
-	void showError(String message, Integer timeout);
+  void showInfo(String message);
 
-	void showErrorMessage(String message);
+  void showInfo(String message, Integer timeout);
 
-	void showErrorMessage(String title, String message);
+  void showError(String message, Integer timeout);
 
-	void showInfoDialog(String title, String message, Callback okCallback);
+  void showErrorMessage(String message);
 
-	void showConfirmDialog(String title, String message, Callback yesCallback, Callback noCallback);
+  void showErrorMessage(String title, String message);
 
-	void showConfirmDialog(String title, String message, Callback yesCallback);
+  void showInfoDialog(String title, String message, Callback okCallback);
 
-	void openInNewWindow(String url);
+  void showConfirmDialog(
+    String title,
+    String message,
+    Callback yesCallback,
+    Callback noCallback
+  );
 
-	void showConfirmDelete(String message, Callback callback);
+  void showConfirmDialog(String title, String message, Callback yesCallback);
 
-	void showInfo(String message, String href, String buttonText, IconType iconType);
+  void openInNewWindow(String url);
+
+  void showConfirmDelete(String message, Callback callback);
+
+  void showInfo(String message, String href, String buttonText);
 }

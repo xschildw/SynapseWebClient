@@ -12,109 +12,125 @@ import org.sagebionetworks.web.client.DisplayUtils;
 import org.sagebionetworks.web.client.widget.CommaSeparatedValuesParserView;
 import org.sagebionetworks.web.client.widget.entity.controller.SynapseAlertView;
 
-public class EditAnnotationsDialogViewImpl implements EditAnnotationsDialogView {
+public class EditAnnotationsDialogViewImpl
+  implements EditAnnotationsDialogView {
 
-	public interface Binder extends UiBinder<Widget, EditAnnotationsDialogViewImpl> {
-	}
+  public interface Binder
+    extends UiBinder<Widget, EditAnnotationsDialogViewImpl> {}
 
-	@UiField
-	FlowPanel editorsPanel;
-	@UiField
-	Modal editModal;
-	@UiField
-	Button saveButton;
-	@UiField
-	Button cancelButton;
-	@UiField
-	Button addAnnotationButton;
-	@UiField
-	Button pasteNewValuesButton;
-	@UiField
-	FlowPanel pasteNewValuesPanel;
+  @UiField
+  FlowPanel editorsPanel;
 
-	@UiField
-	SynapseAlertView alert;
-	Presenter presenter;
+  @UiField
+  Modal editModal;
 
-	Widget widget;
+  @UiField
+  Button saveButton;
 
-	@Inject
-	public EditAnnotationsDialogViewImpl(final Binder uiBinder) {
-		widget = uiBinder.createAndBindUi(this);
-		saveButton.addClickHandler(event -> {
-			presenter.onSave();
-		});
-		addAnnotationButton.addClickHandler(event -> {
-			presenter.onAddNewAnnotation(null);
-		});
-		pasteNewValuesButton.addClickHandler(clickEvent -> {
-			presenter.onClickPasteNewValues();
-		});
-		saveButton.addDomHandler(DisplayUtils.getPreventTabHandler(saveButton), KeyDownEvent.getType());
-	}
+  @UiField
+  Button cancelButton;
 
-	@Override
-	public void setPresenter(final Presenter presenter) {
-		this.presenter = presenter;
-	}
+  @UiField
+  Button addAnnotationButton;
 
-	@Override
-	public void showEditor() {
-		saveButton.state().reset();
-		alert.clearState();
-		editModal.show();
-	}
+  @UiField
+  Button pasteNewValuesButton;
 
-	@Override
-	public void hideEditor() {
-		editModal.hide();
-	}
+  @UiField
+  FlowPanel pasteNewValuesPanel;
 
-	@Override
-	public void setLoading() {
-		saveButton.state().loading();
-	}
+  @UiField
+  SynapseAlertView alert;
 
-	@Override
-	public void showError(String message) {
-		alert.showError(message);
-		// enable the save button after an error
-		saveButton.state().reset();
-	}
+  Presenter presenter;
 
-	@Override
-	public void hideErrors() {
-		alert.clearState();
-	}
+  Widget widget;
+  String originalButtonText;
 
-	@Override
-	public void addAnnotationEditor(Widget editor) {
-		editorsPanel.add(editor);
-	}
+  @Inject
+  public EditAnnotationsDialogViewImpl(final Binder uiBinder) {
+    widget = uiBinder.createAndBindUi(this);
+    saveButton.addClickHandler(event -> {
+      presenter.onSave();
+    });
+    addAnnotationButton.addClickHandler(event -> {
+      presenter.onAddNewAnnotation(null);
+    });
+    pasteNewValuesButton.addClickHandler(clickEvent -> {
+      presenter.onClickPasteNewValues();
+    });
+    saveButton.addDomHandler(
+      DisplayUtils.getPreventTabHandler(saveButton),
+      KeyDownEvent.getType()
+    );
+    originalButtonText = saveButton.getText();
+  }
 
-	@Override
-	public void removeAnnotationEditor(Widget editor) {
-		editorsPanel.remove(editor);
-	}
+  @Override
+  public void setPresenter(final Presenter presenter) {
+    this.presenter = presenter;
+  }
 
-	@Override
-	public void addCommaSeparatedValuesParser(Widget commaSeparatedValuesParser){
-		pasteNewValuesPanel.add(commaSeparatedValuesParser);
-	}
+  @Override
+  public void showEditor() {
+    setLoading(false);
+    alert.clearState();
+    editModal.show();
+  }
 
-	@Override
-	public Widget asWidget() {
-		return widget;
-	}
+  @Override
+  public void hideEditor() {
+    editModal.hide();
+  }
 
-	@Override
-	public void clearAnnotationEditors() {
-		editorsPanel.clear();
-	}
+  @Override
+  public void setLoading() {
+    setLoading(true);
+  }
 
-	@Override
-	public void showInfo(String message) {
-		DisplayUtils.showInfo(message);
-	}
+  private void setLoading(boolean isLoading) {
+    DisplayUtils.showLoading(saveButton, isLoading, originalButtonText);
+  }
 
+  @Override
+  public void showError(String message) {
+    alert.showError(message);
+    // enable the save button after an error
+    setLoading(false);
+  }
+
+  @Override
+  public void hideErrors() {
+    alert.clearState();
+  }
+
+  @Override
+  public void addAnnotationEditor(Widget editor) {
+    editorsPanel.add(editor);
+  }
+
+  @Override
+  public void removeAnnotationEditor(Widget editor) {
+    editorsPanel.remove(editor);
+  }
+
+  @Override
+  public void addCommaSeparatedValuesParser(Widget commaSeparatedValuesParser) {
+    pasteNewValuesPanel.add(commaSeparatedValuesParser);
+  }
+
+  @Override
+  public Widget asWidget() {
+    return widget;
+  }
+
+  @Override
+  public void clearAnnotationEditors() {
+    editorsPanel.clear();
+  }
+
+  @Override
+  public void showInfo(String message) {
+    DisplayUtils.showInfo(message);
+  }
 }

@@ -3,35 +3,47 @@ package org.sagebionetworks.web.client.widget.entity;
 import com.google.gwt.user.client.ui.IsWidget;
 
 public interface EntityMetadataView extends IsWidget {
+  public interface Presenter {
+    void toggleAnnotationsVisible();
+  }
 
-	public void setDetailedMetadataVisible(boolean visible);
+  public void setPresenter(Presenter presenter);
 
-	void setAnnotationsVisible(boolean visible);
+  public void setDetailedMetadataVisible(boolean visible);
 
-	public interface Presenter {
-	}
+  void setAnnotationsModalVisible(boolean visible);
 
-	void setVersionHistoryWidget(IsWidget fileHistoryWidget);
+  boolean getAnnotationsVisible();
 
-	public void setDoiWidget(IsWidget doiWidget);
+  void setAnnotationsVisible(boolean visible);
 
-	public void setAnnotationsRendererWidget(IsWidget annotationsWidget);
+  void setDescriptionVisible(boolean visible);
 
-	void clear();
+  void setVersionHistoryWidget(IsWidget fileHistoryWidget);
 
-	public void setRestrictionPanelVisible(boolean visible);
+  public void setDoiWidget(IsWidget doiWidget);
 
-	void setRestrictionWidgetV2(IsWidget restrictionWidget);
+  public void setAnnotationsRendererWidget(IsWidget annotationsWidget);
 
-	void setEntityId(String text);
+  void clear();
 
-	void setUploadDestinationPanelVisible(boolean isVisible);
+  public void setRestrictionPanelVisible(boolean visible);
 
-	void setUploadDestinationText(String text);
+  void setRestrictionWidgetV2(IsWidget restrictionWidget);
 
-	void setRestrictionWidgetV2Visible(boolean visible);
+  void setEntityId(String text);
 
-	void setAnnotationsTitleText(String text);
+  void setUploadDestinationPanelVisible(boolean isVisible);
 
-	void setContainerItemCountWidget(IsWidget w);
+  void setUploadDestinationText(String text);
+
+  void setRestrictionWidgetV2Visible(boolean visible);
+
+  void setAnnotationsTitleText(String text);
+
+  void setContainerItemCountWidget(IsWidget w);
+
+  void setDescription(String description);
+
+  void setVersionNumber(Long versionNumber);
 }

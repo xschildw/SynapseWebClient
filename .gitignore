@@ -10,3 +10,28 @@ war/
 extras/
 /.externalToolBuilders/
 /.sass-cache/
+.idea/*
+
+# We use a maven plugin to download node and required modules.
+# Since these are retrieved at build-time, no need to commit.
+node/*
+node_modules/*
+
+# We copy these files to the webapp folder to serve this folder in Eclipse (dev builds only)
+# We don't want to commit them because they are compiled or retrieved at build-time
+src/main/webapp/generated/*
+src/main/webapp/fonts/*
+
+# If using jenv for JDK management
+/.java-version
+
+# Playwright
+/test-results/
+/playwright-report/
+/playwright/.cache/
+/playwright/.auth/
+/blob-report/
+/all-blob-reports/
+
+# dotenv
+.env

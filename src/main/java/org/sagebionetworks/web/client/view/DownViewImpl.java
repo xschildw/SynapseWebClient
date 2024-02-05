@@ -1,63 +1,91 @@
 package org.sagebionetworks.web.client.view;
 
-import org.gwtbootstrap3.client.ui.Heading;
-import org.gwtbootstrap3.client.ui.html.Div;
-import org.gwtbootstrap3.client.ui.html.Text;
-import org.sagebionetworks.web.client.widget.header.Header;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.client.ui.Widget;
 import com.google.inject.Inject;
+import org.sagebionetworks.web.client.context.SynapseReactClientFullContextPropsProvider;
+import org.sagebionetworks.web.client.jsinterop.ErrorPageProps;
+import org.sagebionetworks.web.client.jsinterop.React;
+import org.sagebionetworks.web.client.jsinterop.ReactNode;
+import org.sagebionetworks.web.client.jsinterop.SRC;
+import org.sagebionetworks.web.client.widget.ReactComponentDiv;
+import org.sagebionetworks.web.client.widget.header.Header;
 
 public class DownViewImpl implements DownView {
-	private Header headerWidget;
-	@UiField
-	Heading messageHeading;
-	@UiField
-	Text secondsText;
-	@UiField
-	Div timerUI;
 
-	public interface Binder extends UiBinder<Widget, DownViewImpl> {
-	}
+  public static final String SYNAPSE_DOWN_MAINTENANCE_TITLE =
+    "Sorry, Synapse is down for maintenance.";
+  private Header headerWidget;
+  private SynapseReactClientFullContextPropsProvider propsProvider;
 
-	Widget widget;
+  @UiField
+  ReactComponentDiv srcDownContainer;
 
-	@Inject
-	public DownViewImpl(Binder uiBinder, Header headerWidget) {
-		widget = uiBinder.createAndBindUi(this);
-		this.headerWidget = headerWidget;
-		headerWidget.configure();
-	}
+  String message;
 
-	@Override
-	public void init() {
-		headerWidget.configure();
-		com.google.gwt.user.client.Window.scrollTo(0, 0); // scroll user to top of page
-	}
+  public static enum ErrorPageType {
+    maintenance,
+    noAccess,
+    unavailable,
+  }
 
-	@Override
-	public void setMessage(String message) {
-		messageHeading.setSubText(message);
-	}
+  public interface Binder extends UiBinder<Widget, DownViewImpl> {}
 
-	@Override
-	public void updateTimeToNextRefresh(int seconds) {
-		secondsText.setText(" " + seconds);
-	}
+  Widget widget;
 
-	@Override
-	public Widget asWidget() {
-		return widget;
-	}
+  @Inject
+  public DownViewImpl(
+    Binder uiBinder,
+    Header headerWidget,
+    final SynapseReactClientFullContextPropsProvider propsProvider
+  ) {
+    widget = uiBinder.createAndBindUi(this);
+    this.headerWidget = headerWidget;
+    this.propsProvider = propsProvider;
+    headerWidget.configure();
+    widget.addAttachHandler(event -> {
+      if (event.isAttached()) {
+        renderMaintenancePage();
+      }
+    });
+  }
 
-	@Override
-	public void setTimerVisible(boolean visible) {
-		timerUI.setVisible(visible);
-	}
+  @Override
+  public void init() {
+    headerWidget.configure();
+    com.google.gwt.user.client.Window.scrollTo(0, 0); // scroll user to top of page
+  }
 
-	@Override
-	public boolean isAttached() {
-		return widget.isAttached();
-	}
+  @Override
+  public Widget asWidget() {
+    return widget;
+  }
+
+  @Override
+  public void setMessage(String message) {
+    this.message = message;
+    if (widget.isAttached()) {
+      renderMaintenancePage();
+    }
+  }
+
+  @Override
+  public boolean isAttached() {
+    return widget.isAttached();
+  }
+
+  public void renderMaintenancePage() {
+    ErrorPageProps props = ErrorPageProps.create(
+      ErrorPageType.maintenance.name(),
+      SYNAPSE_DOWN_MAINTENANCE_TITLE,
+      message
+    );
+    ReactNode component = React.createElementWithSynapseContext(
+      SRC.SynapseComponents.ErrorPage,
+      props,
+      propsProvider.getJsInteropContextProps()
+    );
+    srcDownContainer.render(component);
+  }
 }

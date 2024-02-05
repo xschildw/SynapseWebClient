@@ -1,59 +1,44 @@
 package org.sagebionetworks.web.client.widget.entity;
 
-import org.gwtbootstrap3.client.ui.constants.IconType;
-import org.sagebionetworks.repo.model.EntityHeader;
-import org.sagebionetworks.web.client.widget.lazyload.SupportsLazyLoadInterface;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.ui.IsWidget;
+import org.sagebionetworks.repo.model.EntityHeader;
+import org.sagebionetworks.web.client.jsinterop.EntityBadgeIconsProps;
+import org.sagebionetworks.web.client.jsinterop.SynapseReactClientFullContextProviderProps;
+import org.sagebionetworks.web.client.widget.lazyload.SupportsLazyLoadInterface;
 
 public interface EntityBadgeView extends IsWidget, SupportsLazyLoadInterface {
-	void setEntity(EntityHeader header);
+  void setEntity(EntityHeader header);
 
-	void showLoadError(String entityId);
+  void showLoadError(String entityId);
 
-	void setClickHandler(ClickHandler handler);
+  void setClickHandler(ClickHandler handler);
 
-	void setIcon(IconType iconType);
+  void showAddToDownloadList();
 
-	void showAddToDownloadList();
+  void setSize(String s);
 
-	void setAnnotations(String html);
+  void setMd5(String s);
 
-	void setSize(String s);
+  void setIcons(
+    EntityBadgeIconsProps props,
+    SynapseReactClientFullContextProviderProps contextProps
+  );
 
-	void setMd5(String s);
+  void setError(String error);
 
-	void showPublicIcon();
+  void setPresenter(Presenter p);
 
-	void showPrivateIcon();
+  String getFriendlySize(Long contentSize, boolean b);
 
-	void showSharingSetIcon();
+  void setModifiedByUserBadgeClickHandler(ClickHandler handler);
 
-	void showHasWikiIcon();
+  void showMinimalColumnSet();
 
-	void showUnlinkIcon();
+  void clearIcons();
+  void clearEntityInformation();
 
-	void setError(String error);
-
-	void setPresenter(Presenter p);
-
-	String getFriendlySize(Long contentSize, boolean b);
-
-	void setModifiedByUserBadgeClickHandler(ClickHandler handler);
-
-	void showDiscussionThreadIcon();
-
-	void showMinimalColumnSet();
-
-	void setEntityNameWidthPx(int width);
-
-	void clearIcons();
-	void clearEntityInformation();
-
-	public interface Presenter {
-		void onUnlink();
-
-		void onAddToDownloadList();
-	}
-
+  public interface Presenter {
+    void onAddToDownloadList();
+  }
 }

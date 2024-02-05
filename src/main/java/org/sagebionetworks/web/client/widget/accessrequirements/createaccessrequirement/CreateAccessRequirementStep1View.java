@@ -1,45 +1,42 @@
 package org.sagebionetworks.web.client.widget.accessrequirements.createaccessrequirement;
 
 import com.google.gwt.user.client.ui.IsWidget;
+import org.sagebionetworks.web.client.widget.accessrequirements.EntitySubjectsWidget;
 
 /**
  * View shows the first step of the wizard
- * 
+ *
  * @author Jay
  *
  */
 public interface CreateAccessRequirementStep1View extends IsWidget {
+  void setTeamSubjects(IsWidget w);
 
-	void setSubjects(IsWidget w);
+  boolean isManagedACTAccessRequirementType();
 
-	boolean isManagedACTAccessRequirementType();
+  boolean isACTAccessRequirementType();
 
-	boolean isACTAccessRequirementType();
+  boolean isTermsOfUseAccessRequirementType();
 
-	boolean isTermsOfUseAccessRequirementType();
+  void setPresenter(Presenter p);
 
-	void setPresenter(Presenter p);
+  String getTeamIds();
 
-	String getEntityIds();
+  void setTeamIdsString(String ids);
 
-	void setEntityIdsString(String ids);
+  void setAccessRequirementTypeSelectionVisible(boolean visible);
 
-	String getTeamIds();
+  void setName(String name);
+  String getName();
 
-	void setTeamIdsString(String ids);
+  /**
+   * Presenter interface
+   */
+  public interface Presenter {
+    void onAddTeams();
+  }
 
-	void setAccessRequirementTypeSelectionVisible(boolean visible);
+  void setEntitySubjects(IsWidget entitySubjectsWidget);
 
-	void setShortDescription(String description);
-	String getShortDescription();
-	
-	/**
-	 * Presenter interface
-	 */
-	public interface Presenter {
-		void onAddEntities();
-
-		void onAddTeams();
-	}
-
+  void showEntityUI();
 }

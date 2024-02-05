@@ -8,11 +8,17 @@ import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.sagebionetworks.web.client.place.ACTAccessApprovalsPlace.ACCESSOR_ID_PARAM;
 import static org.sagebionetworks.web.client.place.ACTAccessApprovalsPlace.ACCESS_REQUIREMENT_ID_PARAM;
 import static org.sagebionetworks.web.client.place.ACTAccessApprovalsPlace.EXPIRES_BEFORE_PARAM;
 import static org.sagebionetworks.web.client.place.ACTAccessApprovalsPlace.SUBMITTER_ID_PARAM;
 import static org.sagebionetworks.web.client.presenter.ACTAccessApprovalsPresenter.HIDE_AR_TEXT;
 import static org.sagebionetworks.web.client.presenter.ACTAccessApprovalsPresenter.SHOW_AR_TEXT;
+
+import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.place.shared.Place;
+import com.google.gwt.user.client.rpc.AsyncCallback;
+import com.google.gwt.user.client.ui.Widget;
 import java.util.Collections;
 import java.util.Date;
 import org.junit.Before;
@@ -46,193 +52,310 @@ import org.sagebionetworks.web.client.widget.search.UserGroupSuggestion;
 import org.sagebionetworks.web.client.widget.search.UserGroupSuggestionProvider;
 import org.sagebionetworks.web.client.widget.user.UserBadge;
 import org.sagebionetworks.web.test.helper.AsyncMockStubber;
-import com.google.gwt.event.dom.client.ClickHandler;
-import com.google.gwt.place.shared.Place;
-import com.google.gwt.user.client.rpc.AsyncCallback;
-import com.google.gwt.user.client.ui.Widget;
 
 public class ACTAccessApprovalsPresenterTest {
 
-	ACTAccessApprovalsPresenter presenter;
+  ACTAccessApprovalsPresenter presenter;
 
-	@Mock
-	ACTAccessApprovalsPlace mockPlace;
-	@Mock
-	ACTAccessApprovalsView mockView;
-	@Mock
-	SynapseAlert mockSynAlert;
-	@Mock
-	PortalGinInjector mockGinInjector;
-	@Mock
-	LoadMoreWidgetContainer mockLoadMoreContainer;
-	@Mock
-	Button mockShowHideAccessRequirementButton;
-	@Mock
-	DataAccessClientAsync mockDataAccessClient;
-	@Mock
-	SynapseSuggestBox mockPeopleSuggestWidget;
-	@Mock
-	UserGroupSuggestionProvider mockProvider;
-	@Mock
-	UserBadge mockSelectedUserBadge;
-	@Mock
-	AccessRequirementWidget mockAccessRequirementWidget;
-	@Mock
-	GlobalApplicationState mockGlobalAppState;
-	@Mock
-	AccessorGroupResponse mockAccessorGroupResponse;
-	@Captor
-	ArgumentCaptor<ClickHandler> clickHandlerCaptor;
-	@Captor
-	ArgumentCaptor<AccessorGroupRequest> accessorGroupRequestCaptor;
-	@Mock
-	AccessorGroup mockAccessorGroup;
-	@Mock
-	AccessorGroupWidget mockAccessorGroupWidget;
-	@Mock
-	UserGroupSuggestion mockUserGroupSuggestion;
-	@Mock
-	UserGroupHeader mockUserGroupHeader;
-	@Mock
-	PlaceChanger mockPlaceChanger;
-	@Captor
-	ArgumentCaptor<Place> placeCaptor;
+  @Mock
+  ACTAccessApprovalsPlace mockPlace;
 
-	public static final String AR_ID = "765";
-	public static final String SUBMITTER_ID = "88888";
-	public static final String NEXT_PAGE_TOKEN = "9876789876";
-	public static final String USER_ID_SELECTED = "42";
+  @Mock
+  ACTAccessApprovalsView mockView;
 
-	@Before
-	public void setup() {
-		MockitoAnnotations.initMocks(this);
-		presenter = new ACTAccessApprovalsPresenter(mockView, mockSynAlert, mockGinInjector, mockLoadMoreContainer, mockShowHideAccessRequirementButton, mockDataAccessClient, mockPeopleSuggestWidget, mockProvider, mockSelectedUserBadge, mockAccessRequirementWidget, mockGlobalAppState);
-		AsyncMockStubber.callSuccessWith(mockAccessorGroupResponse).when(mockDataAccessClient).listAccessorGroup(any(AccessorGroupRequest.class), any(AsyncCallback.class));
-		when(mockAccessorGroupResponse.getResults()).thenReturn(Collections.singletonList(mockAccessorGroup));
-		when(mockAccessorGroupResponse.getNextPageToken()).thenReturn(NEXT_PAGE_TOKEN);
-		when(mockGinInjector.getAccessorGroupWidget()).thenReturn(mockAccessorGroupWidget);
-		when(mockUserGroupSuggestion.getHeader()).thenReturn(mockUserGroupHeader);
-		when(mockUserGroupHeader.getOwnerId()).thenReturn(USER_ID_SELECTED);
-		when(mockGlobalAppState.getPlaceChanger()).thenReturn(mockPlaceChanger);
-	}
+  @Mock
+  SynapseAlert mockSynAlert;
 
-	@Test
-	public void testConstruction() {
-		verify(mockPeopleSuggestWidget).setSuggestionProvider(mockProvider);
-		verify(mockPeopleSuggestWidget).setTypeFilter(TypeFilter.USERS_ONLY);
-		verify(mockShowHideAccessRequirementButton).addClickHandler(clickHandlerCaptor.capture());
-		verify(mockView).setAccessRequirementUIVisible(false);
-		verify(mockShowHideAccessRequirementButton).setText(SHOW_AR_TEXT);
-		clickHandlerCaptor.getValue().onClick(null);
-		verify(mockView).setAccessRequirementUIVisible(true);
-		verify(mockShowHideAccessRequirementButton).setText(HIDE_AR_TEXT);
-		verify(mockView).setSynAlert(mockSynAlert);
-		verify(mockView).setLoadMoreContainer(mockLoadMoreContainer);
-		verify(mockView).setShowHideButton(mockShowHideAccessRequirementButton);
-		verify(mockView).setAccessRequirementWidget(mockAccessRequirementWidget);
-		verify(mockView).setUserPickerWidget(any(Widget.class));
-		verify(mockView).setSelectedUserBadge(any(Widget.class));
-		verify(mockView).setPresenter(presenter);
-		verify(mockPeopleSuggestWidget).addItemSelectedHandler(any(CallbackP.class));
-		verify(mockLoadMoreContainer).configure(any(Callback.class));
-	}
+  @Mock
+  PortalGinInjector mockGinInjector;
 
-	@Test
-	public void testSetPlace() {
-		Date now = new Date();
-		when(mockPlace.getParam(ACCESS_REQUIREMENT_ID_PARAM)).thenReturn(AR_ID);
-		when(mockPlace.getParam(EXPIRES_BEFORE_PARAM)).thenReturn(Long.toString(now.getTime()));
-		when(mockPlace.getParam(SUBMITTER_ID_PARAM)).thenReturn(SUBMITTER_ID);
+  @Mock
+  LoadMoreWidgetContainer mockLoadMoreContainer;
 
-		presenter.setPlace(mockPlace);
+  @Mock
+  Button mockShowHideAccessRequirementButton;
 
-		verify(mockSynAlert, atLeast(1)).clear();
-		verify(mockView).setExpiresBeforeDate(now);
-		// not requesting access to any subject in particular.
-		RestrictableObjectDescriptor targetSubject = null;
-		verify(mockAccessRequirementWidget).configure(AR_ID, targetSubject);
-		verify(mockDataAccessClient).listAccessorGroup(accessorGroupRequestCaptor.capture(), any(AsyncCallback.class));
-		AccessorGroupRequest request = accessorGroupRequestCaptor.getValue();
-		assertEquals(now, request.getExpireBefore());
-		assertEquals(SUBMITTER_ID, request.getSubmitterId());
-		assertEquals(AR_ID, request.getAccessRequirementId());
-		verify(mockAccessorGroupWidget).configure(mockAccessorGroup);
-		assertEquals(NEXT_PAGE_TOKEN, request.getNextPageToken());
-	}
+  @Mock
+  DataAccessClientAsync mockDataAccessClient;
 
-	@Test
-	public void testClearExpireBefore() {
-		Date now = new Date();
-		when(mockPlace.getParam(EXPIRES_BEFORE_PARAM)).thenReturn(Long.toString(now.getTime()));
-		presenter.setPlace(mockPlace);
-		verify(mockView).setExpiresBeforeDate(now);
-		reset(mockDataAccessClient);
+  @Mock
+  SynapseSuggestBox mockSubmitterSuggestWidget;
 
-		presenter.onClearExpireBeforeFilter();
+  @Mock
+  SynapseSuggestBox mockAccessorSuggestWidget;
 
-		verify(mockView).setExpiresBeforeDate(null);
-		verify(mockPlace).removeParam(EXPIRES_BEFORE_PARAM);
-		verify(mockDataAccessClient).listAccessorGroup(accessorGroupRequestCaptor.capture(), any(AsyncCallback.class));
-		AccessorGroupRequest request = accessorGroupRequestCaptor.getValue();
-		assertNull(request.getExpireBefore());
-	}
+  @Mock
+  UserGroupSuggestionProvider mockProvider;
 
-	@Test
-	public void testClearUserFilter() {
-		when(mockPlace.getParam(SUBMITTER_ID_PARAM)).thenReturn(SUBMITTER_ID);
-		presenter.setPlace(mockPlace);
-		reset(mockDataAccessClient);
+  @Mock
+  UserBadge mockSelectedSubmitterUserBadge;
 
-		presenter.onClearUserFilter();
+  @Mock
+  UserBadge mockSelectedAccessorUserBadge;
 
-		verify(mockView).setSelectedUserBadgeVisible(false);
-		verify(mockPlace).removeParam(SUBMITTER_ID_PARAM);
-		verify(mockDataAccessClient).listAccessorGroup(accessorGroupRequestCaptor.capture(), any(AsyncCallback.class));
-		AccessorGroupRequest request = accessorGroupRequestCaptor.getValue();
-		assertNull(request.getSubmitterId());
-	}
+  @Mock
+  AccessRequirementWidget mockAccessRequirementWidget;
 
-	@Test
-	public void testClearAccessRequirementFilter() {
-		when(mockPlace.getParam(ACCESS_REQUIREMENT_ID_PARAM)).thenReturn(AR_ID);
-		presenter.setPlace(mockPlace);
-		reset(mockDataAccessClient);
+  @Mock
+  GlobalApplicationState mockGlobalAppState;
 
-		presenter.onClearAccessRequirementFilter();
+  @Mock
+  AccessorGroupResponse mockAccessorGroupResponse;
 
-		verify(mockView, times(2)).setAccessRequirementUIVisible(false);
-		verify(mockShowHideAccessRequirementButton).setVisible(false);
-		verify(mockPlace).removeParam(ACCESS_REQUIREMENT_ID_PARAM);
-		verify(mockDataAccessClient).listAccessorGroup(accessorGroupRequestCaptor.capture(), any(AsyncCallback.class));
-		AccessorGroupRequest request = accessorGroupRequestCaptor.getValue();
-		assertNull(request.getAccessRequirementId());
-	}
+  @Captor
+  ArgumentCaptor<ClickHandler> clickHandlerCaptor;
 
-	@Test
-	public void testOnSetExpiresBeforeDateSelected() {
-		presenter.setPlace(mockPlace);
-		reset(mockDataAccessClient);
-		Date now = new Date();
+  @Captor
+  ArgumentCaptor<AccessorGroupRequest> accessorGroupRequestCaptor;
 
-		presenter.onExpiresBeforeDateSelected(now);
+  @Mock
+  AccessorGroup mockAccessorGroup;
 
-		verify(mockDataAccessClient).listAccessorGroup(accessorGroupRequestCaptor.capture(), any(AsyncCallback.class));
-		AccessorGroupRequest request = accessorGroupRequestCaptor.getValue();
-		assertEquals(now, request.getExpireBefore());
-		verify(mockPlace).putParam(EXPIRES_BEFORE_PARAM, Long.toString(now.getTime()));
-	}
+  @Mock
+  AccessorGroupWidget mockAccessorGroupWidget;
 
-	@Test
-	public void testOnUserSelected() {
-		presenter.setPlace(mockPlace);
-		reset(mockDataAccessClient);
+  @Mock
+  UserGroupSuggestion mockUserGroupSuggestion;
 
-		presenter.onUserSelected(mockUserGroupSuggestion);
+  @Mock
+  UserGroupHeader mockUserGroupHeader;
 
-		verify(mockPlace).putParam(SUBMITTER_ID_PARAM, USER_ID_SELECTED);
-		verify(mockSelectedUserBadge).configure(USER_ID_SELECTED);
-		verify(mockDataAccessClient).listAccessorGroup(accessorGroupRequestCaptor.capture(), any(AsyncCallback.class));
-		AccessorGroupRequest request = accessorGroupRequestCaptor.getValue();
-		assertEquals(USER_ID_SELECTED, request.getSubmitterId());
-	}
+  @Mock
+  PlaceChanger mockPlaceChanger;
+
+  @Captor
+  ArgumentCaptor<Place> placeCaptor;
+
+  public static final String AR_ID = "765";
+  public static final String SUBMITTER_ID = "88888";
+  public static final String ACCESSOR_ID = "999999999";
+  public static final String NEXT_PAGE_TOKEN = "9876789876";
+  public static final String USER_ID_SELECTED = "42";
+
+  @Before
+  public void setup() {
+    MockitoAnnotations.initMocks(this);
+    presenter =
+      new ACTAccessApprovalsPresenter(
+        mockView,
+        mockSynAlert,
+        mockGinInjector,
+        mockLoadMoreContainer,
+        mockShowHideAccessRequirementButton,
+        mockDataAccessClient,
+        mockAccessorSuggestWidget,
+        mockSubmitterSuggestWidget,
+        mockProvider,
+        mockSelectedSubmitterUserBadge,
+        mockSelectedAccessorUserBadge,
+        mockAccessRequirementWidget,
+        mockGlobalAppState
+      );
+    AsyncMockStubber
+      .callSuccessWith(mockAccessorGroupResponse)
+      .when(mockDataAccessClient)
+      .listAccessorGroup(
+        any(AccessorGroupRequest.class),
+        any(AsyncCallback.class)
+      );
+    when(mockAccessorGroupResponse.getResults())
+      .thenReturn(Collections.singletonList(mockAccessorGroup));
+    when(mockAccessorGroupResponse.getNextPageToken())
+      .thenReturn(NEXT_PAGE_TOKEN);
+    when(mockGinInjector.getAccessorGroupWidget())
+      .thenReturn(mockAccessorGroupWidget);
+    when(mockUserGroupSuggestion.getHeader()).thenReturn(mockUserGroupHeader);
+    when(mockUserGroupHeader.getOwnerId()).thenReturn(USER_ID_SELECTED);
+    when(mockGlobalAppState.getPlaceChanger()).thenReturn(mockPlaceChanger);
+  }
+
+  @Test
+  public void testConstruction() {
+    verify(mockSubmitterSuggestWidget).setSuggestionProvider(mockProvider);
+    verify(mockSubmitterSuggestWidget).setTypeFilter(TypeFilter.USERS_ONLY);
+    verify(mockAccessorSuggestWidget).setSuggestionProvider(mockProvider);
+    verify(mockAccessorSuggestWidget).setTypeFilter(TypeFilter.USERS_ONLY);
+    verify(mockShowHideAccessRequirementButton)
+      .addClickHandler(clickHandlerCaptor.capture());
+    verify(mockView).setAccessRequirementUIVisible(false);
+    verify(mockShowHideAccessRequirementButton).setText(SHOW_AR_TEXT);
+    clickHandlerCaptor.getValue().onClick(null);
+    verify(mockView).setAccessRequirementUIVisible(true);
+    verify(mockShowHideAccessRequirementButton).setText(HIDE_AR_TEXT);
+    verify(mockView).setSynAlert(mockSynAlert);
+    verify(mockView).setLoadMoreContainer(mockLoadMoreContainer);
+    verify(mockView).setShowHideButton(mockShowHideAccessRequirementButton);
+    verify(mockView).setAccessRequirementWidget(mockAccessRequirementWidget);
+    verify(mockView).setSubmitterPickerWidget(any(Widget.class));
+    verify(mockView).setSelectedSubmitterUserBadge(any(Widget.class));
+    verify(mockView).setAccessorPickerWidget(any(Widget.class));
+    verify(mockView).setSelectedAccessorUserBadge(any(Widget.class));
+    verify(mockView).setPresenter(presenter);
+    verify(mockSubmitterSuggestWidget)
+      .addItemSelectedHandler(any(CallbackP.class));
+    verify(mockLoadMoreContainer).configure(any(Callback.class));
+  }
+
+  @Test
+  public void testSetPlace() {
+    Date now = new Date();
+    when(mockPlace.getParam(ACCESS_REQUIREMENT_ID_PARAM)).thenReturn(AR_ID);
+    when(mockPlace.getParam(EXPIRES_BEFORE_PARAM))
+      .thenReturn(Long.toString(now.getTime()));
+    when(mockPlace.getParam(SUBMITTER_ID_PARAM)).thenReturn(SUBMITTER_ID);
+
+    presenter.setPlace(mockPlace);
+
+    verify(mockSynAlert, atLeast(1)).clear();
+    verify(mockView).setExpiresBeforeDate(now);
+    // not requesting access to any subject in particular.
+    RestrictableObjectDescriptor targetSubject = null;
+    verify(mockAccessRequirementWidget).configure(AR_ID, targetSubject);
+    verify(mockDataAccessClient)
+      .listAccessorGroup(
+        accessorGroupRequestCaptor.capture(),
+        any(AsyncCallback.class)
+      );
+    AccessorGroupRequest request = accessorGroupRequestCaptor.getValue();
+    assertEquals(now, request.getExpireBefore());
+    assertEquals(SUBMITTER_ID, request.getSubmitterId());
+    assertEquals(AR_ID, request.getAccessRequirementId());
+    verify(mockAccessorGroupWidget).configure(mockAccessorGroup);
+    assertEquals(NEXT_PAGE_TOKEN, request.getNextPageToken());
+  }
+
+  @Test
+  public void testClearExpireBefore() {
+    Date now = new Date();
+    when(mockPlace.getParam(EXPIRES_BEFORE_PARAM))
+      .thenReturn(Long.toString(now.getTime()));
+    presenter.setPlace(mockPlace);
+    verify(mockView).setExpiresBeforeDate(now);
+    reset(mockDataAccessClient);
+
+    presenter.onClearExpireBeforeFilter();
+
+    verify(mockView).setExpiresBeforeDate(null);
+    verify(mockPlace).removeParam(EXPIRES_BEFORE_PARAM);
+    verify(mockDataAccessClient)
+      .listAccessorGroup(
+        accessorGroupRequestCaptor.capture(),
+        any(AsyncCallback.class)
+      );
+    AccessorGroupRequest request = accessorGroupRequestCaptor.getValue();
+    assertNull(request.getExpireBefore());
+  }
+
+  @Test
+  public void testClearSubmitterFilter() {
+    when(mockPlace.getParam(SUBMITTER_ID_PARAM)).thenReturn(SUBMITTER_ID);
+    presenter.setPlace(mockPlace);
+    reset(mockDataAccessClient);
+
+    presenter.onClearSubmitterFilter();
+
+    verify(mockView).setSelectedSubmitterUserBadgeVisible(false);
+    verify(mockPlace).removeParam(SUBMITTER_ID_PARAM);
+    verify(mockDataAccessClient)
+      .listAccessorGroup(
+        accessorGroupRequestCaptor.capture(),
+        any(AsyncCallback.class)
+      );
+    AccessorGroupRequest request = accessorGroupRequestCaptor.getValue();
+    assertNull(request.getSubmitterId());
+  }
+
+  @Test
+  public void testClearAccessorFilter() {
+    when(mockPlace.getParam(ACCESSOR_ID_PARAM)).thenReturn(ACCESSOR_ID);
+    presenter.setPlace(mockPlace);
+    reset(mockDataAccessClient);
+
+    presenter.onClearAccessorFilter();
+
+    verify(mockView).setSelectedAccessorUserBadgeVisible(false);
+    verify(mockPlace).removeParam(ACCESSOR_ID_PARAM);
+    verify(mockDataAccessClient)
+      .listAccessorGroup(
+        accessorGroupRequestCaptor.capture(),
+        any(AsyncCallback.class)
+      );
+    AccessorGroupRequest request = accessorGroupRequestCaptor.getValue();
+    assertNull(request.getAccessorId());
+  }
+
+  @Test
+  public void testClearAccessRequirementFilter() {
+    when(mockPlace.getParam(ACCESS_REQUIREMENT_ID_PARAM)).thenReturn(AR_ID);
+    presenter.setPlace(mockPlace);
+    reset(mockDataAccessClient);
+
+    presenter.onClearAccessRequirementFilter();
+
+    verify(mockView, times(2)).setAccessRequirementUIVisible(false);
+    verify(mockShowHideAccessRequirementButton).setVisible(false);
+    verify(mockPlace).removeParam(ACCESS_REQUIREMENT_ID_PARAM);
+    verify(mockDataAccessClient)
+      .listAccessorGroup(
+        accessorGroupRequestCaptor.capture(),
+        any(AsyncCallback.class)
+      );
+    AccessorGroupRequest request = accessorGroupRequestCaptor.getValue();
+    assertNull(request.getAccessRequirementId());
+  }
+
+  @Test
+  public void testOnSetExpiresBeforeDateSelected() {
+    presenter.setPlace(mockPlace);
+    reset(mockDataAccessClient);
+    Date now = new Date();
+
+    presenter.onExpiresBeforeDateSelected(now);
+
+    verify(mockDataAccessClient)
+      .listAccessorGroup(
+        accessorGroupRequestCaptor.capture(),
+        any(AsyncCallback.class)
+      );
+    AccessorGroupRequest request = accessorGroupRequestCaptor.getValue();
+    assertEquals(now, request.getExpireBefore());
+    verify(mockPlace)
+      .putParam(EXPIRES_BEFORE_PARAM, Long.toString(now.getTime()));
+  }
+
+  @Test
+  public void testOnSubmitterSelected() {
+    presenter.setPlace(mockPlace);
+    reset(mockDataAccessClient);
+
+    presenter.onSubmitterSelected(mockUserGroupSuggestion);
+
+    verify(mockPlace).putParam(SUBMITTER_ID_PARAM, USER_ID_SELECTED);
+    verify(mockSelectedSubmitterUserBadge).configure(USER_ID_SELECTED);
+    verify(mockDataAccessClient)
+      .listAccessorGroup(
+        accessorGroupRequestCaptor.capture(),
+        any(AsyncCallback.class)
+      );
+    AccessorGroupRequest request = accessorGroupRequestCaptor.getValue();
+    assertEquals(USER_ID_SELECTED, request.getSubmitterId());
+  }
+
+  @Test
+  public void testOnAccessorSelected() {
+    presenter.setPlace(mockPlace);
+    reset(mockDataAccessClient);
+
+    presenter.onAccessorSelected(mockUserGroupSuggestion);
+
+    verify(mockPlace).putParam(ACCESSOR_ID_PARAM, USER_ID_SELECTED);
+    verify(mockSelectedAccessorUserBadge).configure(USER_ID_SELECTED);
+    verify(mockDataAccessClient)
+      .listAccessorGroup(
+        accessorGroupRequestCaptor.capture(),
+        any(AsyncCallback.class)
+      );
+    AccessorGroupRequest request = accessorGroupRequestCaptor.getValue();
+    assertEquals(USER_ID_SELECTED, request.getAccessorId());
+  }
 }

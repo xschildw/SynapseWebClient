@@ -1,10 +1,5 @@
 package org.sagebionetworks.web.client.widget.entity.controller;
 
-import org.gwtbootstrap3.client.ui.Alert;
-import org.gwtbootstrap3.client.ui.Button;
-import org.gwtbootstrap3.client.ui.html.Div;
-import org.gwtbootstrap3.client.ui.html.Span;
-import org.gwtbootstrap3.client.ui.html.Strong;
 import com.google.gwt.core.shared.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -12,92 +7,84 @@ import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Widget;
+import org.gwtbootstrap3.client.ui.html.Div;
+import org.gwtbootstrap3.client.ui.html.Span;
+import org.sagebionetworks.web.client.widget.FullWidthAlert;
 
 public class SynapseAlertViewImpl implements SynapseAlertView {
 
-	public interface Binder extends UiBinder<Widget, SynapseAlertViewImpl> {
-	}
+  public interface Binder extends UiBinder<Widget, SynapseAlertViewImpl> {}
 
-	private static Binder uiBinder = GWT.create(Binder.class);
+  private static Binder uiBinder = GWT.create(Binder.class);
 
-	Widget widget = null;
+  Widget widget = null;
 
-	@UiField
-	Button reloadButton;
+  @UiField
+  FullWidthAlert alert;
 
-	@UiField
-	Strong alertText;
-	@UiField
-	Alert alert;
-	@UiField
-	Div loginAlert;
-	@UiField
-	Div loginWidgetContainer;
+  @UiField
+  Div loginWidgetContainer;
 
-	Span synapseAlertContainer = new Span();
+  Span synapseAlertContainer = new Span();
 
-	public SynapseAlertViewImpl() {}
+  public SynapseAlertViewImpl() {}
 
-	private void lazyConstruct() {
-		if (widget == null) {
-			synapseAlertContainer.setVisible(false);
-			widget = uiBinder.createAndBindUi(this);
-			synapseAlertContainer.add(widget);
-			reloadButton.addClickHandler(new ClickHandler() {
-				@Override
-				public void onClick(ClickEvent event) {
-					reload();
-				}
-			});
-			clearState();
-		}
-	}
+  private void lazyConstruct() {
+    if (widget == null) {
+      synapseAlertContainer.setVisible(false);
+      widget = uiBinder.createAndBindUi(this);
+      synapseAlertContainer.add(widget);
+      alert.addPrimaryCTAClickHandler(
+        new ClickHandler() {
+          @Override
+          public void onClick(ClickEvent event) {
+            reload();
+          }
+        }
+      );
 
-	@Override
-	public void setRetryButtonVisible(boolean visible) {
-		lazyConstruct();
-		reloadButton.setVisible(visible);
-	}
+      clearState();
+    }
+  }
 
-	@Override
-	public Widget asWidget() {
-		return synapseAlertContainer;
-	}
+  @Override
+  public void setRetryButtonVisible(boolean visible) {
+    lazyConstruct();
+    alert.setPrimaryCTAText(visible ? "Retry" : null);
+  }
 
-	@Override
-	public void clearState() {
-		if (widget != null) {
-			alert.setVisible(false);
-			alertText.setText("");
-			loginAlert.setVisible(false);
-			reloadButton.setVisible(false);
-		}
-	}
+  @Override
+  public Widget asWidget() {
+    return synapseAlertContainer;
+  }
 
-	@Override
-	public void showLogin() {
-		lazyConstruct();
-		synapseAlertContainer.setVisible(true);
-		loginAlert.setVisible(true);
-	}
+  @Override
+  public void clearState() {
+    if (widget != null) {
+      alert.setVisible(false);
+      alert.setMessage("");
+      loginWidgetContainer.setVisible(false);
+      alert.setPrimaryCTAText(null);
+    }
+  }
 
-	@Override
-	public void showError(String error) {
-		lazyConstruct();
-		synapseAlertContainer.setVisible(true);
-		alertText.setText(error);
-		alert.setVisible(true);
-	}
+  @Override
+  public void showLogin() {
+    lazyConstruct();
+    synapseAlertContainer.setVisible(true);
+    loginWidgetContainer.setVisible(true);
+  }
 
-	@Override
-	public void setLoginWidget(Widget w) {
-		lazyConstruct();
-		loginWidgetContainer.clear();
-		loginWidgetContainer.add(w);
-	}
+  @Override
+  public void showError(String error) {
+    lazyConstruct();
+    synapseAlertContainer.setVisible(true);
+    alert.setMessage(error);
+    alert.setVisible(true);
+  }
 
-	@Override
-	public void reload() {
-		Window.Location.reload();
-	}
+  @Override
+  public void reload() {
+    Window.Location.reload();
+  }
 }

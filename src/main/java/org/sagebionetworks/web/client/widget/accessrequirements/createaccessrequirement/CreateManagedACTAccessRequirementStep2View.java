@@ -4,55 +4,59 @@ import com.google.gwt.user.client.ui.IsWidget;
 
 /**
  * View shows the second step of the wizard for ACT AR
- * 
+ *
  * @author Jay
  *
  */
 public interface CreateManagedACTAccessRequirementStep2View extends IsWidget {
-	void setAreOtherAttachmentsRequired(boolean value);
+  void setAreOtherAttachmentsRequired(boolean value);
 
-	void setExpirationPeriod(String days);
+  void setExpirationPeriod(String days);
 
-	void setIsCertifiedUserRequired(boolean value);
+  void setIsCertifiedUserRequired(boolean value);
 
-	void setIsDUCRequired(boolean value);
+  void setIsDUCRequired(boolean value);
 
-	void setIsIDUPublic(boolean value);
+  void setIsIDUPublic(boolean value);
 
-	void setIsIRBApprovalRequired(boolean value);
+  void setIsIRBApprovalRequired(boolean value);
 
-	void setIsValidatedProfileRequired(boolean value);
+  void setIsValidatedProfileRequired(boolean value);
 
-	boolean areOtherAttachmentsRequired();
+  void setIsTwoFactorAuthRequired(boolean value);
 
-	String getExpirationPeriod();
+  boolean areOtherAttachmentsRequired();
 
-	boolean isCertifiedUserRequired();
+  String getExpirationPeriod();
 
-	boolean isDUCRequired();
+  boolean isCertifiedUserRequired();
 
-	boolean isIDUPublic();
+  boolean isDUCRequired();
 
-	boolean isIRBApprovalRequired();
+  boolean isIDUPublic();
 
-	boolean isValidatedProfileRequired();
+  boolean isIRBApprovalRequired();
 
-	void setWikiPageRenderer(IsWidget w);
+  boolean isValidatedProfileRequired();
 
-	void setDUCTemplateUploadWidget(IsWidget w);
+  boolean isTwoFactorAuthRequired();
 
-	void setDUCTemplateWidget(IsWidget w);
+  void setWikiPageRenderer(IsWidget w);
 
-	void setIsIDURequired(boolean value);
+  void setDUCTemplateUploadWidget(IsWidget w);
 
-	boolean isIDURequired();
+  void setDUCTemplateWidget(IsWidget w);
 
-	public void setPresenter(Presenter p);
-	/*
-	 * Presenter interface
-	 */
-	public interface Presenter {
-		void onEditWiki();
-	}
+  void setIsIDURequired(boolean value);
 
+  boolean isIDURequired();
+
+  public void setPresenter(Presenter p);
+
+  /*
+   * Presenter interface
+   */
+  public interface Presenter {
+    void onEditWiki();
+  }
 }

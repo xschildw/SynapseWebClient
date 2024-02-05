@@ -1,14 +1,17 @@
 package org.sagebionetworks.web.client;
 
+import com.google.gwt.user.client.Event.NativePreviewHandler;
 
 public interface GlobalApplicationStateView {
-	void showVersionOutOfDateGlobalMessage();
+  void showVersionOutOfDateGlobalMessage();
 
-	void initGlobalViewProperties();
+  void initGlobalViewProperties();
 
-	void showGetVersionError(String error);
+  void showGetVersionError(String error);
 
-	void back();
+  void back();
 
-	void initSRCEndpoints(String repoEndpoint, String portalEndpoint);
+  void initSRCEndpoints(String repoEndpoint, String portalEndpoint);
+
+  void addNativePreviewHandler(NativePreviewHandler handler);
 }

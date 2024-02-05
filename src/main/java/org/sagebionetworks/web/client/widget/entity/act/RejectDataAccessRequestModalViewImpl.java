@@ -1,158 +1,160 @@
 package org.sagebionetworks.web.client.widget.entity.act;
 
-import org.gwtbootstrap3.client.ui.Alert;
-import org.gwtbootstrap3.client.ui.Button;
-import org.gwtbootstrap3.client.ui.CheckBox;
-import org.gwtbootstrap3.client.ui.Modal;
-import org.gwtbootstrap3.client.ui.TextArea;
-import org.sagebionetworks.web.client.DisplayUtils;
 import com.google.gwt.event.dom.client.KeyDownEvent;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.client.ui.Widget;
 import com.google.inject.Inject;
+import java.util.ArrayList;
+import org.gwtbootstrap3.client.ui.Alert;
+import org.gwtbootstrap3.client.ui.Button;
+import org.gwtbootstrap3.client.ui.CheckBox;
+import org.gwtbootstrap3.client.ui.Modal;
+import org.gwtbootstrap3.client.ui.TextArea;
+import org.gwtbootstrap3.client.ui.html.Div;
+import org.sagebionetworks.web.client.DisplayUtils;
 
-public class RejectDataAccessRequestModalViewImpl implements RejectDataAccessRequestModalView {
+public class RejectDataAccessRequestModalViewImpl
+  implements RejectDataAccessRequestModalView {
 
-	public interface Binder extends UiBinder<Modal, RejectDataAccessRequestModalViewImpl> {
-	}
+  public interface Binder
+    extends UiBinder<Modal, RejectDataAccessRequestModalViewImpl> {}
 
-	@UiField
-	Modal modal;
+  @UiField
+  Modal modal;
 
-	// Generated Response Preview
-	@UiField
-	TextArea responseField;
+  // Generated Response Preview
+  @UiField
+  TextArea responseField;
 
-	// Checkboxes
-	@UiField
-	CheckBox fillInPrincipalInvestigatorOption;
-	@UiField
-	CheckBox wrongDucOption;
-	@UiField
-	CheckBox everyPageDucOption;
-	@UiField
-	CheckBox executeDucOption;
-	@UiField
-	CheckBox notOwnSigningOfficialOption;
-	@UiField
-	CheckBox requestorsMismatchSignedOption;
-	@UiField
-	CheckBox projectLeadMissingOption;
-	@UiField
-	CheckBox institutionNameMissingOption;
-	@UiField
-	CheckBox missingBasicInfoOption;
-	@UiField
-	CheckBox missingApprovalLetterOption;
-	@UiField
-	CheckBox customTextOption;
+  // Checkboxes
+  @UiField
+  Div reasonsContainer;
 
-	// Generate response button
-	@UiField
-	Button generateButton;
+  @UiField
+  CheckBox customTextOption;
 
-	// Text Box for custom checkbox
-	@UiField
-	TextArea customText;
+  // Generate response button
+  @UiField
+  Button generateButton;
 
-	// alert if no responses submitted
-	@UiField
-	Alert alert;
+  // Text Box for custom checkbox
+  @UiField
+  TextArea customText;
 
-	// Cancel and Submit Buttons
-	@UiField
-	Button primaryButton;
-	@UiField
-	Button defaultButton;
+  // alert if no responses submitted
+  @UiField
+  Alert alert;
 
-	Widget widget;
+  // Cancel and Submit Buttons
+  @UiField
+  Button primaryButton;
 
-	// Presenter
-	Presenter presenter;
-	
-	@Inject
-	public RejectDataAccessRequestModalViewImpl(Binder binder) {
-		widget = binder.createAndBindUi(this);
+  @UiField
+  Button defaultButton;
 
-		defaultButton.addClickHandler(event -> modal.hide());
-		primaryButton.addClickHandler(event -> presenter.onSave());
-		primaryButton.addDomHandler(DisplayUtils.getPreventTabHandler(primaryButton), KeyDownEvent.getType());
+  Widget widget;
 
-		generateButton.addClickHandler(event -> presenter.updateResponse());
-		customTextOption.addClickHandler(event -> customText.setVisible(customTextOption.getValue()));
-	}
+  ArrayList<CheckBox> checkboxes = new ArrayList<>();
 
-	public void setPresenter(Presenter presenter) {
-		this.presenter = presenter;
-	}
+  // Presenter
+  Presenter presenter;
 
-	private CheckBox[] getCheckBoxes() {
-		return new CheckBox[] {wrongDucOption, everyPageDucOption, executeDucOption, notOwnSigningOfficialOption, requestorsMismatchSignedOption, projectLeadMissingOption, fillInPrincipalInvestigatorOption, institutionNameMissingOption, missingBasicInfoOption, missingApprovalLetterOption};
-	}
-	public void setValue(String value) {
-		responseField.setText(value);
-	}
+  @Inject
+  public RejectDataAccessRequestModalViewImpl(Binder binder) {
+    widget = binder.createAndBindUi(this);
 
-	@Override
-	public Widget asWidget() {
-		return widget;
-	}
+    defaultButton.addClickHandler(event -> modal.hide());
+    primaryButton.addClickHandler(event -> presenter.onSave());
+    primaryButton.addDomHandler(
+      DisplayUtils.getPreventTabHandler(primaryButton),
+      KeyDownEvent.getType()
+    );
 
-	@Override
-	public String getValue() {
-		return responseField.getText();
-	}
+    generateButton.addClickHandler(event -> presenter.updateResponse());
+    customTextOption.addClickHandler(event ->
+      customText.setVisible(customTextOption.getValue())
+    );
+  }
 
-	@Override
-	public void showError(String error) {
-		alert.setVisible(true);
-		alert.setText(error);
-	}
+  public void setPresenter(Presenter presenter) {
+    this.presenter = presenter;
+  }
 
-	@Override
-	public void hide() {
-		modal.hide();
-	}
+  @Override
+  public void clearReasons() {
+    reasonsContainer.clear();
+    checkboxes = new ArrayList<CheckBox>();
+  }
 
-	@Override
-	public void show() {
-		modal.show();
-		responseField.setFocus(true);
-	}
+  @Override
+  public void addReason(String reason) {
+    CheckBox cb = new CheckBox(reason);
+    cb.addStyleName("margin-top-20");
+    checkboxes.add(cb);
+    reasonsContainer.add(cb);
+  }
 
-	@Override
-	public void clear() {
-		this.clearError();
-		this.primaryButton.state().reset();
-		this.defaultButton.state().reset();
-		this.defaultButton.state().reset();
-		this.customText.clear();
-		this.responseField.clear();
-		for (CheckBox cb : getCheckBoxes()) {
-			cb.setValue(false);
-		}
-		this.customTextOption.setValue(false);
-		this.customText.setVisible(false);
-	}
+  public void setValue(String value) {
+    responseField.setText(value);
+  }
 
-	@Override
-	public void clearError() {
-		this.alert.setVisible(false);
-	}
+  @Override
+  public Widget asWidget() {
+    return widget;
+  }
 
-	@Override
-	public String getSelectedCheckboxText() {
-		String output = "";
-		for (CheckBox checkBox : getCheckBoxes()) {
-			if (checkBox.getValue()) {
-				output += "\n" + checkBox.getText() + "\n";
-			}
-		}
-		if (customTextOption.getValue()) {
-			output += "\n" + customText.getText() + "\n";
-		}
+  @Override
+  public String getValue() {
+    return responseField.getText();
+  }
 
-		return output;
-	}
+  @Override
+  public void showError(String error) {
+    alert.setVisible(true);
+    alert.setText(error);
+  }
+
+  @Override
+  public void hide() {
+    modal.hide();
+  }
+
+  @Override
+  public void show() {
+    modal.show();
+    responseField.setFocus(true);
+  }
+
+  @Override
+  public void clear() {
+    this.clearError();
+    this.customText.clear();
+    this.responseField.clear();
+    for (CheckBox cb : checkboxes) {
+      cb.setValue(false);
+    }
+    this.customTextOption.setValue(false);
+    this.customText.setVisible(false);
+  }
+
+  @Override
+  public void clearError() {
+    this.alert.setVisible(false);
+  }
+
+  @Override
+  public String getSelectedCheckboxText() {
+    String output = "";
+    for (CheckBox checkBox : checkboxes) {
+      if (checkBox.getValue()) {
+        output += "\n" + checkBox.getText() + "\n";
+      }
+    }
+    if (customTextOption.getValue()) {
+      output += "\n" + customText.getText() + "\n";
+    }
+
+    return output;
+  }
 }

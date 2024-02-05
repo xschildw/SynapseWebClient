@@ -1,0 +1,210 @@
+name: 'Build/Run End-to-End Tests'
+
+on: push
+env:
+  BUILD_ARTIFACT_NAME: swc-war
+  BUILD_DIR: target
+  BUILD_NAME: portal-develop-SNAPSHOT.war
+  NODE_VERSION: 18.16.0
+  PW_ALL_BLOBS_DIR: all-blob-reports
+jobs:
+  lint-e2e:
+    # Run in Sage repo on develop or release- branches
+    # and on all branches in user-owned forks
+    if: ${{ github.ref_name == 'develop' || startsWith(github.ref_name, 'release-') || github.actor == github.repository_owner }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+      - name: Lint E2E tests
+        run: yarn e2e:lint
+  build:
+    # Run in Sage repo on develop or release- branches
+    # and on all branches in user-owned forks
+    if: ${{ github.ref_name == 'develop' || startsWith(github.ref_name, 'release-') || github.actor == github.repository_owner }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build SWC
+        uses: ./.github/workflows/build
+      - name: Upload build to GitHub Actions Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ env.BUILD_ARTIFACT_NAME }}
+          path: '${{ env.BUILD_DIR }}/${{ env.BUILD_NAME }}'
+          retention-days: 1
+  playwright-tests:
+    needs: [build]
+    runs-on: 'macos-latest'
+    timeout-minutes: 60
+    # Ensure that at most one playwright-tests job will run at a time in Sage-Bionetworks repo,
+    # but allow multiple playwright-test jobs to run concurrently in forked repos
+    # Per https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#concurrency
+    #  "When a concurrent job or workflow is queued, if another job or workflow
+    #   using the same concurrency group in the repository is in progress,
+    #   the queued job or workflow will be pending. Any previously pending job or
+    #   workflow in the concurrency group will be cancelled."
+    # Related discussion here: https://github.com/orgs/community/discussions/5435
+    concurrency:
+      group: ${{ github.repository_owner == 'Sage-Bionetworks' && format('${0}-${1}', github.workflow, '-playwright-tests') || format('${0}-${1}', github.run_id, matrix.shard ) }}
+    strategy:
+      max-parallel: ${{ github.repository_owner == 'Sage-Bionetworks' && 1 || 3 }}
+      fail-fast: false
+      matrix:
+        shard: [1/3, 2/3, 3/3]
+    env:
+      CONTAINER_NAME: 'swc-tomcat'
+      CI: true
+      DESTINATION_BUCKET: e2e-reports-bucket-bucket-1p1qz6p48t4uy
+      REPORT_ID: ${{ github.event.repository.name }}-${{ github.run_id }}-${{ github.run_attempt }}
+    # Allow OIDC Integration (so we can assume the AWS role to deploy)
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v3
+      - name: Check colima and lima version
+        if: runner.os == 'macos'
+        run: |
+          echo "- runner colima version: $(colima version)" >> $GITHUB_STEP_SUMMARY
+          LIMA_VERSION=$(limactl --version)
+          echo "- runner lima version: ${LIMA_VERSION}" >> $GITHUB_STEP_SUMMARY
+          if [[ !("${LIMA_VERSION}" == "limactl version 0.19.0" || "${LIMA_VERSION}" == "limactl version 0.19.1") ]]; then 
+            echo "::warning::runner lima version has changed. Consider removing lima/colima downgrade, see SWC-6655."
+          fi
+      - name: Downgrade colima/lima versions
+        if: runner.os == 'macos'
+        run: |
+          brew uninstall colima
+          brew uninstall lima
+
+          # install lima
+          LIMA_VERSION="v0.18.0"
+          LIMA_VERSION_URL="https://github.com/lima-vm/lima/releases/download/${LIMA_VERSION}/lima-${LIMA_VERSION:1}-$(uname -s)-$(uname -m).tar.gz"
+          curl -fsSL "${LIMA_VERSION_URL}" | tar Cxzvm /usr/local
+
+          # install colima
+          COLIMA_VERSION="v0.6.6"
+          COLIMA_VERSION_URL="https://github.com/abiosoft/colima/releases/download/${COLIMA_VERSION}/colima-$(uname -s)-$(uname -m)"
+          sudo mkdir -p /usr/local/bin
+          sudo curl -L -o /usr/local/bin/colima "${COLIMA_VERSION_URL}" && sudo chmod +x /usr/local/bin/colima
+
+          # Get colima and lima versions
+          limactl --version
+          colima version
+      - name: Setup docker (missing on MacOS)
+        if: runner.os == 'macos'
+        run: |
+          brew install docker
+          colima start
+      - name: Download build from GitHub Actions Artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ env.BUILD_ARTIFACT_NAME }}
+          path: ${{ env.BUILD_DIR }}
+      - name: Run SWC on Tomcat
+        run: |
+          docker run \
+            --name "${{ env.CONTAINER_NAME }}" \
+            -d --rm \
+            -p 8888:8080 \
+            -v "/$(pwd)/${{ env.BUILD_DIR }}/${{ env.BUILD_NAME }}:/usr/local/tomcat/webapps/ROOT.war" \
+            -v "/$(pwd)/e2e_workflow/settings.xml":/root/.m2/settings.xml \
+            tomcat:9.0
+      - uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+      - name: Install Playwright Browsers
+        run: yarn playwright install --with-deps
+      - name: Check for common errors
+        run: |
+          if [ ! -e "/$(pwd)/${{ env.BUILD_DIR }}/${{ env.BUILD_NAME }}" ]; then
+            echo "::error:: downloaded WAR not found at expected location"
+            exit 1
+          fi
+          if [[ $(docker ps --filter "name=${{ env.CONTAINER_NAME }}" --format '{{.Names}}') != "${{ env.CONTAINER_NAME }}" ]]; then
+            echo "::error:: SWC docker container is not running"
+            exit 1
+          fi
+          if ! docker port "${{ env.CONTAINER_NAME }}" | grep -q "8080/tcp -> 0.0.0.0:8888"; then
+              echo "::error:: SWC container configuration does not specify expected port mapping"
+              exit 1
+          fi
+          if [[ "$(docker exec "${{ env.CONTAINER_NAME }}" bash -c "curl -sS -o /dev/null -w '%{http_code}\n' http://127.0.0.1:8080")" != "200" ]]; then
+            echo "::error:: SWC container port not accessible from container"
+            exit 1
+          fi
+          if [[ "$(docker exec "${{ env.CONTAINER_NAME }}" bash -c "curl -sS -o /dev/null -w '%{http_code}\n' http://172.17.0.1:8888")" != "200" ]]; then
+            echo "::error:: SWC host port not accessible from container"
+            exit 1
+          fi
+          if ! netstat -an | grep -q "8888"; then
+            echo "::error:: host is not listening to SWC host port"
+            exit 1
+          fi
+          if [[ "$(curl -w '%{http_code}' --output /dev/null --silent --fail --show-error http://127.0.0.1:8888 2>&1)" != "200" ]]; then
+            echo "::error:: SWC host port not accessible from host"
+            exit 1
+          fi
+      - name: Run Playwright tests
+        env:
+          ADMIN_PAT: ${{ secrets.ADMIN_PAT }}
+          TRACE_TOGGLE: ${{ github.repository_owner == 'Sage-Bionetworks' && 'on' || 'off'}}
+        run: yarn playwright test --shard ${{ matrix.shard }} --trace=${{ env.TRACE_TOGGLE }}
+      - name: Assume AWS Role
+        if: ${{ github.repository_owner == 'Sage-Bionetworks' && always() }}
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-region: us-east-1
+          role-to-assume: arn:aws:iam::449435941126:role/sagebase-github-oidc-synapsedev-e2e-infra
+          role-session-name: GitHubActions-${{ github.repository_owner }}-${{ github.event.repository.name }}-${{ github.run_id }}
+          role-duration-seconds: 1200
+      - name: Upload blob report to S3
+        if: ${{ github.repository_owner == 'Sage-Bionetworks' && always() }}
+        run: |
+          aws s3 sync ./blob-report --region us-east-1 s3://${{ env.DESTINATION_BUCKET }}/${{ env.REPORT_ID }}/
+      - name: Upload blob report to GitHub Actions Artifacts
+        uses: actions/upload-artifact@v3
+        if: ${{ github.repository_owner != 'Sage-Bionetworks' && always() }}
+        with:
+          name: ${{ env.PW_ALL_BLOBS_DIR }}
+          path: blob-report
+          retention-days: 1
+      - name: Stop Tomcat
+        if: always()
+        run: docker stop "${{ env.CONTAINER_NAME }}"
+      - name: Stop Colima
+        if: runner.os == 'macos'
+        run: colima stop
+  merge-reports:
+    # Merge reports after playwright-tests, even if some shards have failed
+    # But skip this job if the previous job was cancelled or skipped
+    if: ${{ github.repository_owner != 'Sage-Bionetworks' && !cancelled() && needs.playwright-tests.result != 'skipped' }}
+    needs: [playwright-tests]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+      - name: Download blob reports from GitHub Actions Artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ env.PW_ALL_BLOBS_DIR }}
+          path: ${{ env.PW_ALL_BLOBS_DIR }}
+      - name: Merge into HTML Report
+        run: yarn playwright merge-reports --reporter html ./"${{ env.PW_ALL_BLOBS_DIR }}"
+      - name: Upload HTML report
+        uses: actions/upload-artifact@v3
+        with:
+          name: html-report--attempt-${{ github.run_attempt }}
+          path: playwright-report
+          retention-days: 14

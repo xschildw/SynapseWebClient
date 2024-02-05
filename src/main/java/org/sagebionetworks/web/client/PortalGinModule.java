@@ -1,5 +1,9 @@
 package org.sagebionetworks.web.client;
 
+import com.google.gwt.event.shared.EventBus;
+import com.google.gwt.event.shared.SimpleEventBus;
+import com.google.gwt.inject.client.AbstractGinModule;
+import com.google.inject.Singleton;
 import org.sagebionetworks.gwt.client.schema.adapter.GwtAdapterFactory;
 import org.sagebionetworks.gwt.client.schema.adapter.JSONArrayGwt;
 import org.sagebionetworks.gwt.client.schema.adapter.JSONObjectGwt;
@@ -14,6 +18,12 @@ import org.sagebionetworks.web.client.cache.SessionStorage;
 import org.sagebionetworks.web.client.cache.SessionStorageImpl;
 import org.sagebionetworks.web.client.cache.StorageImpl;
 import org.sagebionetworks.web.client.cache.StorageWrapper;
+import org.sagebionetworks.web.client.context.KeyFactoryProvider;
+import org.sagebionetworks.web.client.context.KeyFactoryProviderImpl;
+import org.sagebionetworks.web.client.context.QueryClientProvider;
+import org.sagebionetworks.web.client.context.QueryClientProviderImpl;
+import org.sagebionetworks.web.client.context.SynapseReactClientFullContextPropsProvider;
+import org.sagebionetworks.web.client.context.SynapseReactClientFullContextPropsProviderImpl;
 import org.sagebionetworks.web.client.cookie.CookieProvider;
 import org.sagebionetworks.web.client.cookie.GWTCookieImpl;
 import org.sagebionetworks.web.client.presenter.DownPresenter;
@@ -37,6 +47,8 @@ import org.sagebionetworks.web.client.view.ACTView;
 import org.sagebionetworks.web.client.view.ACTViewImpl;
 import org.sagebionetworks.web.client.view.AccountView;
 import org.sagebionetworks.web.client.view.AccountViewImpl;
+import org.sagebionetworks.web.client.view.CertificationQuizView;
+import org.sagebionetworks.web.client.view.CertificationQuizViewImpl;
 import org.sagebionetworks.web.client.view.ChallengeOverviewView;
 import org.sagebionetworks.web.client.view.ChallengeOverviewViewImpl;
 import org.sagebionetworks.web.client.view.ChangeUsernameView;
@@ -45,16 +57,22 @@ import org.sagebionetworks.web.client.view.ComingSoonView;
 import org.sagebionetworks.web.client.view.ComingSoonViewImpl;
 import org.sagebionetworks.web.client.view.DataAccessApprovalTokenView;
 import org.sagebionetworks.web.client.view.DataAccessApprovalTokenViewImpl;
+import org.sagebionetworks.web.client.view.DataAccessManagementView;
+import org.sagebionetworks.web.client.view.DataAccessManagementViewImpl;
 import org.sagebionetworks.web.client.view.DivView;
 import org.sagebionetworks.web.client.view.DivViewImpl;
 import org.sagebionetworks.web.client.view.DownView;
 import org.sagebionetworks.web.client.view.DownViewImpl;
+import org.sagebionetworks.web.client.view.DownloadCartPageView;
+import org.sagebionetworks.web.client.view.DownloadCartPageViewImpl;
 import org.sagebionetworks.web.client.view.EmailInvitationView;
 import org.sagebionetworks.web.client.view.EmailInvitationViewImpl;
 import org.sagebionetworks.web.client.view.EntityView;
 import org.sagebionetworks.web.client.view.EntityViewImpl;
 import org.sagebionetworks.web.client.view.ErrorView;
 import org.sagebionetworks.web.client.view.ErrorViewImpl;
+import org.sagebionetworks.web.client.view.FollowingPageView;
+import org.sagebionetworks.web.client.view.FollowingPageViewImpl;
 import org.sagebionetworks.web.client.view.HelpView;
 import org.sagebionetworks.web.client.view.HelpViewImpl;
 import org.sagebionetworks.web.client.view.HomeView;
@@ -65,6 +83,8 @@ import org.sagebionetworks.web.client.view.MapView;
 import org.sagebionetworks.web.client.view.MapViewImpl;
 import org.sagebionetworks.web.client.view.NewAccountView;
 import org.sagebionetworks.web.client.view.NewAccountViewImpl;
+import org.sagebionetworks.web.client.view.OAuthClientEditorView;
+import org.sagebionetworks.web.client.view.OAuthClientEditorViewImpl;
 import org.sagebionetworks.web.client.view.PasswordResetSignedTokenView;
 import org.sagebionetworks.web.client.view.PasswordResetSignedTokenViewImpl;
 import org.sagebionetworks.web.client.view.PeopleSearchView;
@@ -99,6 +119,8 @@ import org.sagebionetworks.web.client.view.TeamView;
 import org.sagebionetworks.web.client.view.TeamViewImpl;
 import org.sagebionetworks.web.client.view.TrashView;
 import org.sagebionetworks.web.client.view.TrashViewImpl;
+import org.sagebionetworks.web.client.view.TwoFactorAuthView;
+import org.sagebionetworks.web.client.view.TwoFactorAuthViewImpl;
 import org.sagebionetworks.web.client.view.WikiDiffView;
 import org.sagebionetworks.web.client.view.WikiDiffViewImpl;
 import org.sagebionetworks.web.client.view.users.PasswordResetView;
@@ -124,14 +146,16 @@ import org.sagebionetworks.web.client.widget.RadioWidget;
 import org.sagebionetworks.web.client.widget.RadioWidgetViewImpl;
 import org.sagebionetworks.web.client.widget.accessrequirements.ACTAccessRequirementWidgetView;
 import org.sagebionetworks.web.client.widget.accessrequirements.ACTAccessRequirementWidgetViewImpl;
+import org.sagebionetworks.web.client.widget.accessrequirements.EntitySubjectsWidgetView;
+import org.sagebionetworks.web.client.widget.accessrequirements.EntitySubjectsWidgetViewImpl;
 import org.sagebionetworks.web.client.widget.accessrequirements.LockAccessRequirementWidgetView;
 import org.sagebionetworks.web.client.widget.accessrequirements.LockAccessRequirementWidgetViewImpl;
 import org.sagebionetworks.web.client.widget.accessrequirements.ManagedACTAccessRequirementWidgetView;
 import org.sagebionetworks.web.client.widget.accessrequirements.ManagedACTAccessRequirementWidgetViewImpl;
 import org.sagebionetworks.web.client.widget.accessrequirements.SelfSignAccessRequirementWidgetView;
 import org.sagebionetworks.web.client.widget.accessrequirements.SelfSignAccessRequirementWidgetViewImpl;
-import org.sagebionetworks.web.client.widget.accessrequirements.SubjectWidgetView;
-import org.sagebionetworks.web.client.widget.accessrequirements.SubjectWidgetViewImpl;
+import org.sagebionetworks.web.client.widget.accessrequirements.TeamSubjectWidgetView;
+import org.sagebionetworks.web.client.widget.accessrequirements.TeamSubjectWidgetViewImpl;
 import org.sagebionetworks.web.client.widget.accessrequirements.TermsOfUseAccessRequirementWidgetView;
 import org.sagebionetworks.web.client.widget.accessrequirements.TermsOfUseAccessRequirementWidgetViewImpl;
 import org.sagebionetworks.web.client.widget.accessrequirements.approval.AccessorGroupView;
@@ -142,10 +166,8 @@ import org.sagebionetworks.web.client.widget.accessrequirements.createaccessrequ
 import org.sagebionetworks.web.client.widget.accessrequirements.createaccessrequirement.CreateBasicAccessRequirementStep2ViewImpl;
 import org.sagebionetworks.web.client.widget.accessrequirements.createaccessrequirement.CreateManagedACTAccessRequirementStep2View;
 import org.sagebionetworks.web.client.widget.accessrequirements.createaccessrequirement.CreateManagedACTAccessRequirementStep2ViewImpl;
-import org.sagebionetworks.web.client.widget.accessrequirements.requestaccess.CreateDataAccessSubmissionWizardStep2View;
-import org.sagebionetworks.web.client.widget.accessrequirements.requestaccess.CreateDataAccessSubmissionWizardStep2ViewImpl;
-import org.sagebionetworks.web.client.widget.accessrequirements.requestaccess.CreateResearchProjectWizardStep1View;
-import org.sagebionetworks.web.client.widget.accessrequirements.requestaccess.CreateResearchProjectWizardStep1ViewImpl;
+import org.sagebionetworks.web.client.widget.accessrequirements.createaccessrequirement.CreateManagedACTAccessRequirementStep3View;
+import org.sagebionetworks.web.client.widget.accessrequirements.createaccessrequirement.CreateManagedACTAccessRequirementStep3ViewImpl;
 import org.sagebionetworks.web.client.widget.accessrequirements.submission.ACTDataAccessSubmissionWidgetView;
 import org.sagebionetworks.web.client.widget.accessrequirements.submission.ACTDataAccessSubmissionWidgetViewImpl;
 import org.sagebionetworks.web.client.widget.accessrequirements.submission.OpenSubmissionWidgetView;
@@ -267,6 +289,7 @@ import org.sagebionetworks.web.client.widget.entity.PreviewWidgetView;
 import org.sagebionetworks.web.client.widget.entity.PreviewWidgetViewImpl;
 import org.sagebionetworks.web.client.widget.entity.ProjectBadgeView;
 import org.sagebionetworks.web.client.widget.entity.ProjectBadgeViewImpl;
+import org.sagebionetworks.web.client.widget.entity.PromptForValuesModalConfigurationImpl;
 import org.sagebionetworks.web.client.widget.entity.PromptForValuesModalView;
 import org.sagebionetworks.web.client.widget.entity.PromptForValuesModalViewImpl;
 import org.sagebionetworks.web.client.widget.entity.RegisterTeamDialogView;
@@ -311,8 +334,10 @@ import org.sagebionetworks.web.client.widget.entity.annotation.AnnotationsRender
 import org.sagebionetworks.web.client.widget.entity.annotation.AnnotationsRendererWidgetViewImpl;
 import org.sagebionetworks.web.client.widget.entity.annotation.EditAnnotationsDialogView;
 import org.sagebionetworks.web.client.widget.entity.annotation.EditAnnotationsDialogViewImpl;
-import org.sagebionetworks.web.client.widget.entity.browse.EntityFinderView;
-import org.sagebionetworks.web.client.widget.entity.browse.EntityFinderViewImpl;
+import org.sagebionetworks.web.client.widget.entity.browse.EntityFinderWidget;
+import org.sagebionetworks.web.client.widget.entity.browse.EntityFinderWidgetImpl;
+import org.sagebionetworks.web.client.widget.entity.browse.EntityFinderWidgetView;
+import org.sagebionetworks.web.client.widget.entity.browse.EntityFinderWidgetViewImpl;
 import org.sagebionetworks.web.client.widget.entity.browse.EntityTreeBrowserView;
 import org.sagebionetworks.web.client.widget.entity.browse.EntityTreeBrowserViewImpl;
 import org.sagebionetworks.web.client.widget.entity.browse.FilesBrowserView;
@@ -401,30 +426,30 @@ import org.sagebionetworks.web.client.widget.entity.editor.TabbedTableConfigView
 import org.sagebionetworks.web.client.widget.entity.editor.TabbedTableConfigViewImpl;
 import org.sagebionetworks.web.client.widget.entity.editor.TableQueryResultWikiView;
 import org.sagebionetworks.web.client.widget.entity.editor.TableQueryResultWikiViewImpl;
+import org.sagebionetworks.web.client.widget.entity.editor.TeamSelectEditorView;
+import org.sagebionetworks.web.client.widget.entity.editor.TeamSelectEditorViewImpl;
 import org.sagebionetworks.web.client.widget.entity.editor.UserSelectorView;
 import org.sagebionetworks.web.client.widget.entity.editor.UserSelectorViewImpl;
 import org.sagebionetworks.web.client.widget.entity.editor.UserTeamConfigView;
 import org.sagebionetworks.web.client.widget.entity.editor.UserTeamConfigViewImpl;
 import org.sagebionetworks.web.client.widget.entity.editor.VideoConfigView;
 import org.sagebionetworks.web.client.widget.entity.editor.VideoConfigViewImpl;
-import org.sagebionetworks.web.client.widget.entity.file.AddToDownloadListView;
-import org.sagebionetworks.web.client.widget.entity.file.AddToDownloadListViewImpl;
+import org.sagebionetworks.web.client.widget.entity.file.AddToDownloadListV2;
+import org.sagebionetworks.web.client.widget.entity.file.AddToDownloadListV2Impl;
 import org.sagebionetworks.web.client.widget.entity.file.BasicTitleBarView;
 import org.sagebionetworks.web.client.widget.entity.file.BasicTitleBarViewImpl;
 import org.sagebionetworks.web.client.widget.entity.file.FileDownloadMenuItemView;
 import org.sagebionetworks.web.client.widget.entity.file.FileDownloadMenuItemViewImpl;
-import org.sagebionetworks.web.client.widget.entity.file.FileTitleBarView;
-import org.sagebionetworks.web.client.widget.entity.file.FileTitleBarViewImpl;
+import org.sagebionetworks.web.client.widget.entity.file.ProjectTitleBarView;
+import org.sagebionetworks.web.client.widget.entity.file.ProjectTitleBarViewImpl;
 import org.sagebionetworks.web.client.widget.entity.file.S3DirectLoginDialog;
 import org.sagebionetworks.web.client.widget.entity.file.S3DirectLoginDialogImpl;
-import org.sagebionetworks.web.client.widget.entity.file.downloadlist.DownloadListWidgetView;
-import org.sagebionetworks.web.client.widget.entity.file.downloadlist.DownloadListWidgetViewImpl;
 import org.sagebionetworks.web.client.widget.entity.file.downloadlist.PackageSizeSummaryView;
 import org.sagebionetworks.web.client.widget.entity.file.downloadlist.PackageSizeSummaryViewImpl;
-import org.sagebionetworks.web.client.widget.entity.menu.v2.ActionMenuWidget;
-import org.sagebionetworks.web.client.widget.entity.menu.v2.ActionMenuWidgetImpl;
-import org.sagebionetworks.web.client.widget.entity.menu.v2.ActionMenuWidgetView;
-import org.sagebionetworks.web.client.widget.entity.menu.v2.ActionMenuWidgetViewImpl;
+import org.sagebionetworks.web.client.widget.entity.menu.v3.EntityActionMenu;
+import org.sagebionetworks.web.client.widget.entity.menu.v3.EntityActionMenuImpl;
+import org.sagebionetworks.web.client.widget.entity.menu.v3.EntityActionMenuView;
+import org.sagebionetworks.web.client.widget.entity.menu.v3.EntityActionMenuViewImpl;
 import org.sagebionetworks.web.client.widget.entity.registration.WidgetRegistrar;
 import org.sagebionetworks.web.client.widget.entity.registration.WidgetRegistrarImpl;
 import org.sagebionetworks.web.client.widget.entity.renderer.AttachmentPreviewWidgetView;
@@ -447,26 +472,28 @@ import org.sagebionetworks.web.client.widget.entity.renderer.IFrameView;
 import org.sagebionetworks.web.client.widget.entity.renderer.IFrameViewImpl;
 import org.sagebionetworks.web.client.widget.entity.renderer.ImageWidgetView;
 import org.sagebionetworks.web.client.widget.entity.renderer.ImageWidgetViewImpl;
+import org.sagebionetworks.web.client.widget.entity.renderer.IntendedDataUseReportWidgetView;
+import org.sagebionetworks.web.client.widget.entity.renderer.IntendedDataUseReportWidgetViewImpl;
+import org.sagebionetworks.web.client.widget.entity.renderer.NbConvertPreviewView;
+import org.sagebionetworks.web.client.widget.entity.renderer.NbConvertPreviewViewImpl;
 import org.sagebionetworks.web.client.widget.entity.renderer.PlotlyWidgetView;
 import org.sagebionetworks.web.client.widget.entity.renderer.PlotlyWidgetViewImpl;
 import org.sagebionetworks.web.client.widget.entity.renderer.ReferenceWidgetView;
 import org.sagebionetworks.web.client.widget.entity.renderer.ReferenceWidgetViewImpl;
-import org.sagebionetworks.web.client.widget.entity.renderer.SRCDemoWidgetView;
-import org.sagebionetworks.web.client.widget.entity.renderer.SRCDemoWidgetViewImpl;
 import org.sagebionetworks.web.client.widget.entity.renderer.SingleButtonView;
 import org.sagebionetworks.web.client.widget.entity.renderer.SingleButtonViewImpl;
 import org.sagebionetworks.web.client.widget.entity.renderer.SubmitToEvaluationWidgetView;
 import org.sagebionetworks.web.client.widget.entity.renderer.SubmitToEvaluationWidgetViewImpl;
 import org.sagebionetworks.web.client.widget.entity.renderer.SynapseTableFormWidgetView;
 import org.sagebionetworks.web.client.widget.entity.renderer.SynapseTableFormWidgetViewImpl;
+import org.sagebionetworks.web.client.widget.entity.renderer.TIFFPreviewWidgetView;
+import org.sagebionetworks.web.client.widget.entity.renderer.TIFFPreviewWidgetViewImpl;
 import org.sagebionetworks.web.client.widget.entity.renderer.TableOfContentsWidgetView;
 import org.sagebionetworks.web.client.widget.entity.renderer.TableOfContentsWidgetViewImpl;
 import org.sagebionetworks.web.client.widget.entity.renderer.TeamMemberCountView;
 import org.sagebionetworks.web.client.widget.entity.renderer.TeamMemberCountViewImpl;
-import org.sagebionetworks.web.client.widget.entity.renderer.TeamMemberRowWidgetView;
-import org.sagebionetworks.web.client.widget.entity.renderer.TeamMemberRowWidgetViewImpl;
-import org.sagebionetworks.web.client.widget.entity.renderer.TeamMembersWidgetView;
-import org.sagebionetworks.web.client.widget.entity.renderer.TeamMembersWidgetViewImpl;
+import org.sagebionetworks.web.client.widget.entity.renderer.UserListRowWidgetView;
+import org.sagebionetworks.web.client.widget.entity.renderer.UserListRowWidgetViewImpl;
 import org.sagebionetworks.web.client.widget.entity.renderer.UserListView;
 import org.sagebionetworks.web.client.widget.entity.renderer.UserListViewImpl;
 import org.sagebionetworks.web.client.widget.entity.renderer.VideoWidgetView;
@@ -527,6 +554,10 @@ import org.sagebionetworks.web.client.widget.login.LoginModalView;
 import org.sagebionetworks.web.client.widget.login.LoginModalViewImpl;
 import org.sagebionetworks.web.client.widget.login.LoginWidgetView;
 import org.sagebionetworks.web.client.widget.login.LoginWidgetViewImpl;
+import org.sagebionetworks.web.client.widget.modal.Dialog;
+import org.sagebionetworks.web.client.widget.modal.DialogView;
+import org.sagebionetworks.web.client.widget.pageprogress.PageProgressWidgetView;
+import org.sagebionetworks.web.client.widget.pageprogress.PageProgressWidgetViewImpl;
 import org.sagebionetworks.web.client.widget.pagination.BasicPaginationView;
 import org.sagebionetworks.web.client.widget.pagination.BasicPaginationViewImpl;
 import org.sagebionetworks.web.client.widget.profile.EmailAddressesWidgetView;
@@ -541,8 +572,8 @@ import org.sagebionetworks.web.client.widget.profile.UserProfileEditorWidget;
 import org.sagebionetworks.web.client.widget.profile.UserProfileEditorWidgetImpl;
 import org.sagebionetworks.web.client.widget.profile.UserProfileEditorWidgetView;
 import org.sagebionetworks.web.client.widget.profile.UserProfileEditorWidgetViewImpl;
-import org.sagebionetworks.web.client.widget.provenance.ProvenanceWidgetView;
-import org.sagebionetworks.web.client.widget.provenance.ProvenanceWidgetViewImpl;
+import org.sagebionetworks.web.client.widget.provenance.v2.ProvenanceWidgetView;
+import org.sagebionetworks.web.client.widget.provenance.v2.ProvenanceWidgetViewImpl;
 import org.sagebionetworks.web.client.widget.refresh.RefreshAlertView;
 import org.sagebionetworks.web.client.widget.refresh.RefreshAlertViewImpl;
 import org.sagebionetworks.web.client.widget.search.SearchBoxView;
@@ -557,6 +588,8 @@ import org.sagebionetworks.web.client.widget.sharing.AccessControlListModalWidge
 import org.sagebionetworks.web.client.widget.sharing.AccessControlListModalWidgetViewImpl;
 import org.sagebionetworks.web.client.widget.sharing.EvaluationAccessControlListModalWidget;
 import org.sagebionetworks.web.client.widget.sharing.EvaluationAccessControlListModalWidgetImpl;
+import org.sagebionetworks.web.client.widget.sharing.OpenDataView;
+import org.sagebionetworks.web.client.widget.sharing.OpenDataViewImpl;
 import org.sagebionetworks.web.client.widget.sharing.PublicPrivateBadgeView;
 import org.sagebionetworks.web.client.widget.sharing.PublicPrivateBadgeViewImpl;
 import org.sagebionetworks.web.client.widget.sharing.SharingPermissionsGridView;
@@ -565,10 +598,6 @@ import org.sagebionetworks.web.client.widget.statistics.StatisticsPlotWidgetView
 import org.sagebionetworks.web.client.widget.statistics.StatisticsPlotWidgetViewImpl;
 import org.sagebionetworks.web.client.widget.subscription.SubscribeButtonWidgetView;
 import org.sagebionetworks.web.client.widget.subscription.SubscribeButtonWidgetViewImpl;
-import org.sagebionetworks.web.client.widget.subscription.SubscriptionListWidgetView;
-import org.sagebionetworks.web.client.widget.subscription.SubscriptionListWidgetViewImpl;
-import org.sagebionetworks.web.client.widget.subscription.TopicRowWidgetView;
-import org.sagebionetworks.web.client.widget.subscription.TopicRowWidgetViewImpl;
 import org.sagebionetworks.web.client.widget.subscription.TopicWidgetView;
 import org.sagebionetworks.web.client.widget.subscription.TopicWidgetViewImpl;
 import org.sagebionetworks.web.client.widget.table.TableListWidgetView;
@@ -585,14 +614,12 @@ import org.sagebionetworks.web.client.widget.table.modal.download.DownloadFilePa
 import org.sagebionetworks.web.client.widget.table.modal.download.DownloadFilePageViewImpl;
 import org.sagebionetworks.web.client.widget.table.modal.download.DownloadTableQueryModalWidget;
 import org.sagebionetworks.web.client.widget.table.modal.download.DownloadTableQueryModalWidgetImpl;
-import org.sagebionetworks.web.client.widget.table.modal.fileview.CreateTableViewWizardStep1View;
-import org.sagebionetworks.web.client.widget.table.modal.fileview.CreateTableViewWizardStep1ViewImpl;
-import org.sagebionetworks.web.client.widget.table.modal.fileview.CreateTableViewWizardStep2View;
-import org.sagebionetworks.web.client.widget.table.modal.fileview.CreateTableViewWizardStep2ViewImpl;
 import org.sagebionetworks.web.client.widget.table.modal.fileview.EntityContainerListWidgetView;
 import org.sagebionetworks.web.client.widget.table.modal.fileview.EntityContainerListWidgetViewImpl;
 import org.sagebionetworks.web.client.widget.table.modal.fileview.EntityViewScopeWidgetView;
 import org.sagebionetworks.web.client.widget.table.modal.fileview.EntityViewScopeWidgetViewImpl;
+import org.sagebionetworks.web.client.widget.table.modal.fileview.SqlDefinedTableEditorView;
+import org.sagebionetworks.web.client.widget.table.modal.fileview.SqlDefinedTableEditorViewImpl;
 import org.sagebionetworks.web.client.widget.table.modal.fileview.SubmissionViewScopeWidgetView;
 import org.sagebionetworks.web.client.widget.table.modal.fileview.SubmissionViewScopeWidgetViewImpl;
 import org.sagebionetworks.web.client.widget.table.modal.fileview.ViewDefaultColumns;
@@ -626,6 +653,8 @@ import org.sagebionetworks.web.client.widget.table.v2.QueryInputView;
 import org.sagebionetworks.web.client.widget.table.v2.QueryInputViewImpl;
 import org.sagebionetworks.web.client.widget.table.v2.TableEntityWidgetView;
 import org.sagebionetworks.web.client.widget.table.v2.TableEntityWidgetViewImpl;
+import org.sagebionetworks.web.client.widget.table.v2.TotalVisibleResultsWidgetView;
+import org.sagebionetworks.web.client.widget.table.v2.TotalVisibleResultsWidgetViewImpl;
 import org.sagebionetworks.web.client.widget.table.v2.results.QueryResultEditorView;
 import org.sagebionetworks.web.client.widget.table.v2.results.QueryResultEditorViewImpl;
 import org.sagebionetworks.web.client.widget.table.v2.results.RowFormView;
@@ -638,8 +667,6 @@ import org.sagebionetworks.web.client.widget.table.v2.results.StaticTableHeader;
 import org.sagebionetworks.web.client.widget.table.v2.results.StaticTableHeaderImpl;
 import org.sagebionetworks.web.client.widget.table.v2.results.TablePageView;
 import org.sagebionetworks.web.client.widget.table.v2.results.TablePageViewImpl;
-import org.sagebionetworks.web.client.widget.table.v2.results.TableQueryResultView;
-import org.sagebionetworks.web.client.widget.table.v2.results.TableQueryResultViewImpl;
 import org.sagebionetworks.web.client.widget.table.v2.results.TableQueryResultWikiWidgetView;
 import org.sagebionetworks.web.client.widget.table.v2.results.TableQueryResultWikiWidgetViewImpl;
 import org.sagebionetworks.web.client.widget.table.v2.results.cell.CellEditorView;
@@ -678,18 +705,7 @@ import org.sagebionetworks.web.client.widget.table.v2.results.cell.UserIdCellEdi
 import org.sagebionetworks.web.client.widget.table.v2.results.cell.UserIdCellEditorViewImpl;
 import org.sagebionetworks.web.client.widget.table.v2.results.cell.UserIdListRendererCellView;
 import org.sagebionetworks.web.client.widget.table.v2.results.cell.UserIdListRendererCellViewImpl;
-import org.sagebionetworks.web.client.widget.table.v2.results.facets.FacetColumnResultValuesView;
-import org.sagebionetworks.web.client.widget.table.v2.results.facets.FacetColumnResultValuesViewImpl;
-import org.sagebionetworks.web.client.widget.table.v2.schema.ColumnModelTableRowEditorView;
-import org.sagebionetworks.web.client.widget.table.v2.schema.ColumnModelTableRowEditorViewImpl;
-import org.sagebionetworks.web.client.widget.table.v2.schema.ColumnModelTableRowEditorWidget;
-import org.sagebionetworks.web.client.widget.table.v2.schema.ColumnModelTableRowEditorWidgetImpl;
-import org.sagebionetworks.web.client.widget.table.v2.schema.ColumnModelTableRowViewer;
-import org.sagebionetworks.web.client.widget.table.v2.schema.ColumnModelTableRowViewerImpl;
-import org.sagebionetworks.web.client.widget.table.v2.schema.ColumnModelsView;
-import org.sagebionetworks.web.client.widget.table.v2.schema.ColumnModelsViewBase;
-import org.sagebionetworks.web.client.widget.table.v2.schema.ColumnModelsViewBaseImpl;
-import org.sagebionetworks.web.client.widget.table.v2.schema.ColumnModelsViewImpl;
+import org.sagebionetworks.web.client.widget.table.v2.schema.*;
 import org.sagebionetworks.web.client.widget.team.BigTeamBadgeView;
 import org.sagebionetworks.web.client.widget.team.BigTeamBadgeViewImpl;
 import org.sagebionetworks.web.client.widget.team.EmailInvitationBadgeView;
@@ -739,677 +755,858 @@ import org.sagebionetworks.web.client.widget.upload.MultipartUploaderImpl;
 import org.sagebionetworks.web.client.widget.user.UserBadgeView;
 import org.sagebionetworks.web.client.widget.user.UserBadgeViewImpl;
 
-import com.google.gwt.event.shared.EventBus;
-import com.google.gwt.event.shared.SimpleEventBus;
-import com.google.gwt.inject.client.AbstractGinModule;
-import com.google.inject.Singleton;
-
 public class PortalGinModule extends AbstractGinModule {
 
-	@Override
-	protected void configure() {
-		// Event Bus
-		bind(EventBus.class).to(SimpleEventBus.class).in(Singleton.class);
+  @Override
+  protected void configure() {
+    // Event Bus
+    bind(EventBus.class).to(SimpleEventBus.class).in(Singleton.class);
+
+    // JsoProvider
+    bind(JsoProvider.class).to(JsoProviderImpl.class);
+    bind(JsoProviderImpl.class).in(Singleton.class);
+    // AuthenticationController
+    bind(AuthenticationController.class)
+      .to(AuthenticationControllerImpl.class)
+      .in(Singleton.class);
+    // GlobalApplicationState
+    bind(GlobalApplicationState.class)
+      .to(GlobalApplicationStateImpl.class)
+      .in(Singleton.class);
+
+    bind(GlobalApplicationStateView.class)
+      .to(GlobalApplicationStateViewImpl.class);
+    bind(LazyLoadCallbackQueue.class)
+      .to(LazyLoadCallbackQueueImpl.class)
+      .in(Singleton.class);
+
+    bind(ResourceLoader.class).to(ResourceLoaderImpl.class).in(Singleton.class);
+
+    // Header & Footer
+    bind(Header.class).in(Singleton.class);
+
+    bind(HeaderView.class).to(HeaderViewImpl.class).in(Singleton.class);
+    bind(Footer.class).in(Singleton.class);
+    bind(FooterView.class).to(FooterViewImpl.class).in(Singleton.class);
+    // JSONAdapters
+    bind(JSONObjectAdapter.class).to(JSONObjectGwt.class);
+
+    bind(JSONArrayAdapter.class).to(JSONArrayGwt.class);
+    // cache place presenters
+    bind(ProfilePresenter.class).in(Singleton.class);
+
+    bind(EntityPresenter.class).in(Singleton.class);
+    bind(DownPresenter.class).in(Singleton.class);
+    bind(SignedTokenPresenter.class).in(Singleton.class);
+    bind(PersonalAccessTokensPresenter.class).in(Singleton.class);
+    bind(AnnotationsRendererWidgetView.class)
+      .to(AnnotationsRendererWidgetViewImpl.class);
+
+    bind(VersionHistoryWidgetView.class).to(VersionHistoryWidgetViewImpl.class);
+    // GWT utility methods
+    bind(GWTWrapper.class).to(GWTWrapperImpl.class).in(Singleton.class);
+
+    bind(GWTTimer.class).to(GWTTimerImpl.class);
+    bind(SessionDetector.class).in(Singleton.class);
+
+    bind(WebStorageMaxSizeDetector.class).in(Singleton.class);
+    // RequestBuilder
+    bind(RequestBuilderWrapper.class).to(RequestBuilderWrapperImpl.class);
+
+    // Adapter factoyr
+    bind(AdapterFactory.class).to(GwtAdapterFactory.class);
 
-		// JsoProvider
-		bind(JsoProvider.class).to(JsoProviderImpl.class);
-		bind(JsoProviderImpl.class).in(Singleton.class);
-		// AuthenticationController
-		bind(AuthenticationController.class).to(AuthenticationControllerImpl.class).in(Singleton.class);;
+    // ClientCache
+    bind(ClientCache.class).to(ClientCacheImpl.class).in(Singleton.class);
+
+    // Storage wrapper
+    bind(StorageWrapper.class).to(StorageImpl.class).in(Singleton.class);
+
+    /*
+     * Vanilla Implementation binding
+     */
+
+    // JSNI impls
+    bind(SynapseJSNIUtils.class)
+      .to(SynapseJSNIUtilsImpl.class)
+      .in(Singleton.class);
+    /*
+     * Places
+     */
+
+    // The home page
+    bind(HomeView.class).to(HomeViewImpl.class).in(Singleton.class);
+
+    // EntityView
+    bind(EntityView.class).to(EntityViewImpl.class).in(Singleton.class);
+
+    // LoginView
+    bind(LoginView.class).to(LoginViewImpl.class).in(Singleton.class);
+
+    // PasswordResetView
+    bind(PasswordResetView.class)
+      .to(PasswordResetViewImpl.class)
+      .in(Singleton.class);
+
+    // NewAccountView
+    bind(NewAccountView.class).to(NewAccountViewImpl.class).in(Singleton.class);
+
+    // RegisterAccountView
+    bind(RegisterAccountView.class)
+      .to(RegisterAccountViewImpl.class)
+      .in(Singleton.class);
+
+    bind(RegisterWidgetView.class).to(RegisterWidgetViewImpl.class);
+
+    // ProfileView
+    bind(ProfileView.class).to(ProfileViewImpl.class).in(Singleton.class);
 
-		// GlobalApplicationState
-		bind(GlobalApplicationState.class).to(GlobalApplicationStateImpl.class).in(Singleton.class);
-		bind(GlobalApplicationStateView.class).to(GlobalApplicationStateViewImpl.class);
+    // SettingsView
+    bind(SettingsView.class).to(SettingsViewImpl.class).in(Singleton.class);
 
-		bind(LazyLoadCallbackQueue.class).to(LazyLoadCallbackQueueImpl.class).in(Singleton.class);
+    // CominSoonView
+    bind(ComingSoonView.class).to(ComingSoonViewImpl.class).in(Singleton.class);
 
-		bind(ResourceLoader.class).to(ResourceLoaderImpl.class).in(Singleton.class);
+    // BCCOverviewView
+    bind(ChallengeOverviewViewImpl.class).in(Singleton.class);
 
-		// Header & Footer
-		bind(Header.class).in(Singleton.class);
-		bind(HeaderView.class).to(HeaderViewImpl.class).in(Singleton.class);
-		bind(Footer.class).in(Singleton.class);
-		bind(FooterView.class).to(FooterViewImpl.class).in(Singleton.class);
+    bind(ChallengeOverviewView.class).to(ChallengeOverviewViewImpl.class);
 
-		// JSONAdapters
-		bind(JSONObjectAdapter.class).to(JSONObjectGwt.class);
-		bind(JSONArrayAdapter.class).to(JSONArrayGwt.class);
+    // Help
+    bind(HelpView.class).to(HelpViewImpl.class).in(Singleton.class);
+    // SearchView
+    bind(SearchView.class).to(SearchViewImpl.class).in(Singleton.class);
 
-		// cache place presenters
-		bind(ProfilePresenter.class).in(Singleton.class);
-		bind(EntityPresenter.class).in(Singleton.class);
-		bind(DownPresenter.class).in(Singleton.class);
-		bind(SignedTokenPresenter.class).in(Singleton.class);
-        bind(PersonalAccessTokensPresenter.class).in(Singleton.class);
+    // Down
+    bind(DownView.class).to(DownViewImpl.class).in(Singleton.class);
 
-		bind(AnnotationsRendererWidgetView.class).to(AnnotationsRendererWidgetViewImpl.class);
-		bind(VersionHistoryWidgetView.class).to(VersionHistoryWidgetViewImpl.class);
+    // Synapse Wiki Pages
+    bind(SynapseWikiView.class).to(SynapseWikiViewImpl.class);
 
-		// GWT utility methods
-		bind(GWTWrapper.class).to(GWTWrapperImpl.class).in(Singleton.class);
-		bind(GWTTimer.class).to(GWTTimerImpl.class);
+    // QuizView
+    bind(QuizView.class).to(QuizViewImpl.class).in(Singleton.class);
 
-		bind(SessionDetector.class).in(Singleton.class);
+    // Certificate
+    bind(CertificateWidgetView.class).to(CertificateWidgetViewImpl.class);
 
-		// RequestBuilder
-		bind(RequestBuilderWrapper.class).to(RequestBuilderWrapperImpl.class);
+    // Account
+    bind(AccountView.class).to(AccountViewImpl.class).in(Singleton.class);
 
-		// Adapter factoyr
-		bind(AdapterFactory.class).to(GwtAdapterFactory.class);
+    // ChangeUsername
+    bind(ChangeUsernameView.class)
+      .to(ChangeUsernameViewImpl.class)
+      .in(Singleton.class);
 
-		// ClientCache
-		bind(ClientCache.class).to(ClientCacheImpl.class).in(Singleton.class);
+    // SignedToken
+    bind(SignedTokenView.class)
+      .to(SignedTokenViewImpl.class)
+      .in(Singleton.class);
 
-		// Storage wrapper
-		bind(StorageWrapper.class).to(StorageImpl.class).in(Singleton.class);;
+    // NrgrSynapseGlue
+    bind(DataAccessApprovalTokenView.class)
+      .to(DataAccessApprovalTokenViewImpl.class)
+      .in(Singleton.class);
+
+    // Trash
+    bind(TrashView.class).to(TrashViewImpl.class).in(Singleton.class);
 
-		/*
-		 * Vanilla Implementation binding
-		 */
+    // Asynchronous progress
+    bind(TimerProvider.class).to(TimerProviderImpl.class);
+
+    bind(NumberFormatProvider.class).to(NumberFormatProviderImpl.class);
+
+    bind(AsynchronousProgressView.class).to(AsynchronousProgressViewImpl.class);
+    bind(AsynchronousJobTracker.class).to(AsynchronousJobTrackerImpl.class);
+    // EmailInvitation
+    bind(EmailInvitationView.class)
+      .to(EmailInvitationViewImpl.class)
+      .in(Singleton.class);
+    // DataAccessManagement
+    bind(DataAccessManagementView.class)
+      .to(DataAccessManagementViewImpl.class)
+      .in(Singleton.class);
 
-		// JSNI impls
-		bind(SynapseJSNIUtils.class).to(SynapseJSNIUtilsImpl.class).in(Singleton.class);
+    // OAuthClientEditor
+    bind(OAuthClientEditorView.class)
+      .to(OAuthClientEditorViewImpl.class)
+      .in(Singleton.class);
 
-		/*
-		 * Places
-		 */
+    // CertificationQuiz
+    bind(CertificationQuizView.class)
+      .to(CertificationQuizViewImpl.class)
+      .in(Singleton.class);
 
-		// The home page
-		bind(HomeView.class).to(HomeViewImpl.class).in(Singleton.class);
+    /*
+     * Widgets
+     */
 
-		// EntityView
-		bind(EntityView.class).to(EntityViewImpl.class).in(Singleton.class);
+    // QuestionContainerWidget
+    bind(QuestionContainerWidgetView.class)
+      .to(QuestionContainerWidgetViewImpl.class);
 
-		// LoginView
-		bind(LoginView.class).to(LoginViewImpl.class).in(Singleton.class);
+    // DoiWidget
+    bind(DoiWidgetV2View.class).to(DoiWidgetV2ViewImpl.class);
 
-		// PasswordResetView
-		bind(PasswordResetView.class).to(PasswordResetViewImpl.class).in(Singleton.class);
+    bind(CreateOrUpdateDoiModalView.class)
+      .to(CreateOrUpdateDoiModalViewImpl.class);
 
-		// NewAccountView
-		bind(NewAccountView.class).to(NewAccountViewImpl.class).in(Singleton.class);
+    // LoginWidget
+    bind(LoginWidgetView.class)
+      .to(LoginWidgetViewImpl.class)
+      .in(Singleton.class);
+    // Breadcrumb
+    bind(BreadcrumbView.class).to(BreadcrumbViewImpl.class);
 
-		// RegisterAccountView
-		bind(RegisterAccountView.class).to(RegisterAccountViewImpl.class).in(Singleton.class);
+    // Bind the cookie provider
+    bind(GWTCookieImpl.class).in(Singleton.class);
 
-		bind(RegisterWidgetView.class).to(RegisterWidgetViewImpl.class);
+    bind(CookieProvider.class).to(GWTCookieImpl.class);
 
-		// ProfileView
-		bind(ProfileView.class).to(ProfileViewImpl.class).in(Singleton.class);
+    // ACL Editor
+    bind(AccessControlListEditorView.class)
+      .to(AccessControlListEditorViewImpl.class);
+    bind(AccessControlListModalWidget.class)
+      .to(AccessControlListModalWidgetImpl.class);
 
-		// SettingsView
-		bind(SettingsView.class).to(SettingsViewImpl.class).in(Singleton.class);
+    bind(AccessControlListModalWidgetView.class)
+      .to(AccessControlListModalWidgetViewImpl.class);
+    bind(EvaluationAccessControlListModalWidget.class)
+      .to(EvaluationAccessControlListModalWidgetImpl.class);
+    // Sharing Permissions Grid
+    bind(SharingPermissionsGridView.class)
+      .to(SharingPermissionsGridViewImpl.class);
 
-		// CominSoonView
-		bind(ComingSoonView.class).to(ComingSoonViewImpl.class).in(Singleton.class);
+    // basic pagination
+    bind(BasicPaginationView.class).to(BasicPaginationViewImpl.class);
 
-		// BCCOverviewView
-		bind(ChallengeOverviewViewImpl.class).in(Singleton.class);
-		bind(ChallengeOverviewView.class).to(ChallengeOverviewViewImpl.class);
+    // EntityPageTop
+    bind(EntityPageTopView.class).to(EntityPageTopViewImpl.class);
 
-		// Help
-		bind(HelpView.class).to(HelpViewImpl.class).in(Singleton.class);
+    // Preview
+    bind(PreviewWidgetView.class).to(PreviewWidgetViewImpl.class);
 
-		// SearchView
-		bind(SearchView.class).to(SearchViewImpl.class).in(Singleton.class);
+    // ActionMenu
+    bind(EntityActionMenu.class).to(EntityActionMenuImpl.class);
+    bind(EntityActionMenuView.class).to(EntityActionMenuViewImpl.class);
 
-		// Down
-		bind(DownView.class).to(DownViewImpl.class).in(Singleton.class);
+    bind(EntityActionController.class).to(EntityActionControllerImpl.class);
+    bind(EntityActionControllerView.class)
+      .to(EntityActionControllerViewImpl.class);
 
-		// Synapse Wiki Pages
-		bind(SynapseWikiView.class).to(SynapseWikiViewImpl.class);
+    bind(PreflightController.class).to(PreflightControllerImpl.class);
+    bind(CertifiedUserController.class).to(CertifiedUserControllerImpl.class);
+    bind(BigPromptModalView.class).to(BigPromptModalViewImpl.class);
+    bind(PromptForValuesModalView.class).to(PromptForValuesModalViewImpl.class);
 
-		// QuizView
-		bind(QuizView.class).to(QuizViewImpl.class).in(Singleton.class);
-
-		// Certificate
-		bind(CertificateWidgetView.class).to(CertificateWidgetViewImpl.class);
-
-		// Account
-		bind(AccountView.class).to(AccountViewImpl.class).in(Singleton.class);
-
-		// ChangeUsername
-		bind(ChangeUsernameView.class).to(ChangeUsernameViewImpl.class).in(Singleton.class);
-
-		// SignedToken
-		bind(SignedTokenView.class).to(SignedTokenViewImpl.class).in(Singleton.class);
-
-		// NrgrSynapseGlue
-		bind(DataAccessApprovalTokenView.class).to(DataAccessApprovalTokenViewImpl.class).in(Singleton.class);
-
-		// Trash
-		bind(TrashView.class).to(TrashViewImpl.class).in(Singleton.class);
-
-		// Asynchronous progress
-		bind(TimerProvider.class).to(TimerProviderImpl.class);
-		bind(NumberFormatProvider.class).to(NumberFormatProviderImpl.class);
-		bind(AsynchronousProgressView.class).to(AsynchronousProgressViewImpl.class);
-		bind(AsynchronousJobTracker.class).to(AsynchronousJobTrackerImpl.class);
-
-		// EmailInvitation
-		bind(EmailInvitationView.class).to(EmailInvitationViewImpl.class).in(Singleton.class);
-
-		/*
-		 * Widgets
-		 */
-
-		// QuestionContainerWidget
-		bind(QuestionContainerWidgetView.class).to(QuestionContainerWidgetViewImpl.class);
-
-		// DoiWidget
-		bind(DoiWidgetV2View.class).to(DoiWidgetV2ViewImpl.class);
-		bind(CreateOrUpdateDoiModalView.class).to(CreateOrUpdateDoiModalViewImpl.class);
-
-		// LoginWidget
-		bind(LoginWidgetView.class).to(LoginWidgetViewImpl.class).in(Singleton.class);
-
-		// Breadcrumb
-		bind(BreadcrumbView.class).to(BreadcrumbViewImpl.class);
-
-		// Bind the cookie provider
-		bind(GWTCookieImpl.class).in(Singleton.class);
-		bind(CookieProvider.class).to(GWTCookieImpl.class);
-
-		// ACL Editor
-		bind(AccessControlListEditorView.class).to(AccessControlListEditorViewImpl.class);
-		bind(AccessControlListModalWidget.class).to(AccessControlListModalWidgetImpl.class);
-		bind(AccessControlListModalWidgetView.class).to(AccessControlListModalWidgetViewImpl.class);
-
-		bind(EvaluationAccessControlListModalWidget.class).to(EvaluationAccessControlListModalWidgetImpl.class);
-
-		// Sharing Permissions Grid
-		bind(SharingPermissionsGridView.class).to(SharingPermissionsGridViewImpl.class);
-
-
-		// basic pagination
-		bind(BasicPaginationView.class).to(BasicPaginationViewImpl.class);
-
-		// EntityPageTop
-		bind(EntityPageTopView.class).to(EntityPageTopViewImpl.class);
-
-		// Preview
-		bind(PreviewWidgetView.class).to(PreviewWidgetViewImpl.class);
-
-		// ActionMenu V2
-		bind(ActionMenuWidget.class).to(ActionMenuWidgetImpl.class);
-		bind(ActionMenuWidgetView.class).to(ActionMenuWidgetViewImpl.class);
-
-		bind(EntityActionController.class).to(EntityActionControllerImpl.class);
-		bind(EntityActionControllerView.class).to(EntityActionControllerViewImpl.class);
-		bind(PreflightController.class).to(PreflightControllerImpl.class);
-		bind(CertifiedUserController.class).to(CertifiedUserControllerImpl.class);
-
-		bind(BigPromptModalView.class).to(BigPromptModalViewImpl.class);
-		bind(PromptForValuesModalView.class).to(PromptForValuesModalViewImpl.class);
-		bind(RenameEntityModalWidget.class).to(RenameEntityModalWidgetImpl.class);
-
-		// Rejected Reason
-		bind(RejectReasonView.class).to(RejectReasonViewImpl.class);
-
-		// FileBox
-		bind(FileTitleBarView.class).to(FileTitleBarViewImpl.class).in(Singleton.class);
-		bind(BasicTitleBarView.class).to(BasicTitleBarViewImpl.class);
-
-		// Search Box
-		bind(SearchBoxView.class).to(SearchBoxViewImpl.class).in(Singleton.class);
-
-		// Reject Data Access Request Dialog
-		bind(RejectDataAccessRequestModalView.class).to(RejectDataAccessRequestModalViewImpl.class);
-
-		// User Suggest Box
-		bind(SynapseSuggestBoxView.class).to(SynapseSuggestBoxViewImpl.class);
-
-		bind(MultipartUploader.class).to(MultipartUploaderImpl.class);
-		bind(FileInputView.class).to(FileInputViewImpl.class);
-
-		bind(FileHandleUploadView.class).to(FileHandleUploadViewImpl.class);
-		bind(FileHandleUploadWidget.class).to(FileHandleUploadWidgetImpl.class);
-
-		// LocationableUploader
-		bind(UploaderView.class).to(UploaderViewImpl.class);
-
-		bind(QuizInfoWidgetView.class).to(QuizInfoViewImpl.class);
-
-		// EntityTreeBrowser
-		bind(EntityTreeBrowserView.class).to(EntityTreeBrowserViewImpl.class);
-
-		// MyEntitiesBrowser
-		bind(MyEntitiesBrowserView.class).to(MyEntitiesBrowserViewImpl.class);
-
-		// Wiki Attachments
-		bind(WikiAttachmentsView.class).to(WikiAttachmentsViewImpl.class);
-
-		bind(WikiHistoryWidgetView.class).to(WikiHistoryWidgetViewImpl.class);
-
-		// Evaluation selector
-		bind(EvaluationListView.class).to(EvaluationListViewImpl.class);
-
-		// Administer Evaluations list
-		bind(AdministerEvaluationsListView.class).to(AdministerEvaluationsListViewImpl.class);
-
-		// EntitySearchBox
-		bind(EntitySearchBoxView.class).to(EntitySearchBoxViewImpl.class);
-
-		// EntityMetadata
-		bind(EntityMetadataView.class).to(EntityMetadataViewImpl.class);
-
-		bind(UserProfileEditorWidget.class).to(UserProfileEditorWidgetImpl.class);
-		bind(UserProfileEditorWidgetView.class).to(UserProfileEditorWidgetViewImpl.class);
-		bind(ProfileImageView.class).to(ProfileImageViewImpl.class);
-		bind(ProfileImageWidget.class).to(ProfileImageWidgetImpl.class);
-
-		// API Table Column manager
-		bind(APITableColumnManagerView.class).to(APITableColumnManagerViewImpl.class);
-		bind(APITableColumnConfigView.class).to(APITableColumnConfigViewImpl.class);
-
-		// single subpages view
-		bind(WikiSubpagesView.class).to(WikiSubpagesViewImpl.class);
-
-		// SubPages Order Editor
-		bind(WikiSubpagesOrderEditorView.class).to(WikiSubpagesOrderEditorViewImpl.class);
-
-		// SubPages Order Editor Tree
-		bind(WikiSubpageOrderEditorTreeView.class).to(WikiSubpageOrderEditorTreeViewImpl.class);
-
-		// SubPages Navigation Tree
-		bind(WikiSubpageNavigationTreeView.class).to(WikiSubpageNavigationTreeViewImpl.class);
-
-		// Widget Registration
-		bind(WidgetRegistrar.class).to(WidgetRegistrarImpl.class).in(Singleton.class);
-
-		// UI Widget Descriptor editor
-		bind(BaseEditWidgetDescriptorView.class).to(BaseEditWidgetDescriptorViewImpl.class);
-		bind(ReferenceConfigView.class).to(ReferenceConfigViewImpl.class);
-		bind(ImageConfigView.class).to(ImageConfigViewImpl.class).in(Singleton.class);
-		bind(AttachmentConfigView.class).to(AttachmentConfigViewImpl.class).in(Singleton.class);
-		bind(ProvenanceConfigView.class).to(ProvenanceConfigViewImpl.class);
-		bind(LinkConfigView.class).to(LinkConfigViewImpl.class);
-		bind(DetailsSummaryConfigView.class).to(DetailsSummaryConfigViewImpl.class);
-		bind(TabbedTableConfigView.class).to(TabbedTableConfigViewImpl.class);
-		bind(APITableConfigView.class).to(APITableConfigViewImpl.class);
-		bind(QueryTableConfigView.class).to(QueryTableConfigViewImpl.class);
-		bind(EntityListConfigView.class).to(EntityListConfigViewImpl.class);
-		bind(ShinySiteConfigView.class).to(ShinySiteConfigViewImpl.class);
-		bind(ButtonLinkConfigView.class).to(ButtonLinkConfigViewImpl.class);
-		bind(EvaluationSubmissionConfigView.class).to(EvaluationSubmissionConfigViewImpl.class);
-		bind(VideoConfigView.class).to(VideoConfigViewImpl.class);
-		bind(TableQueryResultWikiView.class).to(TableQueryResultWikiViewImpl.class);
-
-		// UI Widget Renderers
-		bind(BookmarkWidgetView.class).to(BookmarkWidgetViewImpl.class);
-		bind(ReferenceWidgetView.class).to(ReferenceWidgetViewImpl.class);
-		bind(EntityListWidgetView.class).to(EntityListWidgetViewImpl.class);
-		bind(IFrameView.class).to(IFrameViewImpl.class);
-		bind(ImageWidgetView.class).to(ImageWidgetViewImpl.class);
-		bind(AttachmentPreviewWidgetView.class).to(AttachmentPreviewWidgetViewImpl.class);
-		bind(APITableWidgetView.class).to(APITableWidgetViewImpl.class);
-		bind(TableOfContentsWidgetView.class).to(TableOfContentsWidgetViewImpl.class);
-		bind(WikiFilesPreviewWidgetView.class).to(WikiFilesPreviewWidgetViewImpl.class);
-		bind(ButtonLinkWidgetView.class).to(ButtonLinkWidgetViewImpl.class);
-		bind(EmptyWidgetView.class).to(EmptyWidgetViewImpl.class);
-		bind(VideoWidgetView.class).to(VideoWidgetViewImpl.class);
-		bind(TeamMemberCountView.class).to(TeamMemberCountViewImpl.class);
-
-
-		// ProvenanceWidget
-		bind(ProvenanceWidgetView.class).to(ProvenanceWidgetViewImpl.class);
-
-		// MarkdownWidget
-		bind(MarkdownWidgetView.class).to(MarkdownWidgetViewImpl.class);
-
-		// MarkdownEditorWidget
-		bind(MarkdownEditorWidgetView.class).to(MarkdownEditorWidgetViewImpl.class);
-
-		// FilesBrowser
-		bind(FilesBrowserView.class).to(FilesBrowserViewImpl.class);
-
-		// Entity Finder
-		bind(EntityFinderView.class).to(EntityFinderViewImpl.class);
-
-		// MoreTreeItem
-		bind(MoreTreeItemView.class).to(MoreTreeItemViewImpl.class);
-
-		bind(EvaluationSubmitterView.class).to(EvaluationSubmitterViewImpl.class);
-
-		bind(FavoriteWidgetView.class).to(FavoriteWidgetViewImpl.class);
-
-		bind(WikiPageWidgetView.class).to(WikiPageWidgetViewImpl.class);
-		bind(UserBadgeView.class).to(UserBadgeViewImpl.class);
-		bind(EmailInvitationBadgeView.class).to(EmailInvitationBadgeViewImpl.class);
-
-		bind(EntityBadgeView.class).to(EntityBadgeViewImpl.class);
-
-		bind(TutorialWizardView.class).to(TutorialWizardViewImpl.class);
-
-		bind(PublicPrivateBadgeView.class).to(PublicPrivateBadgeViewImpl.class);
-
-		/*
-		 * Modal wizard stuff.
-		 */
-		bind(ModalWizardView.class).to(ModalWizardViewImpl.class);
-		bind(ModalWizardWidget.class).to(ModalWizardWidgetImpl.class);
-
-		/*
-		 * TableEntity related bindings
-		 */
-		bind(TableListWidgetView.class).to(TableListWidgetViewImpl.class);
-		bind(ColumnModelsViewBase.class).to(ColumnModelsViewBaseImpl.class);
-		bind(ColumnModelsView.class).to(ColumnModelsViewImpl.class);
-		bind(ColumnModelTableRowEditorView.class).to(ColumnModelTableRowEditorViewImpl.class);
-		bind(ColumnModelTableRowEditorWidget.class).to(ColumnModelTableRowEditorWidgetImpl.class);
-		bind(ColumnModelTableRowViewer.class).to(ColumnModelTableRowViewerImpl.class);
-		bind(TableEntityWidgetView.class).to(TableEntityWidgetViewImpl.class);
-		bind(RowView.class).to(RowViewImpl.class);
-		bind(TablePageView.class).to(TablePageViewImpl.class);
-		bind(TableQueryResultView.class).to(TableQueryResultViewImpl.class);
-		bind(QueryResultEditorView.class).to(QueryResultEditorViewImpl.class);
-		bind(QueryInputView.class).to(QueryInputViewImpl.class);
-		bind(JobTrackingWidget.class).to(AsynchronousProgressWidget.class);
-		bind(UploadTableModalWidget.class).to(UploadTableModalWidgetImpl.class);
-		bind(UploadCSVPreviewPage.class).to(UploadCSVPreviewPageImpl.class);
-		bind(CSVOptionsView.class).to(CSVOptionsViewImpl.class);
-		bind(UploadCSVPreviewPageView.class).to(UploadCSVPreviewPageViewImpl.class);
-		bind(UploadPreviewView.class).to(UploadPreviewViewImpl.class);
-		bind(UploadPreviewWidget.class).to(UploadPreviewWidgetImpl.class);
-		bind(UploadCSVFilePage.class).to(UploadCSVFilePageImpl.class);
-		bind(UploadCSVFinishPage.class).to(UploadCSVFinishPageImpl.class);
-		bind(UploadCSVFinishPageView.class).to(UploadCSVFinishPageViewImpl.class);
-		bind(UploadCSVAppendPage.class).to(UploadCSVAppendPageImpl.class);
-		bind(UploadCSVAppendPageView.class).to(UploadCSVAppendPageViewImpl.class);
-		bind(SortableTableHeader.class).to(SortableTableHeaderImpl.class);
-		bind(StaticTableHeader.class).to(StaticTableHeaderImpl.class);
-
-		bind(CreateDownloadPage.class).to(CreateDownloadPageImpl.class);
-		bind(CreateDownloadPageView.class).to(CreateDownloadPageViewImpl.class);
-
-		bind(DownloadFilePage.class).to(DownloadFilePageImpl.class);
-		bind(DownloadFilePageView.class).to(DownloadFilePageViewImpl.class);
-		bind(DownloadTableQueryModalWidget.class).to(DownloadTableQueryModalWidgetImpl.class);
-
-		/*
-		 * TableEntity cell bindings.
-		 */
-		bind(LinkCellRendererView.class).to(LinkCellRendererViewImpl.class);
-		bind(StringRendererCellView.class).to(StringRendererCellViewImpl.class);
-		bind(StringListRendererCellView.class).to(StringListRendererCellViewImpl.class);
-		bind(DateListRendererCellView.class).to(DateListRendererCellViewImpl.class);
-		bind(UserIdListRendererCellView.class).to(UserIdListRendererCellViewImpl.class);
-		bind(EntityIdListRendererCellView.class).to(EntityIdListRendererCellViewImpl.class);
-		bind(CellEditorView.class).to(CellEditorViewImpl.class);
-		bind(NumberCellEditorView.class).to(NumberCellEditorViewImpl.class);
-		bind(ListCellEditorView.class).to(ListCellEditorViewImpl.class);
-		bind(DateCellEditorView.class).to(DateCellEditorViewImpl.class);
-		bind(UserIdCellEditorView.class).to(UserIdCellEditorViewImpl.class);
-		bind(FileCellEditorView.class).to(FileCellEditorViewImpl.class);
-		bind(FileCellRendererView.class).to(FileCellRendererViewImpl.class);
-		bind(EntityIdCellRendererView.class).to(EntityIdCellRendererViewImpl.class);
-		bind(LargeStringCellEditorView.class).to(LargeStringCellEditorViewImpl.class);
-		bind(JSONListCellEditorView.class).to(JSONListCellEditorViewImpl.class);
-		bind(EditJSONListModalView.class).to(EditJSONListModalViewImpl.class).in(Singleton.class);
-
-		/*
-		 * Teams Places
-		 */
-		// Team Page
-		bind(TeamView.class).to(TeamViewImpl.class).in(Singleton.class);
-
-		// Team Search Page
-		bind(TeamSearchView.class).to(TeamSearchViewImpl.class).in(Singleton.class);
-
-		bind(MapView.class).to(MapViewImpl.class);
-
-		// People Search Page
-		bind(PeopleSearchView.class).to(PeopleSearchViewImpl.class).in(Singleton.class);
-
-		/*
-		 * Teams Widgets
-		 */
-
-		// Team Action Menu Items
-		bind(TeamEditModalWidgetView.class).to(TeamEditModalWidgetViewImpl.class);
-		bind(TeamLeaveModalWidgetView.class).to(TeamLeaveModalWidgetViewImpl.class);
-		bind(TeamDeleteModalWidgetView.class).to(TeamDeleteModalWidgetViewImpl.class);
-
-		// Open Team Invitations widget
-		bind(OpenTeamInvitationsWidgetView.class).to(OpenTeamInvitationsWidgetViewImpl.class);
-
-		// Pending Team Join Requests widget
-		bind(OpenMembershipRequestsWidgetView.class).to(OpenMembershipRequestsWidgetViewImpl.class);
-
-		// Current User Invites widget
-		bind(OpenUserInvitationsWidgetView.class).to(OpenUserInvitationsWidgetViewImpl.class);
-
-		// Team List widget (link to search teams page, optionally can create team)
-		bind(TeamListWidgetView.class).to(TeamListWidgetViewImpl.class);
-
-		// Member List widget
-		bind(MemberListWidgetView.class).to(MemberListWidgetViewImpl.class);
-
-		// Invite Team member widget
-		bind(InviteWidgetView.class).to(InviteWidgetViewImpl.class);
-
-		// Request Team membership widget
-		bind(JoinTeamWidgetView.class).to(JoinTeamWidgetViewImpl.class);
-
-		// Join Team Button Config widget
-		bind(JoinTeamConfigEditorView.class).to(JoinTeamConfigEditorViewImpl.class);
-
-		// Submit to evaluation widget
-		bind(SubmitToEvaluationWidgetView.class).to(SubmitToEvaluationWidgetViewImpl.class);
-		// Team renderer
-		bind(TeamBadgeView.class).to(TeamBadgeViewImpl.class);
-		bind(BigTeamBadgeView.class).to(BigTeamBadgeViewImpl.class);
-
-
-		bind(UserTeamConfigView.class).to(UserTeamConfigViewImpl.class);
-
-		bind(SharingAndDataUseConditionWidgetView.class).to(SharingAndDataUseConditionWidgetViewImpl.class);
-
-		bind(WizardProgressWidgetView.class).to(WizardProgressWidgetViewImpl.class);
-		bind(UploadDialogWidgetView.class).to(UploadDialogWidgetViewImpl.class);
-		bind(AddFolderDialogWidgetView.class).to(AddFolderDialogWidgetViewImpl.class);
-
-		bind(LoginModalView.class).to(LoginModalViewImpl.class);
-
-		bind(ImageParamsPanelView.class).to(ImageParamsPanelViewImpl.class);
-		bind(RegisterTeamDialogView.class).to(RegisterTeamDialogViewImpl.class);
-		bind(EditRegisteredTeamDialogView.class).to(EditRegisteredTeamDialogViewImpl.class);
-		bind(ChallengeTeamsView.class).to(ChallengeTeamsViewImpl.class);
-		bind(ChallengeBadgeView.class).to(ChallengeBadgeViewImpl.class);
-		bind(ProjectBadgeView.class).to(ProjectBadgeViewImpl.class);
-		bind(TableQueryResultWikiWidgetView.class).to(TableQueryResultWikiWidgetViewImpl.class);
-
-		bind(SingleButtonView.class).to(SingleButtonViewImpl.class);
-		bind(UserListView.class).to(UserListViewImpl.class);
-
-		bind(AnnotationTransformer.class).to(AnnotationTransformerImpl.class).in(Singleton.class);
-		bind(AnnotationEditorView.class).to(AnnotationEditorViewImpl.class);
-		bind(EditAnnotationsDialogView.class).to(EditAnnotationsDialogViewImpl.class);
-		bind(CommaSeparatedValuesParserView.class).to(CommaSeparatedValuesParserViewImpl.class);
-		bind(PapaCSVParser.class).in(Singleton.class);
-
-		bind(AnnotationCellFactory.class).to(AnnotationCellFactoryImpl.class).in(Singleton.class);
-		bind(EntityId2BundleCache.class).to(EntityId2BundleCacheImpl.class).in(Singleton.class);
-
-		bind(VersionHistoryRowView.class).to(VersionHistoryRowViewImpl.class);
-		bind(SynapseStandaloneWikiView.class).to(SynapseStandaloneWikiViewImpl.class);
-
-		bind(SynapseAlertView.class).to(SynapseAlertViewImpl.class);
-		bind(SynapseAlert.class).to(SynapseAlertImpl.class);
-
-		bind(ProvenanceEditorWidgetView.class).to(ProvenanceEditorWidgetViewImpl.class);
-		bind(ProvenanceListWidgetView.class).to(ProvenanceListWidgetViewImpl.class);
-		bind(ProvenanceURLDialogWidgetView.class).to(ProvenanceURLDialogWidgetViewImpl.class);
-		bind(EntityRefProvEntryView.class).to(EntityRefProvEntryViewImpl.class);
-		bind(URLProvEntryView.class).to(URLProvEntryViewImpl.class);
-		bind(StorageLocationWidgetView.class).to(StorageLocationWidgetViewImpl.class);
-		bind(ErrorView.class).to(ErrorViewImpl.class);
-		bind(PreviewConfigView.class).to(PreviewConfigViewImpl.class);
-		bind(SynapseFormConfigView.class).to(SynapseFormConfigViewImpl.class);
-
-		bind(EditFileMetadataModalView.class).to(EditFileMetadataModalViewImpl.class);
-		bind(EditFileMetadataModalWidget.class).to(EditFileMetadataModalWidgetImpl.class);
-		bind(EditProjectMetadataModalView.class).to(EditProjectMetadataModalViewImpl.class);
-		bind(EditProjectMetadataModalWidget.class).to(EditProjectMetadataModalWidgetImpl.class);
-		bind(BiodallianceWidgetView.class).to(BiodallianceWidgetViewImpl.class);
-		bind(BiodallianceSourceEditorView.class).to(BiodallianceSourceEditorViewImpl.class);
-		bind(BiodallianceEditorView.class).to(BiodallianceEditorViewImpl.class);
-
-		bind(TabView.class).to(TabViewImpl.class);
-		bind(TabsView.class).to(TabsViewImpl.class);
-
-		bind(FilesTabView.class).to(FilesTabViewImpl.class);
-		bind(TablesTabView.class).to(TablesTabViewImpl.class);
-		bind(ChallengeTabView.class).to(ChallengeTabViewImpl.class);
-		bind(DiscussionTabView.class).to(DiscussionTabViewImpl.class);
-		bind(DockerTabView.class).to(DockerTabViewImpl.class);
-		bind(ModifiedCreatedByWidgetView.class).to(ModifiedCreatedByWidgetViewImpl.class);
-		bind(FileHandleListView.class).to(FileHandleListViewImpl.class);
-		bind(ACTView.class).to(ACTViewImpl.class);
-		bind(CytoscapeConfigView.class).to(CytoscapeConfigViewImpl.class);
-		bind(CytoscapeView.class).to(CytoscapeViewImpl.class);
-
-		// discussion
-		bind(DiscussionThreadModalView.class).to(DiscussionThreadModalViewImpl.class);
-		bind(ReplyModalView.class).to(ReplyModalViewImpl.class);
-		bind(DiscussionThreadListWidgetView.class).to(DiscussionThreadListWidgetViewImpl.class);
-		bind(DiscussionThreadListItemWidgetView.class).to(DiscussionThreadListItemWidgetViewImpl.class);
-		bind(SingleDiscussionThreadWidgetView.class).to(SingleDiscussionThreadWidgetViewImpl.class);
-		bind(ReplyWidgetView.class).to(ReplyWidgetViewImpl.class);
-		bind(ForumWidgetView.class).to(ForumWidgetViewImpl.class);
-		bind(NewReplyWidgetView.class).to(NewReplyWidgetViewImpl.class);
-
-		// docker
-		bind(DockerRepoListWidgetView.class).to(DockerRepoListWidgetViewImpl.class);
-		bind(DockerRepoWidgetView.class).to(DockerRepoWidgetViewImpl.class);
-		bind(AddExternalRepoModalView.class).to(AddExternalRepoModalViewImpl.class);
-		bind(DockerCommitRowWidgetView.class).to(DockerCommitRowWidgetViewImpl.class);
-		bind(DockerCommitListWidgetView.class).to(DockerCommitListWidgetViewImpl.class);
-
-		bind(SessionStorage.class).to(SessionStorageImpl.class);
-		bind(SynapseForumView.class).to(SynapseForumViewImpl.class);
-		bind(WikiMarkdownEditorView.class).to(WikiMarkdownEditorViewImpl.class);
-		bind(StuAlertView.class).to(StuAlertViewImpl.class);
-
-		bind(SynapseTableFormWidgetView.class).to(SynapseTableFormWidgetViewImpl.class);
-		bind(RowFormView.class).to(RowFormViewImpl.class);
-		bind(RadioCellEditorView.class).to(RadioCellEditorViewImpl.class);
-
-		bind(MarkdownIt.class).to(MarkdownItImpl.class);
-		bind(SubscriptionView.class).to(SubscriptionViewImpl.class);
-		bind(TopicWidgetView.class).to(TopicWidgetViewImpl.class);
-		bind(SubscribeButtonWidgetView.class).to(SubscribeButtonWidgetViewImpl.class);
-		bind(SubscriptionListWidgetView.class).to(SubscriptionListWidgetViewImpl.class);
-		bind(TopicRowWidgetView.class).to(TopicRowWidgetViewImpl.class);
-		bind(RefreshAlertView.class).to(RefreshAlertViewImpl.class);
-
-		bind(UserSelectorView.class).to(UserSelectorViewImpl.class);
-		bind(CreateTableViewWizardStep1View.class).to(CreateTableViewWizardStep1ViewImpl.class);
-		bind(EntityContainerListWidgetView.class).to(EntityContainerListWidgetViewImpl.class);
-		bind(EntityViewScopeWidgetView.class).to(EntityViewScopeWidgetViewImpl.class);
-		bind(CopyTextModal.class).to(CopyTextModalImpl.class);
-
-		bind(EvaluationEditorModalView.class).to(EvaluationEditorModalViewImpl.class);
-		bind(LoadMoreWidgetContainerView.class).to(LoadMoreWidgetContainerViewImpl.class);
-		bind(RadioWidget.class).to(RadioWidgetViewImpl.class);
-
-		bind(FileClientsHelpView.class).to(FileClientsHelpViewImpl.class);
-		bind(ContainerClientsHelp.class).to(ContainerClientsHelpImpl.class);
-		bind(FileDownloadMenuItemView.class).to(FileDownloadMenuItemViewImpl.class);
-		bind(CreateTableViewWizardStep2View.class).to(CreateTableViewWizardStep2ViewImpl.class);
-		bind(ChallengeWidgetView.class).to(ChallengeWidgetViewImpl.class);
-		bind(SelectTeamModalView.class).to(SelectTeamModalViewImpl.class);
-		bind(ApproveUserAccessModalView.class).to(ApproveUserAccessModalViewImpl.class);
-		bind(UserBadgeListView.class).to(UserBadgeListViewImpl.class);
-		bind(EntityListRowBadgeView.class).to(EntityListRowBadgeViewImpl.class);
-
-		bind(LazyLoadWikiWidgetWrapperView.class).to(LazyLoadWikiWidgetWrapperViewImpl.class);
-
-		bind(EntityHeaderAsyncHandler.class).to(EntityHeaderAsyncHandlerImpl.class).in(Singleton.class);
-		bind(VersionedEntityHeaderAsyncHandler.class).to(VersionedEntityHeaderAsyncHandlerImpl.class).in(Singleton.class);
-
-		bind(GoogleMapView.class).to(GoogleMapViewImpl.class);
-
-		bind(FileHandleAsyncHandler.class).to(FileHandleAsyncHandlerImpl.class).in(Singleton.class);
-		bind(PresignedURLAsyncHandler.class).to(PresignedURLAsyncHandlerImpl.class).in(Singleton.class);
-		bind(PresignedAndFileHandleURLAsyncHandler.class).to(PresignedAndFileHandleURLAsyncHandlerImpl.class).in(Singleton.class);
-
-		bind(UserProfileAsyncHandler.class).to(UserProfileAsyncHandlerImpl.class).in(Singleton.class);
-
-		bind(TeamAsyncHandler.class).to(TeamAsyncHandlerImpl.class).in(Singleton.class);
-
-		bind(UserGroupHeaderAsyncHandler.class).to(UserGroupHeaderAsyncHandlerImpl.class).in(Singleton.class);
-
-		bind(UserGroupHeaderFromAliasAsyncHandler.class).to(UserGroupHeaderFromAliasAsyncHandlerImpl.class).in(Singleton.class);
-
-		bind(DivView.class).to(DivViewImpl.class);
-		bind(FacetColumnResultValuesView.class).to(FacetColumnResultValuesViewImpl.class);
-
-		bind(ViewDefaultColumns.class).in(Singleton.class);
-		bind(SubscribersWidgetView.class).to(SubscribersWidgetViewImpl.class);
-		bind(PlaceView.class).to(PlaceViewImpl.class);
-		bind(ManagedACTAccessRequirementWidgetView.class).to(ManagedACTAccessRequirementWidgetViewImpl.class);
-		bind(ACTAccessRequirementWidgetView.class).to(ACTAccessRequirementWidgetViewImpl.class);
-		bind(TermsOfUseAccessRequirementWidgetView.class).to(TermsOfUseAccessRequirementWidgetViewImpl.class);
-		bind(CreateResearchProjectWizardStep1View.class).to(CreateResearchProjectWizardStep1ViewImpl.class);
-		bind(CreateDataAccessSubmissionWizardStep2View.class).to(CreateDataAccessSubmissionWizardStep2ViewImpl.class);
-		bind(FileHandleWidgetView.class).to(FileHandleWidgetViewImpl.class);
-		bind(CreateAccessRequirementStep1View.class).to(CreateAccessRequirementStep1ViewImpl.class);
-		bind(CreateManagedACTAccessRequirementStep2View.class).to(CreateManagedACTAccessRequirementStep2ViewImpl.class);
-		bind(CreateBasicAccessRequirementStep2View.class).to(CreateBasicAccessRequirementStep2ViewImpl.class);
-		bind(Button.class).to(ButtonImpl.class);
-
-		bind(IsACTMemberAsyncHandler.class).to(IsACTMemberAsyncHandlerImpl.class).in(Singleton.class);
-
-		bind(PopupUtilsView.class).to(PopupUtilsViewImpl.class).in(Singleton.class);
-		bind(ProfileCertifiedValidatedView.class).to(ProfileCertifiedValidatedViewImpl.class);
-		bind(ACTDataAccessSubmissionsView.class).to(ACTDataAccessSubmissionsViewImpl.class);
-		bind(RestrictionWidgetView.class).to(RestrictionWidgetViewImpl.class);
-		bind(ACTDataAccessSubmissionWidgetView.class).to(ACTDataAccessSubmissionWidgetViewImpl.class);
-		bind(OpenSubmissionWidgetView.class).to(OpenSubmissionWidgetViewImpl.class);
-		bind(LockAccessRequirementWidgetView.class).to(LockAccessRequirementWidgetViewImpl.class);
-		bind(ImageUploadView.class).to(ImageUploadViewImpl.class);
-		bind(RevokeUserAccessModalView.class).to(RevokeUserAccessModalViewImpl.class);
-		bind(PlotlyWidgetView.class).to(PlotlyWidgetViewImpl.class);
-		bind(PlotlyConfigView.class).to(PlotlyConfigViewImpl.class);
-
-		bind(DateTimeUtils.class).to(DateTimeUtilsImpl.class).in(Singleton.class);
-		bind(ACTAccessApprovalsView.class).to(ACTAccessApprovalsViewImpl.class);
-		bind(AccessorGroupView.class).to(AccessorGroupViewImpl.class);
-		bind(SelfSignAccessRequirementWidgetView.class).to(SelfSignAccessRequirementWidgetViewImpl.class);
-		bind(SubjectWidgetView.class).to(SubjectWidgetViewImpl.class);
-		bind(AwsLoginView.class).to(AwsLoginViewImpl.class);
-		bind(TeamMemberRowWidgetView.class).to(TeamMemberRowWidgetViewImpl.class);
-		bind(TeamMembersWidgetView.class).to(TeamMembersWidgetViewImpl.class);
-		bind(FileViewClientsHelp.class).to(FileViewClientsHelpImpl.class);
-		bind(EmailAddressesWidgetView.class).to(EmailAddressesWidgetViewImpl.class);
-		bind(SRCDemoWidgetView.class).to(SRCDemoWidgetViewImpl.class);
-
-		// Synapse js client
-		bind(SynapseJavascriptClient.class).in(Singleton.class);
-		bind(SynapseJavascriptFactory.class).in(Singleton.class);
-
-		bind(HtmlPreviewView.class).to(HtmlPreviewViewImpl.class);
-		bind(S3DirectLoginDialog.class).to(S3DirectLoginDialogImpl.class);
-		bind(WikiPageDeleteConfirmationDialogView.class).to(WikiPageDeleteConfirmationDialogViewImpl.class);
-		bind(WikiDiffView.class).to(WikiDiffViewImpl.class);
-		bind(SynapseProperties.class).to(SynapsePropertiesImpl.class).in(Singleton.class);
-		bind(Moment.class).to(MomentImpl.class);
-		bind(DownloadSpeedTester.class).to(DownloadSpeedTesterImpl.class);
-		bind(PackageSizeSummaryView.class).to(PackageSizeSummaryViewImpl.class);
-		bind(DownloadListWidgetView.class).to(DownloadListWidgetViewImpl.class);
-		bind(AddToDownloadListView.class).to(AddToDownloadListViewImpl.class);
-		bind(EntityPresenterEventBinder.class).to(EntityPresenterEventBinderImpl.class);
-		bind(Linkify.class).to(LinkifyImpl.class);
-		bind(PasswordResetSignedTokenView.class).to(PasswordResetSignedTokenViewImpl.class);
-		bind(TeamProjectsModalWidgetView.class).to(TeamProjectsModalWidgetViewImpl.class);
-		bind(ContainerItemCountWidgetView.class).to(ContainerItemCountWidgetViewImpl.class);
-		bind(StatisticsPlotWidgetView.class).to(StatisticsPlotWidgetViewImpl.class);
-		bind(QuarantinedEmailModal.class).in(Singleton.class);
-		bind(SubmissionViewScopeEditorView.class).to(SubmissionViewScopeEditorViewImpl.class);
-		bind(EvaluationFinderView.class).to(EvaluationFinderViewImpl.class);
-		bind(SubmissionViewScopeWidgetView.class).to(SubmissionViewScopeWidgetViewImpl.class);
-        bind(PersonalAccessTokensView.class).to(PersonalAccessTokensViewImpl.class);
-
-    }
+    bind(PromptForValuesModalView.Configuration.Builder.class)
+      .to(PromptForValuesModalConfigurationImpl.Builder.class);
+    bind(RenameEntityModalWidget.class).to(RenameEntityModalWidgetImpl.class);
+    // Rejected Reason
+    bind(RejectReasonView.class).to(RejectReasonViewImpl.class);
+
+    bind(ProjectTitleBarView.class).to(ProjectTitleBarViewImpl.class);
+    bind(BasicTitleBarView.class).to(BasicTitleBarViewImpl.class);
+
+    // Search Box
+    bind(SearchBoxView.class).to(SearchBoxViewImpl.class).in(Singleton.class);
+    // Reject Data Access Request Dialog
+    bind(RejectDataAccessRequestModalView.class)
+      .to(RejectDataAccessRequestModalViewImpl.class);
+
+    // User Suggest Box
+    bind(SynapseSuggestBoxView.class).to(SynapseSuggestBoxViewImpl.class);
+
+    bind(MultipartUploader.class).to(MultipartUploaderImpl.class);
+
+    bind(FileInputView.class).to(FileInputViewImpl.class);
+
+    bind(FileHandleUploadView.class).to(FileHandleUploadViewImpl.class);
+    bind(FileHandleUploadWidget.class).to(FileHandleUploadWidgetImpl.class);
+
+    // LocationableUploader
+    bind(UploaderView.class).to(UploaderViewImpl.class);
+    bind(QuizInfoWidgetView.class).to(QuizInfoViewImpl.class);
+
+    // EntityTreeBrowser
+    bind(EntityTreeBrowserView.class).to(EntityTreeBrowserViewImpl.class);
+
+    // MyEntitiesBrowser
+    bind(MyEntitiesBrowserView.class).to(MyEntitiesBrowserViewImpl.class);
+
+    // Wiki Attachments
+    bind(WikiAttachmentsView.class).to(WikiAttachmentsViewImpl.class);
+
+    bind(WikiHistoryWidgetView.class).to(WikiHistoryWidgetViewImpl.class);
+
+    // Evaluation selector
+    bind(EvaluationListView.class).to(EvaluationListViewImpl.class);
+
+    // Administer Evaluations list
+    bind(AdministerEvaluationsListView.class)
+      .to(AdministerEvaluationsListViewImpl.class);
+
+    // EntitySearchBox
+    bind(EntitySearchBoxView.class).to(EntitySearchBoxViewImpl.class);
+
+    // EntityMetadata
+    bind(EntityMetadataView.class).to(EntityMetadataViewImpl.class);
+
+    bind(UserProfileEditorWidget.class).to(UserProfileEditorWidgetImpl.class);
+
+    bind(UserProfileEditorWidgetView.class)
+      .to(UserProfileEditorWidgetViewImpl.class);
+
+    bind(ProfileImageView.class).to(ProfileImageViewImpl.class);
+    bind(ProfileImageWidget.class).to(ProfileImageWidgetImpl.class);
+    // API Table Column manager
+    bind(APITableColumnManagerView.class)
+      .to(APITableColumnManagerViewImpl.class);
+    bind(APITableColumnConfigView.class).to(APITableColumnConfigViewImpl.class);
+
+    // single subpages view
+    bind(WikiSubpagesView.class).to(WikiSubpagesViewImpl.class);
+    // SubPages Order Editor
+    bind(WikiSubpagesOrderEditorView.class)
+      .to(WikiSubpagesOrderEditorViewImpl.class);
+
+    // SubPages Order Editor Tree
+    bind(WikiSubpageOrderEditorTreeView.class)
+      .to(WikiSubpageOrderEditorTreeViewImpl.class);
+
+    // SubPages Navigation Tree
+    bind(WikiSubpageNavigationTreeView.class)
+      .to(WikiSubpageNavigationTreeViewImpl.class);
+
+    // Widget Registration
+    bind(WidgetRegistrar.class)
+      .to(WidgetRegistrarImpl.class)
+      .in(Singleton.class);
+
+    // UI Widget Descriptor editor
+    bind(BaseEditWidgetDescriptorView.class)
+      .to(BaseEditWidgetDescriptorViewImpl.class);
+
+    bind(ReferenceConfigView.class).to(ReferenceConfigViewImpl.class);
+
+    bind(ImageConfigView.class)
+      .to(ImageConfigViewImpl.class)
+      .in(Singleton.class);
+    bind(AttachmentConfigView.class)
+      .to(AttachmentConfigViewImpl.class)
+      .in(Singleton.class);
+    bind(ProvenanceConfigView.class).to(ProvenanceConfigViewImpl.class);
+    bind(LinkConfigView.class).to(LinkConfigViewImpl.class);
+    bind(DetailsSummaryConfigView.class).to(DetailsSummaryConfigViewImpl.class);
+    bind(TabbedTableConfigView.class).to(TabbedTableConfigViewImpl.class);
+    bind(APITableConfigView.class).to(APITableConfigViewImpl.class);
+    bind(QueryTableConfigView.class).to(QueryTableConfigViewImpl.class);
+    bind(EntityListConfigView.class).to(EntityListConfigViewImpl.class);
+    bind(ShinySiteConfigView.class).to(ShinySiteConfigViewImpl.class);
+    bind(ButtonLinkConfigView.class).to(ButtonLinkConfigViewImpl.class);
+    bind(EvaluationSubmissionConfigView.class)
+      .to(EvaluationSubmissionConfigViewImpl.class);
+    bind(VideoConfigView.class).to(VideoConfigViewImpl.class);
+    bind(TableQueryResultWikiView.class).to(TableQueryResultWikiViewImpl.class);
+    bind(TeamSelectEditorView.class).to(TeamSelectEditorViewImpl.class);
+    // UI Widget Renderers
+    bind(BookmarkWidgetView.class).to(BookmarkWidgetViewImpl.class);
+    bind(ReferenceWidgetView.class).to(ReferenceWidgetViewImpl.class);
+
+    bind(EntityListWidgetView.class).to(EntityListWidgetViewImpl.class);
+    bind(IFrameView.class).to(IFrameViewImpl.class);
+    bind(ImageWidgetView.class).to(ImageWidgetViewImpl.class);
+    bind(AttachmentPreviewWidgetView.class)
+      .to(AttachmentPreviewWidgetViewImpl.class);
+    bind(APITableWidgetView.class).to(APITableWidgetViewImpl.class);
+    bind(TableOfContentsWidgetView.class)
+      .to(TableOfContentsWidgetViewImpl.class);
+    bind(WikiFilesPreviewWidgetView.class)
+      .to(WikiFilesPreviewWidgetViewImpl.class);
+    bind(ButtonLinkWidgetView.class).to(ButtonLinkWidgetViewImpl.class);
+    bind(EmptyWidgetView.class).to(EmptyWidgetViewImpl.class);
+    bind(VideoWidgetView.class).to(VideoWidgetViewImpl.class);
+    bind(TeamMemberCountView.class).to(TeamMemberCountViewImpl.class);
+    bind(TIFFPreviewWidgetView.class).to(TIFFPreviewWidgetViewImpl.class);
+    // ProvenanceWidget
+    bind(
+      org.sagebionetworks.web.client.widget.provenance.ProvenanceWidgetView.class
+    )
+      .to(
+        org.sagebionetworks.web.client.widget.provenance.ProvenanceWidgetViewImpl.class
+      );
+    bind(ProvenanceWidgetView.class).to(ProvenanceWidgetViewImpl.class);
+
+    // MarkdownWidget
+    bind(MarkdownWidgetView.class).to(MarkdownWidgetViewImpl.class);
+    // MarkdownEditorWidget
+    bind(MarkdownEditorWidgetView.class).to(MarkdownEditorWidgetViewImpl.class);
+
+    // FilesBrowser
+    bind(FilesBrowserView.class).to(FilesBrowserViewImpl.class);
+
+    // MoreTreeItem
+    bind(MoreTreeItemView.class).to(MoreTreeItemViewImpl.class);
+
+    bind(EvaluationSubmitterView.class).to(EvaluationSubmitterViewImpl.class);
+
+    bind(FavoriteWidgetView.class).to(FavoriteWidgetViewImpl.class);
+
+    bind(WikiPageWidgetView.class).to(WikiPageWidgetViewImpl.class);
+
+    bind(UserBadgeView.class).to(UserBadgeViewImpl.class);
+
+    bind(EmailInvitationBadgeView.class).to(EmailInvitationBadgeViewImpl.class);
+    bind(EntityBadgeView.class).to(EntityBadgeViewImpl.class);
+    bind(TutorialWizardView.class).to(TutorialWizardViewImpl.class);
+
+    bind(PublicPrivateBadgeView.class).to(PublicPrivateBadgeViewImpl.class);
+
+    /*
+     * Modal wizard stuff.
+     */
+    bind(ModalWizardView.class).to(ModalWizardViewImpl.class);
+
+    bind(ModalWizardWidget.class).to(ModalWizardWidgetImpl.class);
+
+    /*
+     * TableEntity related bindings
+     */
+    bind(TableListWidgetView.class).to(TableListWidgetViewImpl.class);
+
+    bind(ColumnModelsView.class).to(ColumnModelsViewImpl.class);
+    bind(ColumnModelTableRowEditorView.class)
+      .to(ColumnModelTableRowEditorViewImpl.class);
+    bind(ColumnModelTableRowEditorWidget.class)
+      .to(ColumnModelTableRowEditorWidgetImpl.class);
+    bind(ColumnModelTableRowViewer.class)
+      .to(ColumnModelTableRowViewerImpl.class);
+    bind(ColumnModelsEditorWidgetView.class)
+      .to(ColumnModelsEditorWidgetViewImpl.class);
+    bind(TableEntityWidgetView.class).to(TableEntityWidgetViewImpl.class);
+    bind(RowView.class).to(RowViewImpl.class);
+    bind(TablePageView.class).to(TablePageViewImpl.class);
+    bind(QueryResultEditorView.class).to(QueryResultEditorViewImpl.class);
+    bind(QueryInputView.class).to(QueryInputViewImpl.class);
+    bind(JobTrackingWidget.class).to(AsynchronousProgressWidget.class);
+    bind(UploadTableModalWidget.class).to(UploadTableModalWidgetImpl.class);
+    bind(UploadCSVPreviewPage.class).to(UploadCSVPreviewPageImpl.class);
+    bind(CSVOptionsView.class).to(CSVOptionsViewImpl.class);
+    bind(UploadCSVPreviewPageView.class).to(UploadCSVPreviewPageViewImpl.class);
+    bind(UploadPreviewView.class).to(UploadPreviewViewImpl.class);
+    bind(UploadPreviewWidget.class).to(UploadPreviewWidgetImpl.class);
+    bind(UploadCSVFilePage.class).to(UploadCSVFilePageImpl.class);
+    bind(UploadCSVFinishPage.class).to(UploadCSVFinishPageImpl.class);
+    bind(UploadCSVFinishPageView.class).to(UploadCSVFinishPageViewImpl.class);
+    bind(UploadCSVAppendPage.class).to(UploadCSVAppendPageImpl.class);
+    bind(UploadCSVAppendPageView.class).to(UploadCSVAppendPageViewImpl.class);
+    bind(SortableTableHeader.class).to(SortableTableHeaderImpl.class);
+    bind(StaticTableHeader.class).to(StaticTableHeaderImpl.class);
+    bind(TotalVisibleResultsWidgetView.class)
+      .to(TotalVisibleResultsWidgetViewImpl.class);
+    bind(CreateDownloadPage.class).to(CreateDownloadPageImpl.class);
+    bind(CreateDownloadPageView.class).to(CreateDownloadPageViewImpl.class);
+
+    bind(DownloadFilePage.class).to(DownloadFilePageImpl.class);
+    bind(DownloadFilePageView.class).to(DownloadFilePageViewImpl.class);
+
+    bind(DownloadTableQueryModalWidget.class)
+      .to(DownloadTableQueryModalWidgetImpl.class);
+    /*
+     * TableEntity cell bindings.
+     */
+    bind(LinkCellRendererView.class).to(LinkCellRendererViewImpl.class);
+    bind(StringRendererCellView.class).to(StringRendererCellViewImpl.class);
+
+    bind(StringListRendererCellView.class)
+      .to(StringListRendererCellViewImpl.class);
+    bind(DateListRendererCellView.class).to(DateListRendererCellViewImpl.class);
+    bind(UserIdListRendererCellView.class)
+      .to(UserIdListRendererCellViewImpl.class);
+    bind(EntityIdListRendererCellView.class)
+      .to(EntityIdListRendererCellViewImpl.class);
+    bind(CellEditorView.class).to(CellEditorViewImpl.class);
+    bind(NumberCellEditorView.class).to(NumberCellEditorViewImpl.class);
+    bind(ListCellEditorView.class).to(ListCellEditorViewImpl.class);
+    bind(DateCellEditorView.class).to(DateCellEditorViewImpl.class);
+    bind(UserIdCellEditorView.class).to(UserIdCellEditorViewImpl.class);
+    bind(FileCellEditorView.class).to(FileCellEditorViewImpl.class);
+    bind(FileCellRendererView.class).to(FileCellRendererViewImpl.class);
+    bind(EntityIdCellRendererView.class).to(EntityIdCellRendererViewImpl.class);
+    bind(LargeStringCellEditorView.class)
+      .to(LargeStringCellEditorViewImpl.class);
+    bind(JSONListCellEditorView.class).to(JSONListCellEditorViewImpl.class);
+    bind(EditJSONListModalView.class)
+      .to(EditJSONListModalViewImpl.class)
+      .in(Singleton.class);
+    /*
+     * Teams Places
+     */
+    // Team Page
+    bind(TeamView.class).to(TeamViewImpl.class).in(Singleton.class);
+    // Team Search Page
+    bind(TeamSearchView.class).to(TeamSearchViewImpl.class).in(Singleton.class);
+
+    bind(MapView.class).to(MapViewImpl.class);
+
+    // People Search Page
+    bind(PeopleSearchView.class)
+      .to(PeopleSearchViewImpl.class)
+      .in(Singleton.class);
+
+    /*
+     * Teams Widgets
+     */
+
+    // Team Action Menu Items
+    bind(TeamEditModalWidgetView.class).to(TeamEditModalWidgetViewImpl.class);
+
+    bind(TeamLeaveModalWidgetView.class).to(TeamLeaveModalWidgetViewImpl.class);
+
+    bind(TeamDeleteModalWidgetView.class)
+      .to(TeamDeleteModalWidgetViewImpl.class);
+    // Open Team Invitations widget
+    bind(OpenTeamInvitationsWidgetView.class)
+      .to(OpenTeamInvitationsWidgetViewImpl.class);
+    // Pending Team Join Requests widget
+    bind(OpenMembershipRequestsWidgetView.class)
+      .to(OpenMembershipRequestsWidgetViewImpl.class);
+
+    // Current User Invites widget
+    bind(OpenUserInvitationsWidgetView.class)
+      .to(OpenUserInvitationsWidgetViewImpl.class);
+
+    // Team List widget (link to search teams page, optionally can create team)
+    bind(TeamListWidgetView.class).to(TeamListWidgetViewImpl.class);
+
+    // Member List widget
+    bind(MemberListWidgetView.class).to(MemberListWidgetViewImpl.class);
+
+    // Invite Team member widget
+    bind(InviteWidgetView.class).to(InviteWidgetViewImpl.class);
+
+    // Request Team membership widget
+    bind(JoinTeamWidgetView.class).to(JoinTeamWidgetViewImpl.class);
+
+    // Join Team Button Config widget
+    bind(JoinTeamConfigEditorView.class).to(JoinTeamConfigEditorViewImpl.class);
+
+    // Submit to evaluation widget
+    bind(SubmitToEvaluationWidgetView.class)
+      .to(SubmitToEvaluationWidgetViewImpl.class);
+
+    // Team renderer
+    bind(TeamBadgeView.class).to(TeamBadgeViewImpl.class);
+
+    bind(BigTeamBadgeView.class).to(BigTeamBadgeViewImpl.class);
+    bind(UserTeamConfigView.class).to(UserTeamConfigViewImpl.class);
+    bind(SharingAndDataUseConditionWidgetView.class)
+      .to(SharingAndDataUseConditionWidgetViewImpl.class);
+
+    bind(WizardProgressWidgetView.class).to(WizardProgressWidgetViewImpl.class);
+
+    bind(UploadDialogWidgetView.class).to(UploadDialogWidgetViewImpl.class);
+
+    bind(AddFolderDialogWidgetView.class)
+      .to(AddFolderDialogWidgetViewImpl.class);
+    bind(LoginModalView.class).to(LoginModalViewImpl.class);
+    bind(ImageParamsPanelView.class).to(ImageParamsPanelViewImpl.class);
+
+    bind(RegisterTeamDialogView.class).to(RegisterTeamDialogViewImpl.class);
+
+    bind(EditRegisteredTeamDialogView.class)
+      .to(EditRegisteredTeamDialogViewImpl.class);
+    bind(ChallengeTeamsView.class).to(ChallengeTeamsViewImpl.class);
+    bind(ChallengeBadgeView.class).to(ChallengeBadgeViewImpl.class);
+    bind(ProjectBadgeView.class).to(ProjectBadgeViewImpl.class);
+    bind(TableQueryResultWikiWidgetView.class)
+      .to(TableQueryResultWikiWidgetViewImpl.class);
+    bind(SingleButtonView.class).to(SingleButtonViewImpl.class);
+    bind(AnnotationTransformer.class)
+      .to(AnnotationTransformerImpl.class)
+      .in(Singleton.class);
+
+    bind(AnnotationEditorView.class).to(AnnotationEditorViewImpl.class);
+
+    bind(EditAnnotationsDialogView.class)
+      .to(EditAnnotationsDialogViewImpl.class);
+    bind(CommaSeparatedValuesParserView.class)
+      .to(CommaSeparatedValuesParserViewImpl.class);
+    bind(PapaCSVParser.class).in(Singleton.class);
+    bind(AnnotationCellFactory.class)
+      .to(AnnotationCellFactoryImpl.class)
+      .in(Singleton.class);
+    bind(EntityId2BundleCache.class)
+      .to(EntityId2BundleCacheImpl.class)
+      .in(Singleton.class);
+
+    bind(VersionHistoryRowView.class).to(VersionHistoryRowViewImpl.class);
+    bind(SynapseStandaloneWikiView.class)
+      .to(SynapseStandaloneWikiViewImpl.class);
+
+    bind(SynapseAlertView.class).to(SynapseAlertViewImpl.class);
+    bind(SynapseAlert.class).to(SynapseAlertImpl.class);
+
+    bind(ProvenanceEditorWidgetView.class)
+      .to(ProvenanceEditorWidgetViewImpl.class);
+    bind(ProvenanceListWidgetView.class).to(ProvenanceListWidgetViewImpl.class);
+
+    bind(ProvenanceURLDialogWidgetView.class)
+      .to(ProvenanceURLDialogWidgetViewImpl.class);
+    bind(EntityRefProvEntryView.class).to(EntityRefProvEntryViewImpl.class);
+    bind(URLProvEntryView.class).to(URLProvEntryViewImpl.class);
+    bind(StorageLocationWidgetView.class)
+      .to(StorageLocationWidgetViewImpl.class);
+    bind(ErrorView.class).to(ErrorViewImpl.class);
+    bind(PreviewConfigView.class).to(PreviewConfigViewImpl.class);
+    bind(SynapseFormConfigView.class).to(SynapseFormConfigViewImpl.class);
+    bind(DownloadCartPageView.class).to(DownloadCartPageViewImpl.class);
+    bind(EditFileMetadataModalView.class)
+      .to(EditFileMetadataModalViewImpl.class);
+    bind(EditFileMetadataModalWidget.class)
+      .to(EditFileMetadataModalWidgetImpl.class);
+
+    bind(EditProjectMetadataModalView.class)
+      .to(EditProjectMetadataModalViewImpl.class);
+    bind(EditProjectMetadataModalWidget.class)
+      .to(EditProjectMetadataModalWidgetImpl.class);
+    bind(BiodallianceWidgetView.class).to(BiodallianceWidgetViewImpl.class);
+    bind(BiodallianceSourceEditorView.class)
+      .to(BiodallianceSourceEditorViewImpl.class);
+    bind(BiodallianceEditorView.class).to(BiodallianceEditorViewImpl.class);
+    bind(TabView.class).to(TabViewImpl.class);
+    bind(TabsView.class).to(TabsViewImpl.class);
+
+    bind(FilesTabView.class).to(FilesTabViewImpl.class);
+    bind(TablesTabView.class).to(TablesTabViewImpl.class);
+
+    bind(ChallengeTabView.class).to(ChallengeTabViewImpl.class);
+    bind(DiscussionTabView.class).to(DiscussionTabViewImpl.class);
+    bind(DockerTabView.class).to(DockerTabViewImpl.class);
+    bind(ModifiedCreatedByWidgetView.class)
+      .to(ModifiedCreatedByWidgetViewImpl.class);
+    bind(FileHandleListView.class).to(FileHandleListViewImpl.class);
+    bind(ACTView.class).to(ACTViewImpl.class);
+    bind(CytoscapeConfigView.class).to(CytoscapeConfigViewImpl.class);
+    bind(CytoscapeView.class).to(CytoscapeViewImpl.class);
+    // discussion
+    bind(DiscussionThreadModalView.class)
+      .to(DiscussionThreadModalViewImpl.class);
+    bind(ReplyModalView.class).to(ReplyModalViewImpl.class);
+
+    bind(DiscussionThreadListWidgetView.class)
+      .to(DiscussionThreadListWidgetViewImpl.class);
+    bind(DiscussionThreadListItemWidgetView.class)
+      .to(DiscussionThreadListItemWidgetViewImpl.class);
+    bind(SingleDiscussionThreadWidgetView.class)
+      .to(SingleDiscussionThreadWidgetViewImpl.class);
+    bind(ReplyWidgetView.class).to(ReplyWidgetViewImpl.class);
+    bind(ForumWidgetView.class).to(ForumWidgetViewImpl.class);
+    bind(NewReplyWidgetView.class).to(NewReplyWidgetViewImpl.class);
+    // docker
+    bind(DockerRepoListWidgetView.class).to(DockerRepoListWidgetViewImpl.class);
+    bind(DockerRepoWidgetView.class).to(DockerRepoWidgetViewImpl.class);
+
+    bind(AddExternalRepoModalView.class).to(AddExternalRepoModalViewImpl.class);
+    bind(DockerCommitRowWidgetView.class)
+      .to(DockerCommitRowWidgetViewImpl.class);
+    bind(DockerCommitListWidgetView.class)
+      .to(DockerCommitListWidgetViewImpl.class);
+    bind(SessionStorage.class).to(SessionStorageImpl.class);
+    bind(SynapseForumView.class).to(SynapseForumViewImpl.class);
+
+    bind(WikiMarkdownEditorView.class).to(WikiMarkdownEditorViewImpl.class);
+    bind(StuAlertView.class).to(StuAlertViewImpl.class);
+    bind(SynapseTableFormWidgetView.class)
+      .to(SynapseTableFormWidgetViewImpl.class);
+    bind(RowFormView.class).to(RowFormViewImpl.class);
+
+    bind(RadioCellEditorView.class).to(RadioCellEditorViewImpl.class);
+    bind(MarkdownIt.class).to(MarkdownItImpl.class);
+    bind(SubscriptionView.class).to(SubscriptionViewImpl.class);
+
+    bind(TopicWidgetView.class).to(TopicWidgetViewImpl.class);
+    bind(SubscribeButtonWidgetView.class)
+      .to(SubscribeButtonWidgetViewImpl.class);
+
+    bind(RefreshAlertView.class).to(RefreshAlertViewImpl.class);
+    bind(UserSelectorView.class).to(UserSelectorViewImpl.class);
+
+    bind(EntityContainerListWidgetView.class)
+      .to(EntityContainerListWidgetViewImpl.class);
+    bind(EntityViewScopeWidgetView.class)
+      .to(EntityViewScopeWidgetViewImpl.class);
+    bind(CopyTextModal.class).to(CopyTextModalImpl.class);
+    bind(EvaluationEditorModalView.class)
+      .to(EvaluationEditorModalViewImpl.class);
+    bind(LoadMoreWidgetContainerView.class)
+      .to(LoadMoreWidgetContainerViewImpl.class);
+
+    bind(RadioWidget.class).to(RadioWidgetViewImpl.class);
+    bind(FileClientsHelpView.class).to(FileClientsHelpViewImpl.class);
+    bind(ContainerClientsHelp.class).to(ContainerClientsHelpImpl.class);
+
+    bind(FileDownloadMenuItemView.class).to(FileDownloadMenuItemViewImpl.class);
+    bind(SqlDefinedTableEditorView.class)
+      .to(SqlDefinedTableEditorViewImpl.class);
+    bind(ChallengeWidgetView.class).to(ChallengeWidgetViewImpl.class);
+    bind(SelectTeamModalView.class).to(SelectTeamModalViewImpl.class);
+    bind(ApproveUserAccessModalView.class)
+      .to(ApproveUserAccessModalViewImpl.class);
+    bind(UserBadgeListView.class).to(UserBadgeListViewImpl.class);
+    bind(EntityListRowBadgeView.class).to(EntityListRowBadgeViewImpl.class);
+    bind(LazyLoadWikiWidgetWrapperView.class)
+      .to(LazyLoadWikiWidgetWrapperViewImpl.class);
+    bind(EntityHeaderAsyncHandler.class)
+      .to(EntityHeaderAsyncHandlerImpl.class)
+      .in(Singleton.class);
+
+    bind(VersionedEntityHeaderAsyncHandler.class)
+      .to(VersionedEntityHeaderAsyncHandlerImpl.class)
+      .in(Singleton.class);
+
+    bind(GoogleMapView.class).to(GoogleMapViewImpl.class);
+    bind(FileHandleAsyncHandler.class)
+      .to(FileHandleAsyncHandlerImpl.class)
+      .in(Singleton.class);
+
+    bind(PresignedURLAsyncHandler.class)
+      .to(PresignedURLAsyncHandlerImpl.class)
+      .in(Singleton.class);
+
+    bind(PresignedAndFileHandleURLAsyncHandler.class)
+      .to(PresignedAndFileHandleURLAsyncHandlerImpl.class)
+      .in(Singleton.class);
+    bind(UserProfileAsyncHandler.class)
+      .to(UserProfileAsyncHandlerImpl.class)
+      .in(Singleton.class);
+    bind(TeamAsyncHandler.class)
+      .to(TeamAsyncHandlerImpl.class)
+      .in(Singleton.class);
+
+    bind(UserGroupHeaderAsyncHandler.class)
+      .to(UserGroupHeaderAsyncHandlerImpl.class)
+      .in(Singleton.class);
+
+    bind(UserGroupHeaderFromAliasAsyncHandler.class)
+      .to(UserGroupHeaderFromAliasAsyncHandlerImpl.class)
+      .in(Singleton.class);
+
+    bind(DivView.class).to(DivViewImpl.class);
+
+    bind(ViewDefaultColumns.class).in(Singleton.class);
+    bind(SubscribersWidgetView.class).to(SubscribersWidgetViewImpl.class);
+
+    bind(PlaceView.class).to(PlaceViewImpl.class);
+    bind(ManagedACTAccessRequirementWidgetView.class)
+      .to(ManagedACTAccessRequirementWidgetViewImpl.class);
+    bind(ACTAccessRequirementWidgetView.class)
+      .to(ACTAccessRequirementWidgetViewImpl.class);
+    bind(TermsOfUseAccessRequirementWidgetView.class)
+      .to(TermsOfUseAccessRequirementWidgetViewImpl.class);
+    bind(FileHandleWidgetView.class).to(FileHandleWidgetViewImpl.class);
+    bind(CreateAccessRequirementStep1View.class)
+      .to(CreateAccessRequirementStep1ViewImpl.class);
+    bind(CreateManagedACTAccessRequirementStep2View.class)
+      .to(CreateManagedACTAccessRequirementStep2ViewImpl.class);
+    bind(CreateBasicAccessRequirementStep2View.class)
+      .to(CreateBasicAccessRequirementStep2ViewImpl.class);
+    bind(CreateManagedACTAccessRequirementStep3View.class)
+      .to(CreateManagedACTAccessRequirementStep3ViewImpl.class);
+    bind(Button.class).to(ButtonImpl.class);
+    bind(IsACTMemberAsyncHandler.class)
+      .to(IsACTMemberAsyncHandlerImpl.class)
+      .in(Singleton.class);
+    bind(PopupUtilsView.class).to(PopupUtilsViewImpl.class).in(Singleton.class);
+
+    bind(ProfileCertifiedValidatedView.class)
+      .to(ProfileCertifiedValidatedViewImpl.class);
+
+    bind(ACTDataAccessSubmissionsView.class)
+      .to(ACTDataAccessSubmissionsViewImpl.class);
+    bind(RestrictionWidgetView.class).to(RestrictionWidgetViewImpl.class);
+    bind(ACTDataAccessSubmissionWidgetView.class)
+      .to(ACTDataAccessSubmissionWidgetViewImpl.class);
+    bind(OpenSubmissionWidgetView.class).to(OpenSubmissionWidgetViewImpl.class);
+    bind(LockAccessRequirementWidgetView.class)
+      .to(LockAccessRequirementWidgetViewImpl.class);
+    bind(ImageUploadView.class).to(ImageUploadViewImpl.class);
+    bind(RevokeUserAccessModalView.class)
+      .to(RevokeUserAccessModalViewImpl.class);
+    bind(PlotlyWidgetView.class).to(PlotlyWidgetViewImpl.class);
+    bind(PlotlyConfigView.class).to(PlotlyConfigViewImpl.class);
+    bind(DateTimeUtils.class).to(DateTimeUtilsImpl.class).in(Singleton.class);
+    bind(ACTAccessApprovalsView.class).to(ACTAccessApprovalsViewImpl.class);
+
+    bind(AccessorGroupView.class).to(AccessorGroupViewImpl.class);
+    bind(SelfSignAccessRequirementWidgetView.class)
+      .to(SelfSignAccessRequirementWidgetViewImpl.class);
+    bind(TeamSubjectWidgetView.class).to(TeamSubjectWidgetViewImpl.class);
+    bind(EntitySubjectsWidgetView.class).to(EntitySubjectsWidgetViewImpl.class);
+    bind(AwsLoginView.class).to(AwsLoginViewImpl.class);
+    bind(UserListRowWidgetView.class).to(UserListRowWidgetViewImpl.class);
+    bind(UserListView.class).to(UserListViewImpl.class);
+    bind(FileViewClientsHelp.class).to(FileViewClientsHelpImpl.class);
+    bind(EmailAddressesWidgetView.class).to(EmailAddressesWidgetViewImpl.class);
+    // Synapse js client
+    bind(SynapseJavascriptClient.class).in(Singleton.class);
+    bind(SynapseJavascriptFactory.class).in(Singleton.class);
+
+    bind(HtmlPreviewView.class).to(HtmlPreviewViewImpl.class);
+    bind(NbConvertPreviewView.class).to(NbConvertPreviewViewImpl.class);
+    bind(S3DirectLoginDialog.class).to(S3DirectLoginDialogImpl.class);
+
+    bind(WikiPageDeleteConfirmationDialogView.class)
+      .to(WikiPageDeleteConfirmationDialogViewImpl.class);
+    bind(WikiDiffView.class).to(WikiDiffViewImpl.class);
+    bind(SynapseProperties.class)
+      .to(SynapsePropertiesImpl.class)
+      .in(Singleton.class);
+    bind(Moment.class).to(MomentImpl.class);
+    bind(DownloadSpeedTester.class).to(DownloadSpeedTesterImpl.class);
+    bind(PackageSizeSummaryView.class).to(PackageSizeSummaryViewImpl.class);
+    bind(EntityPresenterEventBinder.class)
+      .to(EntityPresenterEventBinderImpl.class);
+    bind(Linkify.class).to(LinkifyImpl.class);
+    bind(PasswordResetSignedTokenView.class)
+      .to(PasswordResetSignedTokenViewImpl.class);
+    bind(TeamProjectsModalWidgetView.class)
+      .to(TeamProjectsModalWidgetViewImpl.class);
+    bind(ContainerItemCountWidgetView.class)
+      .to(ContainerItemCountWidgetViewImpl.class);
+    bind(StatisticsPlotWidgetView.class).to(StatisticsPlotWidgetViewImpl.class);
+    bind(QuarantinedEmailModal.class).in(Singleton.class);
+    bind(SubmissionViewScopeEditorView.class)
+      .to(SubmissionViewScopeEditorViewImpl.class);
+    bind(EvaluationFinderView.class).to(EvaluationFinderViewImpl.class);
+    bind(SubmissionViewScopeWidgetView.class)
+      .to(SubmissionViewScopeWidgetViewImpl.class);
+    bind(PersonalAccessTokensView.class).to(PersonalAccessTokensViewImpl.class);
+    bind(PageProgressWidgetView.class).to(PageProgressWidgetViewImpl.class);
+    bind(EntityFinderWidget.class).to(EntityFinderWidgetImpl.class);
+    bind(EntityFinderWidget.Builder.class)
+      .to(EntityFinderWidgetImpl.Builder.class);
+
+    bind(EntityFinderWidgetView.class).to(EntityFinderWidgetViewImpl.class);
+    bind(SynapseReactClientFullContextPropsProvider.class)
+      .to(SynapseReactClientFullContextPropsProviderImpl.class);
+
+    bind(AddToDownloadListV2.class).to(AddToDownloadListV2Impl.class);
+    bind(OpenDataView.class).to(OpenDataViewImpl.class);
+    bind(QueryClientProvider.class)
+      .to(QueryClientProviderImpl.class)
+      .in(Singleton.class);
+    bind(IntendedDataUseReportWidgetView.class)
+      .to(IntendedDataUseReportWidgetViewImpl.class);
+    bind(DialogView.class).to(Dialog.class);
+
+    bind(TwoFactorAuthView.class)
+      .to(TwoFactorAuthViewImpl.class)
+      .in(Singleton.class);
+
+    bind(FollowingPageView.class)
+      .to(FollowingPageViewImpl.class)
+      .in(Singleton.class);
+
+    bind(KeyFactoryProvider.class).to(KeyFactoryProviderImpl.class);
+  }
 }
